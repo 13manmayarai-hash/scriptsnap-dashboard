@@ -1,6 +1,6 @@
 {
   "name": "scriptsnap-dashboard",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "ScriptSnap SaaS - AI YouTube Shorts Script Generator",
   "scripts": {
     "dev": "next dev",
