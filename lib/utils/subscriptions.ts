@@ -11,7 +11,7 @@ export const SUBSCRIPTION_TIERS = {
   pro: {
     name: 'Pro',
     price: 9,
-    scripts_per_month: null, // unlimited
+    scripts_per_month: null,
     tones: ['Meditative', 'Balanced', 'Energetic'],
     series_toggle: true,
     export: true,
@@ -55,7 +55,7 @@ export function getMonthlyLimit(tier: string): number | null {
 
 export function getAvailableTones(tier: string): string[] {
   const tierConfig = SUBSCRIPTION_TIERS[tier as keyof typeof SUBSCRIPTION_TIERS]
-  return tierConfig?.tones || ['Balanced']
+  return tierConfig?.tones ? [...tierConfig.tones] : ['Balanced']
 }
 
 export function getTierFeatures(tier: string) {
