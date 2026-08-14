@@ -1,0 +1,6 @@
+Test file - if Vercel can read this, GitHub connection works
+Files should include:
+- app/dashboard/layout.tsx
+- app/dashboard/page.tsx
+- lib/supabase/client.ts
+- lib/store/app.ts
