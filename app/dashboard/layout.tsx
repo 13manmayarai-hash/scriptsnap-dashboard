@@ -18,35 +18,42 @@ export default function DashboardLayout({
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    let isMounted = true
+
     const checkAuth = async () => {
-      const supabase = createClient()
-      const { data: { user: authUser } } = await supabase.auth.getUser()
-      
-      if (!authUser) {
-        router.push('/auth/login')
-        return
-      }
+      try {
+        const supabase = createClient()
+        const { data: { user: authUser }, error: authError } = await supabase.auth.getUser()
+        
+        if (!isMounted) return
 
-      // Fetch user profile
-      const { data: userProfile } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', authUser.id)
-        .single()
+        if (authError || !authUser) {
+          router.push('/auth/login')
+          return
+        }
 
-      if (userProfile) {
+        // Set user in store
         setUser({
           id: authUser.id,
           email: authUser.email || '',
-          subscription_tier: userProfile.subscription_tier || 'free',
-          scripts_generated_month: userProfile.scripts_generated_month || 0,
+          subscription_tier: 'free',
+          scripts_generated_month: 0,
         })
-      }
 
-      setLoading(false)
+        setLoading(false)
+      } catch (err) {
+        if (isMounted) {
+          console.error('Auth check error:', err)
+          router.push('/auth/login')
+        }
+      }
     }
 
     checkAuth()
+
+    return () => {
+      isMounted = false
+    }
   }, [router, setUser])
 
   const handleLogout = async () => {
@@ -69,7 +76,6 @@ export default function DashboardLayout({
 
   return (
     <div className="flex h-screen bg-brand-black text-brand-white">
-      {/* Mobile Menu Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="fixed top-4 right-4 z-50 md:hidden"
@@ -77,7 +83,6 @@ export default function DashboardLayout({
         {isOpen ? <X size={24} /> : <Menu size={24} />}
       </button>
 
-      {/* Sidebar */}
       <div
         className={`fixed md:relative w-64 h-full bg-black/50 border-r border-white/10 p-6 transform transition-transform ${
           isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
@@ -110,10 +115,10 @@ export default function DashboardLayout({
         <div className="absolute bottom-6 left-6 right-6">
           <div className="bg-white/5 border border-white/10 rounded-lg p-4 mb-4">
             <p className="text-sm text-white/60">Tier</p>
-            <p className="font-semibold capitalize">{user?.subscription_tier}</p>
-            {user?.subscription_tier === 'free' && (
+            <p className="font-semibold capitalize">{user?.subscription_tier || 'free'}</p>
+            {(user?.subscription_tier === 'free' || !user?.subscription_tier) && (
               <p className="text-xs text-white/40 mt-2">
-                {user.scripts_generated_month || 0} / 10 scripts used
+                {user?.scripts_generated_month || 0} / 10 scripts used
               </p>
             )}
           </div>
@@ -127,20 +132,16 @@ export default function DashboardLayout({
         </div>
       </div>
 
-      {/* Main Content */}
       <div className="flex-1 overflow-auto">
-        {/* Header */}
         <header className="border-b border-white/10 p-6">
           <div className="flex justify-between items-center">
-            <h2 className="text-xl font-semibold">{user?.email}</h2>
+            <h2 className="text-xl font-semibold">{user?.email || 'User'}</h2>
           </div>
         </header>
 
-        {/* Content */}
         <main className="p-6">{children}</main>
       </div>
 
-      {/* Mobile Overlay */}
       {isOpen && (
         <div
           className="fixed inset-0 bg-black/50 md:hidden z-40"

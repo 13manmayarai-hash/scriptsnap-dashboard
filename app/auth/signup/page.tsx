@@ -26,15 +26,11 @@ export default function SignUpPage() {
 
       if (error) throw error
       
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
-        await supabase.from('users').insert({
-          id: user.id,
-          email: user.email,
-          subscription_tier: 'free',
-          scripts_generated_month: 0,
-        })
-      }
+      // Just sign in after signup
+      await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
 
       router.push('/dashboard')
     } catch (err) {
