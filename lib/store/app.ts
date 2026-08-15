@@ -1,9 +1,10 @@
 import { create } from 'zustand'
+import type { SubscriptionTier } from '@/lib/tiers'
 
 export interface User {
   id: string
   email: string
-  subscription_tier: 'free' | 'pro' | 'pro_plus' | 'team'
+  subscription_tier: SubscriptionTier
   scripts_generated_month: number
 }
 

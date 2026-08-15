@@ -30,14 +30,21 @@ export default function DashboardLayout({
 
       if (!session) {
         router.push('/auth/login')
-      } else if (session.user) {
-        setUser({
-          id: session.user.id,
-          email: session.user.email || '',
-          subscription_tier: 'free',
-          scripts_generated_month: 0,
-        })
+        return
       }
+
+      const { data: profile } = await supabase
+        .from('users')
+        .select('subscription_tier, scripts_generated_month')
+        .eq('id', session.user.id)
+        .single()
+
+      setUser({
+        id: session.user.id,
+        email: session.user.email || '',
+        subscription_tier: profile?.subscription_tier || 'free',
+        scripts_generated_month: profile?.scripts_generated_month || 0,
+      })
     }
 
     checkAuth()
@@ -94,7 +101,9 @@ export default function DashboardLayout({
           <div className="pt-4 border-t border-brand-gold/20 space-y-3">
             <div className="text-sm">
               <p className="text-brand-white/60">Tier</p>
-              <p className="font-semibold text-brand-gold">Free</p>
+              <p className="font-semibold text-brand-gold capitalize">
+                {user?.subscription_tier || 'free'}
+              </p>
             </div>
 
             <button

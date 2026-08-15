@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useAppStore } from '@/lib/store/app'
+import { TIER_SCRIPT_LIMITS } from '@/lib/tiers'
 import { Sparkles, Copy } from 'lucide-react'
 
 interface GeneratedScript {
@@ -25,7 +26,7 @@ interface GeneratedScript {
 }
 
 export default function DashboardPage() {
-  const { user } = useAppStore()
+  const { user, setUser } = useAppStore()
   const [topic, setTopic] = useState('')
   const [duration, setDuration] = useState(30)
   const [category, setCategory] = useState('Cultural & Historical')
@@ -74,11 +75,16 @@ export default function DashboardPage() {
       })
 
       if (!response.ok) {
-        throw new Error('Failed to generate script')
+        const errorData = await response.json().catch(() => null)
+        throw new Error(errorData?.error || 'Failed to generate script')
       }
 
       const data = await response.json()
       setScript(data)
+
+      if (user) {
+        setUser({ ...user, scripts_generated_month: user.scripts_generated_month + 1 })
+      }
 
       if (typeof window !== 'undefined') {
         const scripts = JSON.parse(localStorage.getItem('scriptsnap_scripts') || '[]')
@@ -226,7 +232,7 @@ export default function DashboardPage() {
           {/* Tier Info */}
           <div className="mt-6 pt-6 border-t border-white/10">
             <p className="text-xs text-white/60">
-              <span className="font-semibold capitalize">{user?.subscription_tier || 'free'}</span> plan: {user?.scripts_generated_month || 0} / 10 used this month
+              <span className="font-semibold capitalize">{user?.subscription_tier || 'free'}</span> plan: {user?.scripts_generated_month || 0} / {TIER_SCRIPT_LIMITS[user?.subscription_tier || 'free']} used this month
             </p>
           </div>
         </div>

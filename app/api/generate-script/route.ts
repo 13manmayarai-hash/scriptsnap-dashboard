@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
 import Anthropic from '@anthropic-ai/sdk'
+import { TIER_SCRIPT_LIMITS, type SubscriptionTier } from '@/lib/tiers'
 
 const client = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -7,6 +10,59 @@ const client = new Anthropic({
 
 export async function POST(request: NextRequest) {
   try {
+    // Get authenticated user
+    const cookieStore = cookies()
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll: () => cookieStore.getAll(),
+          setAll: (cookiesToSet: any[]) => {
+            try {
+              cookiesToSet.forEach(({ name, value, options }) =>
+                cookieStore.set(name, value, options)
+              )
+            } catch {}
+          },
+        },
+      }
+    )
+
+    const { data: { user: authUser } } = await supabase.auth.getUser()
+
+    if (!authUser) {
+      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
+    }
+
+    // Check tier limit, resetting the monthly count if we've rolled into a new month
+    const { data: profile } = await supabase
+      .from('users')
+      .select('subscription_tier, scripts_generated_month, last_reset_date')
+      .eq('id', authUser.id)
+      .single()
+
+    const tier = (profile?.subscription_tier as SubscriptionTier) || 'free'
+    const limit = TIER_SCRIPT_LIMITS[tier] ?? TIER_SCRIPT_LIMITS.free
+
+    const today = new Date()
+    const lastReset = profile?.last_reset_date ? new Date(profile.last_reset_date) : null
+    const isNewMonth =
+      !lastReset ||
+      lastReset.getUTCFullYear() !== today.getUTCFullYear() ||
+      lastReset.getUTCMonth() !== today.getUTCMonth()
+
+    const currentCount = isNewMonth ? 0 : profile?.scripts_generated_month || 0
+
+    if (currentCount >= limit) {
+      return NextResponse.json(
+        {
+          error: `You've used all ${limit} scripts included in your ${tier} plan this month. Upgrade to generate more.`,
+        },
+        { status: 403 }
+      )
+    }
+
     const body = await request.json()
     const { topic, duration, category, tone, context, keywords } = body
 
@@ -119,6 +175,16 @@ Generate the script now:`
       `LIKE and SUBSCRIBE for more! ✨`,
       `Tag someone who needs this! 👇`,
     ]
+
+    // Record usage — do this last so a DB hiccup never blocks a script the
+    // user already paid the API cost for
+    await supabase
+      .from('users')
+      .update({
+        scripts_generated_month: currentCount + 1,
+        last_reset_date: today.toISOString().slice(0, 10),
+      })
+      .eq('id', authUser.id)
 
     return NextResponse.json({
       id: `script_${Date.now()}`,
