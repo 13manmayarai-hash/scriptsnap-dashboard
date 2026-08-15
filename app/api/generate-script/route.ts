@@ -44,31 +44,26 @@ REQUIREMENTS:
 Generate the script now:`
 
     // Call Anthropic API
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'x-api-key': process.env.ANTHROPIC_API_KEY!,
-        'anthropic-version': '2023-06-01',
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'claude-3-5-sonnet-20241022',
-        max_tokens: 1024,
-        messages: [
-          {
-            role: 'user',
-            content: prompt,
-          },
-        ],
-      }),
+    const message = await client.messages.create({
+      model: 'claude-sonnet-5',
+      max_tokens: 1024,
+      thinking: { type: 'disabled' },
+      output_config: { effort: 'low' },
+      messages: [
+        {
+          role: 'user',
+          content: prompt,
+        },
+      ],
     })
 
-    if (!response.ok) {
-      throw new Error(`API error: ${response.status}`)
+    const textBlock = message.content.find(
+      (block): block is Anthropic.TextBlock => block.type === 'text'
+    )
+    if (!textBlock) {
+      throw new Error('No text content in Claude response')
     }
-
-    const data = await response.json()
-    const scriptContent = data.content[0].text
+    const scriptContent = textBlock.text
 
     // Generate description
     let description = `📍 Watch this ${durationSeconds}-second deep dive into ${topic}\n`
