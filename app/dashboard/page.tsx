@@ -30,6 +30,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(false)
   const [script, setScript] = useState<GeneratedScript | null>(null)
   const [copied, setCopied] = useState<string | null>(null)
+  const [error, setError] = useState('')
 
   const categories = [
     'Cultural & Historical',
@@ -45,6 +46,7 @@ export default function DashboardPage() {
   const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
+    setError('')
 
     try {
       const response = await fetch('/api/generate-script', {
@@ -58,16 +60,24 @@ export default function DashboardPage() {
         }),
       })
 
+      if (!response.ok) {
+        throw new Error('Failed to generate script')
+      }
+
       const data = await response.json()
-      setScript(data.script)
+      
+      // FIX: Set the entire data object, not data.script
+      setScript(data)
 
       // Save to localStorage
-      const scripts = JSON.parse(localStorage.getItem('scriptsnap_scripts') || '[]')
-      scripts.unshift(data.script)
-      localStorage.setItem('scriptsnap_scripts', JSON.stringify(scripts))
-    } catch (error) {
-      console.error('Error:', error)
-      alert('Failed to generate script')
+      if (typeof window !== 'undefined') {
+        const scripts = JSON.parse(localStorage.getItem('scriptsnap_scripts') || '[]')
+        scripts.unshift(data)
+        localStorage.setItem('scriptsnap_scripts', JSON.stringify(scripts))
+      }
+    } catch (err) {
+      console.error('Error:', err)
+      setError(err instanceof Error ? err.message : 'Failed to generate script')
     } finally {
       setLoading(false)
     }
@@ -169,6 +179,12 @@ export default function DashboardPage() {
               <Sparkles size={20} />
               {loading ? 'Generating...' : 'Generate Script'}
             </button>
+
+            {error && (
+              <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-3">
+                <p className="text-sm text-red-500">{error}</p>
+              </div>
+            )}
           </form>
 
           {/* Tier Info */}
@@ -214,7 +230,7 @@ export default function DashboardPage() {
               </div>
               <button
                 onClick={() => handleCopy(script.script, 'script')}
-                className={`btn-secondary text-sm ${
+                className={`btn-secondary text-sm w-full ${
                   copied === 'script' ? 'bg-green-500/20' : ''
                 }`}
               >
