@@ -1,27 +1,40 @@
-import { createClient } from '@/lib/supabase/server'
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url)
-  const code = searchParams.get('code')
-  const error = searchParams.get('error')
-
-  if (error) {
-    return NextResponse.redirect(
-      new URL(`/auth/login?error=${encodeURIComponent(error)}`, request.url)
-    )
-  }
+  const requestUrl = new URL(request.url)
+  const code = requestUrl.searchParams.get('code')
 
   if (code) {
-    const supabase = createClient()
-    const { error } = await supabase.auth.exchangeCodeForSession(code)
+    const cookieStore = cookies()
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return cookieStore.getAll()
+          },
+          setAll(cookiesToSet: Array<{ name: string; value: string; options?: any }>) {
+            try {
+              cookiesToSet.forEach(({ name, value, options }) =>
+                cookieStore.set(name, value, options)
+              )
+            } catch {}
+          },
+        },
+      }
+    )
 
-    if (!error) {
-      return NextResponse.redirect(new URL('/dashboard', request.url))
+    try {
+      await supabase.auth.exchangeCodeForSession(code)
+    } catch (error) {
+      console.error('Error exchanging code for session:', error)
+      return NextResponse.redirect(new URL('/auth/login?error=invalid_code', requestUrl.origin))
     }
   }
 
-  return NextResponse.redirect(
-    new URL('/auth/login?error=Could not authenticate', request.url)
-  )
+  // Redirect to dashboard after successful auth
+  return NextResponse.redirect(new URL('/dashboard', requestUrl.origin))
 }
