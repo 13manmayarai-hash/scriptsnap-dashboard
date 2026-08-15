@@ -64,22 +64,22 @@ Generate the script now:`
     })
 
     if (!response.ok) {
-      throw new Error(\`API error: \${response.status}\`)
+      throw new Error(`API error: ${response.status}`)
     }
 
     const data = await response.json()
     const scriptContent = data.content[0].text
 
     // Generate description
-    let description = \`📍 Watch this \${durationSeconds}-second deep dive into \${topic}\n\`
+    let description = `📍 Watch this ${durationSeconds}-second deep dive into ${topic}\n`
     if (context) {
-      description += \`📝 Focus: \${context.split('\n')[0]}\n\`
+      description += `📝 Focus: ${context.split('\n')[0]}\n`
     }
     if (keywords && keywords.length > 0) {
-      description += \`🔑 Keywords: \${keywords.slice(0, 3).join(', ')}\n\`
+      description += `🔑 Keywords: ${keywords.slice(0, 3).join(', ')}\n`
     }
-    description += \`🎯 Category: \${category}\n🎭 Tone: \${tone}\n✨ Perfect for YouTube Shorts\n\n\`
-    description += \`Learn the fascinating details about \${topic}.\`
+    description += `🎯 Category: ${category}\n🎭 Tone: ${tone}\n✨ Perfect for YouTube Shorts\n\n`
+    description += `Learn the fascinating details about ${topic}.`
 
     // Generate hashtags
     const hashtagMap: Record<string, string[]> = {
@@ -95,45 +95,45 @@ Generate the script now:`
 
     // Generate alternative titles
     const alternativeTitles = [
-      { style: 'Curious', title: \`The Surprising Truth About \${topic}\` },
-      { style: 'Energetic', title: \`\${topic}?! THIS IS INSANE!\` },
-      { style: 'Educational', title: \`Complete Guide to \${topic}\` },
-      { style: 'Mysterious', title: \`What You DON'T Know About \${topic}\` },
-      { style: 'Mindful', title: \`Understanding \${topic}\` },
-      { style: 'List', title: \`5 Mind-Blowing Facts About \${topic}\` },
-      { style: 'Comparison', title: \`\${topic}: Then vs Now\` },
-      { style: 'Question', title: \`Why Everyone Is Talking About \${topic}\` },
-      { style: 'Story', title: \`How \${topic} Changed Everything\` },
-      { style: 'Quick Tip', title: \`The ONE Thing You Need to Know About \${topic}\` },
+      { style: 'Curious', title: `The Surprising Truth About ${topic}` },
+      { style: 'Energetic', title: `${topic}?! THIS IS INSANE!` },
+      { style: 'Educational', title: `Complete Guide to ${topic}` },
+      { style: 'Mysterious', title: `What You DON'T Know About ${topic}` },
+      { style: 'Mindful', title: `Understanding ${topic}` },
+      { style: 'List', title: `5 Mind-Blowing Facts About ${topic}` },
+      { style: 'Comparison', title: `${topic}: Then vs Now` },
+      { style: 'Question', title: `Why Everyone Is Talking About ${topic}` },
+      { style: 'Story', title: `How ${topic} Changed Everything` },
+      { style: 'Quick Tip', title: `The ONE Thing You Need to Know About ${topic}` },
     ]
 
     // Generate key points
     const keyPoints = [
-      \`\${topic} is more fascinating than most people realize\`,
-      context ? \`Key focus: \${context.split('\n')[0]}\` : \`Understanding brings new perspective\`,
-      keywords && keywords.length > 0 ? \`Core elements: \${keywords.slice(0, 2).join(', ')}\` : \`Multiple applications exist\`,
-      \`Many beliefs about \${topic} are misconceptions\`,
-      \`This is increasingly relevant today\`,
+      `${topic} is more fascinating than most people realize`,
+      context ? `Key focus: ${context.split('\n')[0]}` : `Understanding brings new perspective`,
+      keywords && keywords.length > 0 ? `Core elements: ${keywords.slice(0, 2).join(', ')}` : `Multiple applications exist`,
+      `Many beliefs about ${topic} are misconceptions`,
+      `This is increasingly relevant today`,
     ]
 
     // Pinned comment
     const pinnedComments = [
-      \`Which fact surprised you most? 👇\`,
-      \`Share your thoughts about \${topic}! 💬\`,
-      \`What should we explore next? 🔔\`,
-      \`LIKE and SUBSCRIBE for more! ✨\`,
-      \`Tag someone who needs this! 👇\`,
+      `Which fact surprised you most? 👇`,
+      `Share your thoughts about ${topic}! 💬`,
+      `What should we explore next? 🔔`,
+      `LIKE and SUBSCRIBE for more! ✨`,
+      `Tag someone who needs this! 👇`,
     ]
 
     return NextResponse.json({
-      id: \`script_\${Date.now()}\`,
+      id: `script_${Date.now()}`,
       topic,
       duration: durationSeconds,
       category,
       tone,
       context,
       keywords: keywords || [],
-      title: \`Discover \${topic}\`,
+      title: `Discover ${topic}`,
       script: scriptContent,
       description,
       hashtags,
