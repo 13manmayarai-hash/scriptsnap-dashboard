@@ -7,7 +7,7 @@ export async function POST(request: NextRequest) {
 
     // Generate a more realistic script based on duration and tone
     const durationSeconds = parseInt(duration) || 60
-    const wordCount = Math.floor(durationSeconds * 2.5) // ~150 words per 60 seconds
+    const wordCount = Math.floor(durationSeconds * 2.5)
 
     // Generate opening hook
     const hooks = [
@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
     const closing = closings[Math.floor(Math.random() * closings.length)]
 
     // Combine into full script
-    const script = `${hook} ${mainContent} ${closing}`
+    const fullScript = `${hook} ${mainContent} ${closing}`
 
     // Generate description
     const description = `Explore the fascinating world of ${topic} in this ${durationSeconds}-second journey. Perfect for YouTube Shorts. Learn something new about ${category.toLowerCase()}.`
@@ -60,19 +60,49 @@ export async function POST(request: NextRequest) {
 
     const hashtags = hashtagMap[category] || ['#Shorts', '#YouTube', '#Learning']
 
+    // Generate alternative titles
+    const alternativeTitles = [
+      { style: 'Curious', title: `The Truth About ${topic}` },
+      { style: 'Energetic', title: `${topic} WILL BLOW YOUR MIND!` },
+      { style: 'Educational', title: `Learn About ${topic} in 60 Seconds` },
+      { style: 'Mysterious', title: `What You Don't Know About ${topic}` },
+      { style: 'ASMR', title: `Relaxing Guide to ${topic}` },
+      { style: 'List', title: `5 Amazing Facts About ${topic}` },
+      { style: 'Comparison', title: `${topic}: Then vs Now` },
+      { style: 'Clickbait', title: `Doctors HATE This One Trick: ${topic}` },
+      { style: 'Story', title: `My Journey With ${topic}` },
+      { style: 'Question', title: `Why Is ${topic} So Popular?` },
+    ]
+
     // Generate pinned comment
-    const pinnedComment = `What did you think about ${topic}? Let us know in the comments!`
+    const pinnedComments = [
+      `What did you think about ${topic}? Drop your thoughts below! 👇`,
+      `Have you ever experienced ${topic}? Share your story in the comments!`,
+      `Which part about ${topic} surprised you the most? Let us know! 💬`,
+      `Don't forget to like and subscribe for more ${category.toLowerCase()} content!`,
+      `What should we explore next related to ${topic}? Comment below! 🔔`,
+    ]
+
+    const pinned_comment = pinnedComments[Math.floor(Math.random() * pinnedComments.length)]
 
     return NextResponse.json({
+      id: `script_${Date.now()}`,
+      topic,
+      duration: durationSeconds,
+      category,
+      tone,
       title: `Discover ${topic}`,
-      script,
+      script: fullScript,
       description,
       hashtags,
-      pinnedComment,
-      wordCount: script.split(' ').length,
-      estimatedDuration: durationSeconds,
+      pinned_comment,
+      alternativeTitles,
+      word_count: fullScript.split(' ').length,
+      created_at: new Date().toISOString(),
+      is_series: false,
     })
   } catch (error) {
+    console.error('Error:', error)
     return NextResponse.json(
       { error: 'Failed to generate script' },
       { status: 500 }
