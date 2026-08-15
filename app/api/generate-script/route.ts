@@ -9,10 +9,16 @@ const client = new Anthropic({
 })
 
 export async function POST(request: NextRequest) {
+  // Hoisted so the catch block can refund a reserved quota slot if
+  // generation fails after the limit check passed
+  let supabase: ReturnType<typeof createServerClient> | null = null
+  let userId: string | null = null
+  let quotaReserved = false
+
   try {
     // Get authenticated user
     const cookieStore = cookies()
-    const supabase = createServerClient(
+    supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
@@ -34,27 +40,31 @@ export async function POST(request: NextRequest) {
     if (!authUser) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
     }
+    userId = authUser.id
 
-    // Check tier limit, resetting the monthly count if we've rolled into a new month
     const { data: profile } = await supabase
       .from('users')
-      .select('subscription_tier, scripts_generated_month, last_reset_date')
+      .select('subscription_tier')
       .eq('id', authUser.id)
       .single()
 
     const tier = (profile?.subscription_tier as SubscriptionTier) || 'free'
     const limit = TIER_SCRIPT_LIMITS[tier] ?? TIER_SCRIPT_LIMITS.free
 
-    const today = new Date()
-    const lastReset = profile?.last_reset_date ? new Date(profile.last_reset_date) : null
-    const isNewMonth =
-      !lastReset ||
-      lastReset.getUTCFullYear() !== today.getUTCFullYear() ||
-      lastReset.getUTCMonth() !== today.getUTCMonth()
+    // Atomically check-and-reserve quota before spending any Anthropic API
+    // cost. This runs inside a single locked transaction on the DB side
+    // (see increment_script_usage migration) so concurrent requests from
+    // the same user can't both read the same pre-increment count and both
+    // slip past the limit.
+    const { data: usage, error: usageError } = await supabase
+      .rpc('increment_script_usage', { p_user_id: authUser.id, p_limit: limit })
+      .single()
 
-    const currentCount = isNewMonth ? 0 : profile?.scripts_generated_month || 0
+    if (usageError || !usage) {
+      throw new Error('Failed to check usage limit')
+    }
 
-    if (currentCount >= limit) {
+    if (!usage.allowed) {
       return NextResponse.json(
         {
           error: `You've used all ${limit} scripts included in your ${tier} plan this month. Upgrade to generate more.`,
@@ -62,6 +72,7 @@ export async function POST(request: NextRequest) {
         { status: 403 }
       )
     }
+    quotaReserved = true
 
     const body = await request.json()
     const { topic, duration, category, tone, context, keywords } = body
@@ -176,16 +187,6 @@ Generate the script now:`
       `Tag someone who needs this! 👇`,
     ]
 
-    // Record usage — do this last so a DB hiccup never blocks a script the
-    // user already paid the API cost for
-    await supabase
-      .from('users')
-      .update({
-        scripts_generated_month: currentCount + 1,
-        last_reset_date: today.toISOString().slice(0, 10),
-      })
-      .eq('id', authUser.id)
-
     return NextResponse.json({
       id: `script_${Date.now()}`,
       topic,
@@ -206,6 +207,13 @@ Generate the script now:`
       is_series: false,
     })
   } catch (error) {
+    // A reserved quota slot that never produced a script shouldn't cost
+    // the user a script from their monthly limit
+    if (quotaReserved && supabase && userId) {
+      try {
+        await supabase.rpc('decrement_script_usage', { p_user_id: userId })
+      } catch {}
+    }
     console.error('Error:', error)
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Failed to generate script' },
