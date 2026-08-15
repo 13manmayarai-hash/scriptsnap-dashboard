@@ -4,40 +4,29 @@ import { cookies } from 'next/headers'
 
 const Razorpay = require('razorpay')
 
-// Pricing tiers
 const TIER_PRICES = {
-  basic: { amount: 1000, currency: 'INR', name: 'Basic' }, // ₹10
-  pro: { amount: 2500, currency: 'INR', name: 'Pro' }, // ₹25
+  basic: { amount: 10, currency: 'INR' },
+  pro: { amount: 25, currency: 'INR' },
 }
 
 export async function POST(request: NextRequest) {
   try {
-    // Initialize Razorpay here (at request time, not build time)
-    const razorpay = new Razorpay({
-      key_id: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-      key_secret: process.env.RAZORPAY_KEY_SECRET,
-    })
-
     const { tier } = await request.json()
 
+    // Validate tier
     if (!tier || !TIER_PRICES[tier as keyof typeof TIER_PRICES]) {
-      return NextResponse.json(
-        { error: 'Invalid tier' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Invalid tier' }, { status: 400 })
     }
 
-    // Get user from session
+    // Get authenticated user
     const cookieStore = cookies()
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
         cookies: {
-          getAll() {
-            return cookieStore.getAll()
-          },
-          setAll(cookiesToSet: any[]) {
+          getAll: () => cookieStore.getAll(),
+          setAll: (cookiesToSet: any[]) => {
             try {
               cookiesToSet.forEach(({ name, value, options }) =>
                 cookieStore.set(name, value, options)
@@ -48,22 +37,24 @@ export async function POST(request: NextRequest) {
       }
     )
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
+    const { data: { user } } = await supabase.auth.getUser()
 
     if (!user) {
-      return NextResponse.json(
-        { error: 'Not authenticated' },
-        { status: 401 }
-      )
+      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
     }
 
+    // Initialize Razorpay
+    const razorpay = new Razorpay({
+      key_id: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+      key_secret: process.env.RAZORPAY_KEY_SECRET,
+    })
+
+    // Get price for tier
     const priceInfo = TIER_PRICES[tier as keyof typeof TIER_PRICES]
 
-    // Create Razorpay order
+    // Create order
     const order = await razorpay.orders.create({
-      amount: priceInfo.amount * 100, // Amount in paise
+      amount: priceInfo.amount * 100, // Convert to paise
       currency: priceInfo.currency,
       receipt: `order_${user.id}_${Date.now()}`,
       notes: {
@@ -80,15 +71,9 @@ export async function POST(request: NextRequest) {
       keyId: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
     })
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error)
-    console.error('Checkout error:', {
-      message: errorMessage,
-      stack: error instanceof Error ? error.stack : undefined,
-      razorpayKeyExists: !!process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-      razorpaySecretExists: !!process.env.RAZORPAY_KEY_SECRET,
-    })
+    console.error('Checkout error:', error)
     return NextResponse.json(
-      { error: 'Failed to create order', details: errorMessage },
+      { error: 'Failed to create order' },
       { status: 500 }
     )
   }

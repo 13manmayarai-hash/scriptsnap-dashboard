@@ -21,64 +21,50 @@ export default function RazorpayButton({
     setError('')
 
     try {
-      console.log('🎯 Starting payment flow for tier:', tier)
-
-      // Step 1: Create checkout order
-      console.log('📞 Calling /api/razorpay/checkout...')
+      // Step 1: Call backend to create Razorpay order
       const checkoutRes = await fetch('/api/razorpay/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ tier }),
       })
 
-      console.log('📊 Checkout response status:', checkoutRes.status)
+      const checkoutData = await checkoutRes.json()
 
-      const data = await checkoutRes.json()
-      console.log('📊 Checkout response data:', data)
-
-      // Check if authentication failed
+      // Handle 401 - not authenticated
       if (checkoutRes.status === 401) {
-        console.log('🔑 User not authenticated (401), redirecting to login...')
         router.push('/auth/login')
         return
       }
 
-      // Check if order creation failed
+      // Handle other errors
       if (!checkoutRes.ok) {
-        const errorMsg = data.details || data.error || 'Unknown error'
-        console.error('❌ Order creation failed:', errorMsg)
-        throw new Error(errorMsg)
+        throw new Error(checkoutData.error || 'Failed to create order')
       }
 
-      // Step 2: Extract order details
-      const { orderId, amount, currency, keyId } = data
-      console.log('✅ Order created:', { orderId, amount, currency })
+      const { orderId, amount, currency, keyId } = checkoutData
 
-      if (!orderId || !keyId) {
-        throw new Error('Missing orderId or keyId from server')
+      // Verify we have all required data
+      if (!orderId || !keyId || !amount) {
+        throw new Error('Invalid order data from server')
       }
 
-      // Step 3: Load Razorpay script
-      console.log('📦 Loading Razorpay script...')
+      // Step 2: Load Razorpay checkout script
       const script = document.createElement('script')
       script.src = 'https://checkout.razorpay.com/v1/checkout.js'
       script.async = true
 
       script.onload = () => {
-        console.log('✅ Razorpay script loaded')
-        try {
-          // Step 4: Open payment modal
-          const options = {
-            key: keyId,
-            amount: amount * 100,
-            currency: currency,
-            name: 'ScriptSnap',
-            description: `Upgrade to ${tierName} tier`,
-            order_id: orderId,
-            handler: async (response: any) => {
-              console.log('💳 Payment handler called with:', response)
-
-              // Step 5: Verify payment
+        // Step 3: Configure Razorpay options
+        const options = {
+          key: keyId,
+          amount: Math.round(amount * 100), // Convert to paise
+          currency: currency,
+          name: 'ScriptSnap',
+          description: `${tierName} Plan - ${amount} INR/month`,
+          order_id: orderId,
+          handler: async (response: any) => {
+            // Step 4: Verify payment signature on backend
+            try {
               const verifyRes = await fetch('/api/razorpay/verify', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -91,37 +77,41 @@ export default function RazorpayButton({
               })
 
               if (verifyRes.ok) {
-                console.log('✅ Payment verified! Redirecting to dashboard...')
+                // Payment successful!
                 router.push('/dashboard?payment=success')
               } else {
-                console.error('❌ Verification failed')
-                setError('Payment verification failed')
-                setLoading(false)
+                const errorData = await verifyRes.json()
+                throw new Error(errorData.error || 'Verification failed')
               }
+            } catch (verifyErr) {
+              setError(
+                verifyErr instanceof Error ? verifyErr.message : 'Verification failed'
+              )
+              setLoading(false)
+            }
+          },
+          theme: {
+            color: '#FFD700',
+          },
+          modal: {
+            ondismiss: () => {
+              setLoading(false)
             },
-            theme: { color: '#FFD700' },
-          }
-
-          console.log('🎯 Opening Razorpay checkout with options:', options)
-          const rzp = new (window as any).Razorpay(options)
-          rzp.open()
-          setLoading(false)
-        } catch (err) {
-          console.error('❌ Error opening Razorpay:', err)
-          setError(err instanceof Error ? err.message : 'Failed to open payment')
-          setLoading(false)
+          },
         }
+
+        // Step 5: Open Razorpay checkout
+        const razorpay = new (window as any).Razorpay(options)
+        razorpay.open()
       }
 
       script.onerror = () => {
-        console.error('❌ Failed to load Razorpay script')
         setError('Failed to load payment gateway')
         setLoading(false)
       }
 
       document.body.appendChild(script)
     } catch (err) {
-      console.error('❌ Payment error:', err)
       setError(err instanceof Error ? err.message : 'Payment failed')
       setLoading(false)
     }
@@ -136,9 +126,7 @@ export default function RazorpayButton({
       >
         {loading ? 'Processing...' : `Upgrade to ${tierName}`}
       </button>
-      {error && (
-        <p className="text-red-500 text-sm mt-2">{error}</p>
-      )}
+      {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
     </>
   )
 }
