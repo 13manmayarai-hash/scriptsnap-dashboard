@@ -19,7 +19,7 @@ telling him something is fixed.
 
 ## What ScriptSnap is
 A YouTube Shorts script generator SaaS for the @technosaze channel. Free/Basic
-(₹10/mo)/Pro (₹25/mo) tiers. Free tier and script generation via Anthropic API
+(₹199/mo)/Pro (₹499/mo) tiers. Free tier and script generation via Anthropic API
 are working. **The Razorpay payment flow is the only broken piece.**
 
 ## THE ACTUAL BUG — reproduce this first
@@ -127,7 +127,7 @@ confirmed by inspecting Vercel directly (only by the user's screenshot of the
 
 ## What "done" looks like
 1. Logged-in user on `/pricing` clicks "Upgrade to Basic" → Razorpay modal
-   opens with ₹10 INR order.
+   opens with ₹199 INR order.
 2. Test card `4111 1111 1111 1111`, any future expiry, CVV `123` → payment
    succeeds.
 3. Redirects to `/dashboard?payment=success`.

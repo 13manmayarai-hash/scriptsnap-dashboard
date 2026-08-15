@@ -5,8 +5,8 @@ import { cookies } from 'next/headers'
 const Razorpay = require('razorpay')
 
 const TIER_PRICES = {
-  basic: { amount: 10, currency: 'INR' },
-  pro: { amount: 25, currency: 'INR' },
+  basic: { amount: 199, currency: 'INR' },
+  pro: { amount: 499, currency: 'INR' },
 }
 
 export async function POST(request: NextRequest) {

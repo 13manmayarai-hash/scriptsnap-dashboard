@@ -23,7 +23,7 @@ export default function PricingPage() {
     },
     {
       name: 'Basic',
-      price: 10,
+      price: 199,
       tier: 'basic',
       scripts: 50,
       description: 'Great for active creators',
@@ -40,7 +40,7 @@ export default function PricingPage() {
     },
     {
       name: 'Pro',
-      price: 25,
+      price: 499,
       tier: 'pro',
       scripts: 200,
       description: 'For serious content creators',
