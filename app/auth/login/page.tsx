@@ -39,22 +39,11 @@ export default function LoginPage() {
 
     try {
       const supabase = createClient()
-      
-      // Determine the correct redirect URL based on current domain
-      let redirectUrl = 'https://scriptsnap-dashboard-13manmayarai-3872s-projects.vercel.app/auth/callback'
-      
-      if (typeof window !== 'undefined') {
-        const host = window.location.hostname
-        // For local development
-        if (host === 'localhost' || host === '127.0.0.1') {
-          redirectUrl = 'http://localhost:3000/auth/callback'
-        }
-      }
 
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: redirectUrl,
+          redirectTo: `${window.location.origin}/auth/callback`,
         },
       })
 
