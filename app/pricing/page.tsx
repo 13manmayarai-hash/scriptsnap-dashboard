@@ -120,7 +120,10 @@ export default function PricingPage() {
                     {tier.cta}
                   </Link>
                 ) : (
-                  <RazorpayButton tier={tier.tier} tierName={tier.name} />
+                  <RazorpayButton 
+                    tier={tier.tier as 'basic' | 'pro'} 
+                    tierName={tier.name} 
+                  />
                 )}
               </div>
 
