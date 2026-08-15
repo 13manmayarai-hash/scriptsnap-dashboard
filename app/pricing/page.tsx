@@ -3,12 +3,14 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { Check } from 'lucide-react'
+import RazorpayButton from '@/lib/components/RazorpayButton'
 
 export default function PricingPage() {
   const tiers = [
     {
       name: 'Free',
       price: 0,
+      tier: 'free',
       scripts: 5,
       description: 'Perfect for getting started',
       features: [
@@ -23,6 +25,7 @@ export default function PricingPage() {
     {
       name: 'Basic',
       price: 10,
+      tier: 'basic',
       scripts: 50,
       description: 'Great for active creators',
       features: [
@@ -39,6 +42,7 @@ export default function PricingPage() {
     {
       name: 'Pro',
       price: 25,
+      tier: 'pro',
       scripts: 200,
       description: 'For serious content creators',
       features: [
@@ -103,17 +107,23 @@ export default function PricingPage() {
                 </p>
               </div>
 
-              <button
-                className={`w-full py-3 px-4 rounded-lg font-semibold mb-8 transition-colors ${
-                  tier.highlighted
-                    ? 'bg-brand-yellow text-brand-black hover:bg-yellow-400'
-                    : 'bg-white/10 text-white hover:bg-white/20'
-                }`}
-              >
-                <Link href={tier.price === 0 ? '/auth/signup' : '/dashboard'}>
-                  {tier.cta}
-                </Link>
-              </button>
+              {/* CTA Button - Different for Free vs Paid */}
+              <div className="mb-8">
+                {tier.price === 0 ? (
+                  <Link
+                    href="/auth/signup"
+                    className={`block w-full py-3 px-4 rounded-lg font-semibold text-center transition-colors ${
+                      tier.highlighted
+                        ? 'bg-brand-yellow text-brand-black hover:bg-yellow-400'
+                        : 'bg-white/10 text-white hover:bg-white/20'
+                    }`}
+                  >
+                    {tier.cta}
+                  </Link>
+                ) : (
+                  <RazorpayButton tier={tier.tier} tierName={tier.name} />
+                )}
+              </div>
 
               <div className="space-y-4">
                 {tier.features.map((feature, j) => (
