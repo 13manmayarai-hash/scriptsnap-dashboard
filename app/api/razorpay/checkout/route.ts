@@ -80,9 +80,15 @@ export async function POST(request: NextRequest) {
       keyId: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
     })
   } catch (error) {
-    console.error('Checkout error:', error)
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    console.error('Checkout error:', {
+      message: errorMessage,
+      stack: error instanceof Error ? error.stack : undefined,
+      razorpayKeyExists: !!process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+      razorpaySecretExists: !!process.env.RAZORPAY_KEY_SECRET,
+    })
     return NextResponse.json(
-      { error: 'Failed to create order' },
+      { error: 'Failed to create order', details: errorMessage },
       { status: 500 }
     )
   }

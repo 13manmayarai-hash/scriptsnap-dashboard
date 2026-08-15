@@ -29,7 +29,8 @@ export default function RazorpayButton({
       })
 
       if (!checkoutRes.ok) {
-        throw new Error('Failed to create payment order')
+        const errorData = await checkoutRes.json().catch(() => ({}))
+        throw new Error(errorData.details || `Payment error: ${checkoutRes.status}`)
       }
 
       const { orderId, amount, currency, keyId } = await checkoutRes.json()
