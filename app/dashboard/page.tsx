@@ -64,6 +64,7 @@ export default function DashboardPage() {
       const response = await fetch('/api/generate-script', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
         body: JSON.stringify({
           topic,
           duration,

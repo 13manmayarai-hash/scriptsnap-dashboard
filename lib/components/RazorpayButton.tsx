@@ -25,6 +25,7 @@ export default function RazorpayButton({
       const checkoutRes = await fetch('/api/razorpay/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
         body: JSON.stringify({ tier }),
       })
 
@@ -68,6 +69,7 @@ export default function RazorpayButton({
               const verifyRes = await fetch('/api/razorpay/verify', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
+                credentials: 'same-origin',
                 body: JSON.stringify({
                   razorpay_order_id: orderId,
                   razorpay_payment_id: response.razorpay_payment_id,
