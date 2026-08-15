@@ -4,11 +4,6 @@ import { cookies } from 'next/headers'
 
 const Razorpay = require('razorpay')
 
-const razorpay = new Razorpay({
-  key_id: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-  key_secret: process.env.RAZORPAY_KEY_SECRET,
-})
-
 // Pricing tiers
 const TIER_PRICES = {
   basic: { amount: 1000, currency: 'INR', name: 'Basic' }, // ₹10
@@ -17,6 +12,12 @@ const TIER_PRICES = {
 
 export async function POST(request: NextRequest) {
   try {
+    // Initialize Razorpay here (at request time, not build time)
+    const razorpay = new Razorpay({
+      key_id: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+      key_secret: process.env.RAZORPAY_KEY_SECRET,
+    })
+
     const { tier } = await request.json()
 
     if (!tier || !TIER_PRICES[tier as keyof typeof TIER_PRICES]) {
