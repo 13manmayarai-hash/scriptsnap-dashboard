@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 
 interface RazorpayButtonProps {
   tier: 'basic' | 'pro'
@@ -15,13 +16,14 @@ export default function RazorpayButton({
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [needsLogin, setNeedsLogin] = useState(false)
 
   const handlePayment = async () => {
     setLoading(true)
     setError('')
+    setNeedsLogin(false)
 
     try {
-      // Step 1: Create checkout order
       const checkoutRes = await fetch('/api/razorpay/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -30,23 +32,24 @@ export default function RazorpayButton({
 
       const data = await checkoutRes.json()
 
+      // If 401, show login prompt
+      if (checkoutRes.status === 401) {
+        setNeedsLogin(true)
+        setLoading(false)
+        return
+      }
+
       if (!checkoutRes.ok) {
-        // If 401, redirect to login
-        if (checkoutRes.status === 401) {
-          router.push('/auth/login')
-          return
-        }
         throw new Error(data.details || data.error || 'Payment failed')
       }
 
       const { orderId, amount, currency, keyId } = data
 
-      // Step 2: Load Razorpay script
+      // Load Razorpay script
       const script = document.createElement('script')
       script.src = 'https://checkout.razorpay.com/v1/checkout.js'
       script.async = true
       script.onload = () => {
-        // Step 3: Open Razorpay payment modal
         const options = {
           key: keyId,
           amount: amount * 100,
@@ -55,7 +58,6 @@ export default function RazorpayButton({
           description: `Upgrade to ${tierName} tier`,
           order_id: orderId,
           handler: async (response: any) => {
-            // Step 4: Verify payment
             const verifyRes = await fetch('/api/razorpay/verify', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -87,6 +89,23 @@ export default function RazorpayButton({
     } finally {
       setLoading(false)
     }
+  }
+
+  // If user needs to log in
+  if (needsLogin) {
+    return (
+      <div>
+        <Link
+          href="/auth/login"
+          className="block w-full bg-brand-yellow text-brand-black font-semibold py-3 px-6 rounded-lg text-center hover:bg-yellow-400 transition-colors"
+        >
+          Log In to Upgrade
+        </Link>
+        <p className="text-white/60 text-sm mt-2">
+          You need to log in first to upgrade your plan
+        </p>
+      </div>
+    )
   }
 
   return (
