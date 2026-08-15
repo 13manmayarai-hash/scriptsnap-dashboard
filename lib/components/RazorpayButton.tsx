@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { createBrowserClient } from '@supabase/ssr'
 
 interface RazorpayButtonProps {
   tier: 'basic' | 'pro'
@@ -15,8 +16,36 @@ export default function RazorpayButton({
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [checkingAuth, setCheckingAuth] = useState(true)
+
+  useEffect(() => {
+    // Check if user is authenticated
+    const checkAuth = async () => {
+      try {
+        const supabase = createBrowserClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+        )
+        const { data: { user } } = await supabase.auth.getUser()
+        setIsAuthenticated(!!user)
+      } catch (err) {
+        setIsAuthenticated(false)
+      } finally {
+        setCheckingAuth(false)
+      }
+    }
+
+    checkAuth()
+  }, [])
 
   const handlePayment = async () => {
+    // Redirect to login if not authenticated
+    if (!isAuthenticated) {
+      router.push('/auth/login')
+      return
+    }
+
     setLoading(true)
     setError('')
 
@@ -94,10 +123,10 @@ export default function RazorpayButton({
     <>
       <button
         onClick={handlePayment}
-        disabled={loading}
+        disabled={loading || checkingAuth}
         className="w-full bg-brand-yellow text-brand-black font-semibold py-3 px-6 rounded-lg hover:bg-yellow-400 transition-colors disabled:opacity-50"
       >
-        {loading ? 'Processing...' : `Upgrade to ${tierName}`}
+        {checkingAuth ? 'Loading...' : loading ? 'Processing...' : `Upgrade to ${tierName}`}
       </button>
       {error && (
         <p className="text-red-500 text-sm mt-2">{error}</p>
