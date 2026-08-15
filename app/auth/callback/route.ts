@@ -2,9 +2,19 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 
+// Only allow same-app relative paths (must start with a single `/`) so this
+// can't be abused as an open redirect via a protocol-relative `//host` URL.
+function getSafeRedirect(target: string | null): string {
+  if (target && target.startsWith('/') && !target.startsWith('//')) {
+    return target
+  }
+  return '/dashboard'
+}
+
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url)
   const code = requestUrl.searchParams.get('code')
+  const next = getSafeRedirect(requestUrl.searchParams.get('next'))
 
   if (code) {
     const cookieStore = cookies()
@@ -35,6 +45,6 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // Redirect to dashboard after successful auth
-  return NextResponse.redirect(new URL('/dashboard', requestUrl.origin))
+  // Redirect to the originally-intended destination after successful auth
+  return NextResponse.redirect(new URL(next, requestUrl.origin))
 }

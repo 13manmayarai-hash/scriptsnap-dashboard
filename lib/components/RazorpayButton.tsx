@@ -33,7 +33,7 @@ export default function RazorpayButton({
 
       // Handle 401 - not authenticated
       if (checkoutRes.status === 401) {
-        router.push('/auth/login')
+        router.push(`/auth/login?redirectTo=${encodeURIComponent('/pricing')}`)
         return
       }
 
