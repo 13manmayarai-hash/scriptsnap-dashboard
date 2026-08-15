@@ -12,6 +12,11 @@ export async function POST(request: NextRequest) {
 
     const durationSeconds = parseInt(duration) || 60
 
+    // Build keywords list separately to avoid nested template literal issues
+    const keywordsList = keywords && keywords.length > 0 
+      ? `KEY POINTS TO INCLUDE:\n${keywords.map((kw: string) => `- ${kw}`).join('\n')}\n`
+      : ''
+
     // Build the prompt for Claude with personalization
     const prompt = `You are an expert YouTube Shorts script writer. Generate a compelling, engaging script for a ${durationSeconds}-second video.
 
@@ -21,7 +26,7 @@ TONE: ${tone}
 DURATION: ${durationSeconds} seconds
 
 ${context ? `VIDEO CONTEXT:\n${context}\n` : ''}
-${keywords && keywords.length > 0 ? `KEY POINTS TO INCLUDE:\n${keywords.map((kw: string) => \`- \${kw}\`).join('\n')}\n` : ''}
+${keywordsList}
 
 TONE GUIDELINES:
 - If Meditative: Use calming language, ask reflective questions, create mindfulness
