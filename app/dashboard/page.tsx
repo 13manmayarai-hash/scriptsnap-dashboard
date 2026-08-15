@@ -16,6 +16,7 @@ interface GeneratedScript {
   hashtags: string[]
   pinned_comment: string
   alternativeTitles: Array<{ style: string; title: string }>
+  keyPoints: string[]
   word_count: number
   created_at: string
   is_series: boolean
@@ -65,11 +66,8 @@ export default function DashboardPage() {
       }
 
       const data = await response.json()
-      
-      // FIX: Set the entire data object, not data.script
       setScript(data)
 
-      // Save to localStorage
       if (typeof window !== 'undefined') {
         const scripts = JSON.parse(localStorage.getItem('scriptsnap_scripts') || '[]')
         scripts.unshift(data)
@@ -222,7 +220,7 @@ export default function DashboardPage() {
 
             {/* Script */}
             <div className="card">
-              <h3 className="text-sm font-semibold text-white/60 mb-3">SCRIPT</h3>
+              <h3 className="text-sm font-semibold text-white/60 mb-3">SCRIPT ({script.word_count} words)</h3>
               <div className="bg-black/50 border border-white/10 rounded-lg p-4 mb-4">
                 <p className="text-white whitespace-pre-wrap font-mono text-sm leading-relaxed">
                   {script.script}
@@ -238,12 +236,25 @@ export default function DashboardPage() {
               </button>
             </div>
 
+            {/* Key Points */}
+            <div className="card">
+              <h3 className="text-sm font-semibold text-white/60 mb-3">KEY POINTS</h3>
+              <ul className="space-y-2">
+                {script.keyPoints.map((point, i) => (
+                  <li key={i} className="flex gap-3 text-white text-sm">
+                    <span className="text-brand-yellow font-bold flex-shrink-0">•</span>
+                    <span>{point}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
             {/* Description & SEO */}
             <div className="card">
               <h3 className="text-sm font-semibold text-white/60 mb-3">
                 DESCRIPTION
               </h3>
-              <p className="text-white text-sm mb-4 leading-relaxed">
+              <p className="text-white text-sm mb-4 leading-relaxed whitespace-pre-wrap">
                 {script.description}
               </p>
               <button
