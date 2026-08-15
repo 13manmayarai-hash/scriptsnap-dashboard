@@ -10,6 +10,8 @@ interface GeneratedScript {
   duration: number
   category: string
   tone: string
+  context: string
+  keywords: string[]
   script: string
   title: string
   description: string
@@ -28,6 +30,8 @@ export default function DashboardPage() {
   const [duration, setDuration] = useState(30)
   const [category, setCategory] = useState('Cultural & Historical')
   const [tone, setTone] = useState('Meditative')
+  const [context, setContext] = useState('')
+  const [keywords, setKeywords] = useState('')
   const [loading, setLoading] = useState(false)
   const [script, setScript] = useState<GeneratedScript | null>(null)
   const [copied, setCopied] = useState<string | null>(null)
@@ -50,6 +54,12 @@ export default function DashboardPage() {
     setError('')
 
     try {
+      // Parse keywords from textarea
+      const keywordList = keywords
+        .split(/[,\n]/)
+        .map(k => k.trim())
+        .filter(k => k.length > 0)
+
       const response = await fetch('/api/generate-script', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -58,6 +68,8 @@ export default function DashboardPage() {
           duration,
           category,
           tone,
+          context,
+          keywords: keywordList,
         }),
       })
 
@@ -99,7 +111,7 @@ export default function DashboardPage() {
           <form onSubmit={handleGenerate} className="space-y-4">
             {/* Topic */}
             <div>
-              <label className="block text-sm font-medium mb-2">Topic</label>
+              <label className="block text-sm font-medium mb-2">Topic *</label>
               <input
                 type="text"
                 value={topic}
@@ -110,6 +122,32 @@ export default function DashboardPage() {
                 required
               />
               <p className="text-xs text-white/40 mt-1">What's your video about?</p>
+            </div>
+
+            {/* Context */}
+            <div>
+              <label className="block text-sm font-medium mb-2">Extra Context (optional)</label>
+              <textarea
+                value={context}
+                onChange={(e) => setContext(e.target.value)}
+                placeholder="Describe what's happening in the footage, any specific details you want included..."
+                className="input h-24 resize-none"
+                disabled={loading}
+              />
+              <p className="text-xs text-white/40 mt-1">Make the script more personalized</p>
+            </div>
+
+            {/* Keywords */}
+            <div>
+              <label className="block text-sm font-medium mb-2">Keywords or Phrases (optional)</label>
+              <textarea
+                value={keywords}
+                onChange={(e) => setKeywords(e.target.value)}
+                placeholder="e.g. 'sustainable', 'handmade', 'ancient technique' — one per line or comma-separated"
+                className="input h-20 resize-none"
+                disabled={loading}
+              />
+              <p className="text-xs text-white/40 mt-1">Specific details to include</p>
             </div>
 
             {/* Duration */}
