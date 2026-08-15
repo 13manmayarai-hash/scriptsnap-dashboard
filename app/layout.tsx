@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import './styles/globals.css'
+import '../styles/globals.css'
 
 export const metadata: Metadata = {
   title: 'ScriptSnap - AI YouTube Shorts Script Generator',
@@ -13,7 +13,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="bg-brand-black text-brand-white font-sans">
+      <body className="bg-brand-black text-brand-white">
         {children}
       </body>
     </html>
