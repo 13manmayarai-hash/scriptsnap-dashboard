@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
     // payment_id, not tier, so a client-supplied tier could be swapped
     // (e.g. pay for Basic, claim Pro) without this.
     const razorpay = new Razorpay({
-      key_id: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+      key_id: process.env.RAZORPAY_KEY_ID,
       key_secret: process.env.RAZORPAY_KEY_SECRET,
     })
     const order = await razorpay.orders.fetch(razorpay_order_id)

@@ -6,9 +6,12 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 
 // Only allow same-app relative paths (must start with a single `/`) so this
-// can't be abused as an open redirect via a protocol-relative `//host` URL.
+// can't be abused as an open redirect. Blocks both `//host` (protocol-
+// relative) and a leading backslash (`/\host`) — browsers' URL parsers
+// treat a leading backslash as equivalent to `/`, so `/\evil.com` would
+// otherwise resolve to a cross-origin URL once passed through `new URL()`.
 function getSafeRedirect(target: string | null): string {
-  if (target && target.startsWith('/') && !target.startsWith('//')) {
+  if (target && target.startsWith('/') && !target.startsWith('//') && !target.startsWith('/\\')) {
     return target
   }
   return '/dashboard'

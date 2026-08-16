@@ -2,9 +2,12 @@ import { createServerClient } from '@supabase/ssr'
 import { NextRequest, NextResponse } from 'next/server'
 
 // Only allow same-app relative paths (must start with a single `/`) so this
-// can't be abused as an open redirect via a protocol-relative `//host` URL.
+// can't be abused as an open redirect. Blocks both `//host` (protocol-
+// relative) and a leading backslash (`/\host`) — browsers' URL parsers
+// treat a leading backslash as equivalent to `/`, so `/\evil.com` would
+// otherwise resolve to a cross-origin URL once passed through `new URL()`.
 function getSafeRedirect(target: string | null): string {
-  if (target && target.startsWith('/') && !target.startsWith('//')) {
+  if (target && target.startsWith('/') && !target.startsWith('//') && !target.startsWith('/\\')) {
     return target
   }
   return '/dashboard'
@@ -27,6 +30,15 @@ export async function GET(request: NextRequest) {
     )
   }
 
+  // Neither a code nor an error means something stripped the query string
+  // before it reached us (a proxy, a redirect-URI mismatch) — without this
+  // check we'd fall through to redirecting to `next` with no session ever
+  // set, which looks like a successful login until the next authenticated
+  // action 401s.
+  if (!code) {
+    return NextResponse.redirect(new URL('/auth/login?error=missing_code', requestUrl.origin))
+  }
+
   // Build the redirect response up front and write the session cookies
   // directly onto it, rather than mutating the ambient `cookies()` store
   // from `next/headers` and hoping it gets merged into a later-constructed
@@ -35,30 +47,28 @@ export async function GET(request: NextRequest) {
   // headers land on it.
   const response = NextResponse.redirect(new URL(next, requestUrl.origin))
 
-  if (code) {
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return request.cookies.getAll()
-          },
-          setAll(cookiesToSet: Array<{ name: string; value: string; options?: any }>) {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              response.cookies.set(name, value, options)
-            )
-          },
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll()
         },
-      }
-    )
-
-    try {
-      await supabase.auth.exchangeCodeForSession(code)
-    } catch (error) {
-      console.error('Error exchanging code for session:', error)
-      return NextResponse.redirect(new URL('/auth/login?error=invalid_code', requestUrl.origin))
+        setAll(cookiesToSet: Array<{ name: string; value: string; options?: any }>) {
+          cookiesToSet.forEach(({ name, value, options }) =>
+            response.cookies.set(name, value, options)
+          )
+        },
+      },
     }
+  )
+
+  try {
+    await supabase.auth.exchangeCodeForSession(code)
+  } catch (error) {
+    console.error('Error exchanging code for session:', error)
+    return NextResponse.redirect(new URL('/auth/login?error=invalid_code', requestUrl.origin))
   }
 
   // Redirect to the originally-intended destination after successful auth,
