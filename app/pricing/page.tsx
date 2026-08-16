@@ -132,7 +132,6 @@ export default function PricingPage() {
                   <RazorpayButton
                     tier={tier.tier as 'basic' | 'pro'}
                     tierName={tier.name}
-                    variant={tier.tier === 'basic' ? 'outline' : 'solid'}
                   />
                 )}
               </div>
