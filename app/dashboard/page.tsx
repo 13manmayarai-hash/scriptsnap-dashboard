@@ -128,7 +128,7 @@ function DashboardContent() {
           <div className="flex justify-between items-start gap-4">
             <div className="flex items-start gap-3">
               <div className="flex-shrink-0 mt-0.5 p-1.5 rounded-full bg-brand-yellow/20 text-brand-yellow">
-                <Check size={18} />
+                <Check size={18} aria-hidden="true" />
               </div>
               <div>
                 <h3 className="text-lg font-bold text-white mb-1">
@@ -140,7 +140,7 @@ function DashboardContent() {
                 <ul className="space-y-1.5">
                   {TIER_BENEFITS[tier].map((benefit, i) => (
                     <li key={i} className="flex gap-2 text-white text-sm">
-                      <Check size={16} className="text-brand-yellow flex-shrink-0 mt-0.5" />
+                      <Check size={16} aria-hidden="true" className="text-brand-yellow flex-shrink-0 mt-0.5" />
                       <span>{benefit}</span>
                     </li>
                   ))}
@@ -152,7 +152,7 @@ function DashboardContent() {
               className="flex-shrink-0 p-1.5 bg-white/10 hover:bg-white/20 rounded transition-colors"
               aria-label="Dismiss"
             >
-              <X size={16} />
+              <X size={16} aria-hidden="true" />
             </button>
           </div>
         </div>
@@ -168,12 +168,15 @@ function DashboardContent() {
           <form onSubmit={handleGenerate} className="space-y-4">
             {/* Topic */}
             <div>
-              <label className="block text-sm font-medium mb-2">Topic *</label>
+              <label htmlFor="script-topic" className="block text-sm font-medium mb-2">Topic *</label>
               <input
+                id="script-topic"
+                name="topic"
                 type="text"
+                autoComplete="off"
                 value={topic}
                 onChange={(e) => setTopic(e.target.value)}
-                placeholder="e.g., Japanese pottery, Coffee roasting..."
+                placeholder="e.g., Japanese pottery, Coffee roasting…"
                 className="input"
                 disabled={loading}
                 required
@@ -183,11 +186,13 @@ function DashboardContent() {
 
             {/* Context */}
             <div>
-              <label className="block text-sm font-medium mb-2">Extra Context (optional)</label>
+              <label htmlFor="script-context" className="block text-sm font-medium mb-2">Extra Context (optional)</label>
               <textarea
+                id="script-context"
+                name="context"
                 value={context}
                 onChange={(e) => setContext(e.target.value)}
-                placeholder="Describe what's happening in the footage, any specific details you want included..."
+                placeholder="Describe what's happening in the footage, any specific details you want included…"
                 className="input h-24 resize-none"
                 disabled={loading}
               />
@@ -196,8 +201,10 @@ function DashboardContent() {
 
             {/* Keywords */}
             <div>
-              <label className="block text-sm font-medium mb-2">Keywords or Phrases (optional)</label>
+              <label htmlFor="script-keywords" className="block text-sm font-medium mb-2">Keywords or Phrases (optional)</label>
               <textarea
+                id="script-keywords"
+                name="keywords"
                 value={keywords}
                 onChange={(e) => setKeywords(e.target.value)}
                 placeholder="e.g. 'sustainable', 'handmade', 'ancient technique' — one per line or comma-separated"
@@ -209,10 +216,12 @@ function DashboardContent() {
 
             {/* Duration */}
             <div>
-              <label className="block text-sm font-medium mb-2">
+              <label htmlFor="script-duration" className="block text-sm font-medium mb-2">
                 Duration: {duration}s
               </label>
               <input
+                id="script-duration"
+                name="duration"
                 type="range"
                 min="15"
                 max="90"
@@ -226,8 +235,10 @@ function DashboardContent() {
 
             {/* Category */}
             <div>
-              <label className="block text-sm font-medium mb-2">Category</label>
+              <label htmlFor="script-category" className="block text-sm font-medium mb-2">Category</label>
               <select
+                id="script-category"
+                name="category"
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
                 className="input"
@@ -243,12 +254,14 @@ function DashboardContent() {
 
             {/* Tone */}
             <div>
-              <label className="block text-sm font-medium mb-2">Tone</label>
-              <div className="grid grid-cols-3 gap-2">
+              <span className="block text-sm font-medium mb-2" id="tone-label">Tone</span>
+              <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-labelledby="tone-label">
                 {tones.map((t) => (
                   <button
                     key={t}
                     type="button"
+                    role="radio"
+                    aria-checked={tone === t}
                     onClick={() => setTone(t)}
                     disabled={loading}
                     className={`py-2 px-3 rounded-lg font-medium text-sm transition-colors ${
@@ -269,12 +282,12 @@ function DashboardContent() {
               disabled={loading || !topic}
               className="w-full btn-primary py-3 flex items-center justify-center gap-2"
             >
-              <Sparkles size={20} />
-              {loading ? 'Generating...' : 'Generate Script'}
+              <Sparkles size={20} aria-hidden="true" />
+              {loading ? 'Generating…' : 'Generate Script'}
             </button>
 
             {error && (
-              <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-3">
+              <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-3" aria-live="polite">
                 <p className="text-sm text-red-500">{error}</p>
               </div>
             )}
@@ -307,8 +320,9 @@ function DashboardContent() {
                 <button
                   onClick={() => handleCopy(script.title, 'main-title')}
                   className="flex-shrink-0 p-2 bg-white/10 hover:bg-white/20 rounded transition-colors"
+                  aria-label="Copy title"
                 >
-                  <Copy size={18} />
+                  <Copy size={18} aria-hidden="true" />
                 </button>
               </div>
             </div>
@@ -425,8 +439,9 @@ function DashboardContent() {
                     <button
                       onClick={() => handleCopy(alt.title, `alt-${i}`)}
                       className="flex-shrink-0 p-2 bg-white/10 hover:bg-white/20 rounded transition-colors"
+                      aria-label={`Copy title: ${alt.title}`}
                     >
-                      <Copy size={16} />
+                      <Copy size={16} aria-hidden="true" />
                     </button>
                   </div>
                 ))}

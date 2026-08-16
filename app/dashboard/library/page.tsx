@@ -41,6 +41,7 @@ export default function LibraryPage() {
   }
 
   const handleDelete = (id: string) => {
+    if (!window.confirm('Delete this script? This can\'t be undone.')) return
     const updated = scripts.filter(s => s.id !== id)
     setScripts(updated)
     localStorage.setItem('scriptsnap_scripts', JSON.stringify(updated))
@@ -76,7 +77,7 @@ ${script.description}
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <p className="text-white/60">Loading library...</p>
+        <p className="text-white/60">Loading library…</p>
       </div>
     )
   }
@@ -179,14 +180,14 @@ ${script.description}
                     onClick={() => handleCopy(selectedScript.script)}
                     className="flex items-center gap-2 px-3 py-2 bg-white/10 hover:bg-white/20 rounded text-white text-sm transition-colors"
                   >
-                    <Copy size={16} />
-                    {copied ? 'Copied!' : 'Copy'}
+                    <Copy size={16} aria-hidden="true" />
+                    <span aria-live="polite">{copied ? 'Copied!' : 'Copy'}</span>
                   </button>
                   <button
                     onClick={() => handleDownload(selectedScript)}
                     className="flex items-center gap-2 px-3 py-2 bg-white/10 hover:bg-white/20 rounded text-white text-sm transition-colors"
                   >
-                    <Download size={16} />
+                    <Download size={16} aria-hidden="true" />
                     Download
                   </button>
                 </div>
@@ -219,7 +220,7 @@ ${script.description}
               onClick={() => handleDelete(selectedScript.id)}
               className="w-full flex items-center justify-center gap-2 btn-secondary py-3 text-red-400 hover:text-red-300"
             >
-              <Trash2 size={18} />
+              <Trash2 size={18} aria-hidden="true" />
               Delete Script
             </button>
           </div>

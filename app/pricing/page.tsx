@@ -4,6 +4,12 @@ import Link from 'next/link'
 import { Check } from 'lucide-react'
 import RazorpayButton from '@/lib/components/RazorpayButton'
 
+const priceFormatter = new Intl.NumberFormat('en-IN', {
+  style: 'currency',
+  currency: 'INR',
+  maximumFractionDigits: 0,
+})
+
 export default function PricingPage() {
   const tiers = [
     {
@@ -100,7 +106,7 @@ export default function PricingPage() {
               <div className="mb-2 sm:mb-4 md:mb-8">
                 <div className="flex items-baseline gap-0.5 md:gap-2">
                   <span className="text-sm sm:text-xl md:text-5xl font-bold text-white">
-                    ₹{tier.price}
+                    {priceFormatter.format(tier.price)}
                   </span>
                   <span className="text-xs md:text-base text-white/60">/mo</span>
                 </div>
@@ -133,8 +139,8 @@ export default function PricingPage() {
               <div className="hidden sm:block space-y-1 md:space-y-4">
                 {tier.features.map((feature, j) => (
                   <div key={j} className="flex gap-1 md:gap-3">
-                    <Check size={12} className="md:hidden text-brand-yellow flex-shrink-0 mt-0.5" />
-                    <Check size={20} className="hidden md:block text-brand-yellow flex-shrink-0" />
+                    <Check size={12} aria-hidden="true" className="md:hidden text-brand-yellow flex-shrink-0 mt-0.5" />
+                    <Check size={20} aria-hidden="true" className="hidden md:block text-brand-yellow flex-shrink-0" />
                     <span className="text-white/80 text-[10px] md:text-sm leading-snug">{feature}</span>
                   </div>
                 ))}

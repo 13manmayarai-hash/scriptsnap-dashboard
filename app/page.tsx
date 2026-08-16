@@ -24,7 +24,7 @@ export default function Home() {
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-brand-black">
-      <p className="text-brand-white">Loading...</p>
+      <p className="text-brand-white">Loading…</p>
     </div>
   )
 }

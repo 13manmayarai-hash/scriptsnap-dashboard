@@ -61,12 +61,21 @@ export default function DashboardLayout({
 
   return (
     <div className="flex h-screen bg-brand-black text-brand-white">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[60] focus:bg-brand-yellow focus:text-brand-black focus:px-4 focus:py-2 focus:rounded-lg"
+      >
+        Skip to main content
+      </a>
+
       {/* Mobile menu button */}
       <button
         className="fixed top-4 left-4 z-50 md:hidden"
         onClick={() => setSidebarOpen(!sidebarOpen)}
+        aria-label={sidebarOpen ? 'Close menu' : 'Open menu'}
+        aria-expanded={sidebarOpen}
       >
-        {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
+        {sidebarOpen ? <X size={24} aria-hidden="true" /> : <Menu size={24} aria-hidden="true" />}
       </button>
 
       {/* Backdrop — dismisses the mobile sidebar on tap-outside */}
@@ -81,7 +90,7 @@ export default function DashboardLayout({
       <aside
         className={`${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        } md:translate-x-0 fixed md:static w-64 h-screen bg-brand-black border-r border-brand-gold/20 p-6 transition-transform z-40`}
+        } md:translate-x-0 fixed md:static w-64 h-screen bg-brand-black border-r border-brand-gold/20 p-6 transition-transform z-40 overflow-y-auto overscroll-contain`}
       >
         <div className="space-y-8">
           <div>
@@ -95,7 +104,7 @@ export default function DashboardLayout({
               onClick={() => setSidebarOpen(false)}
               className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-brand-gold/10 transition"
             >
-              <Sparkles size={20} />
+              <Sparkles size={20} aria-hidden="true" />
               <span>Generate Script</span>
             </Link>
             <Link
@@ -103,7 +112,7 @@ export default function DashboardLayout({
               onClick={() => setSidebarOpen(false)}
               className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-brand-gold/10 transition"
             >
-              <BarChart3 size={20} />
+              <BarChart3 size={20} aria-hidden="true" />
               <span>Library</span>
             </Link>
           </nav>
@@ -120,7 +129,7 @@ export default function DashboardLayout({
               onClick={handleLogout}
               className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-red-600 hover:bg-red-700 transition"
             >
-              <LogOut size={20} />
+              <LogOut size={20} aria-hidden="true" />
               <span>Logout</span>
             </button>
           </div>
@@ -128,7 +137,7 @@ export default function DashboardLayout({
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 overflow-auto pt-16 md:pt-0">
+      <main id="main-content" className="flex-1 overflow-auto pt-16 md:pt-0">
         <div className="p-6 md:p-8">
           {children}
         </div>

@@ -43,15 +43,15 @@ body {
 
 /* Button styles */
 .btn-primary {
-  @apply bg-brand-yellow text-brand-black font-semibold py-2 px-6 rounded-lg hover:bg-yellow-600 transition-colors;
+  @apply bg-brand-yellow text-brand-black font-semibold py-2 px-6 rounded-lg hover:bg-yellow-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-yellow focus-visible:ring-offset-2 focus-visible:ring-offset-brand-black;
 }
 
 .btn-secondary {
-  @apply bg-transparent border border-brand-yellow text-brand-yellow py-2 px-6 rounded-lg hover:bg-brand-yellow hover:text-brand-black transition-colors;
+  @apply bg-transparent border border-brand-yellow text-brand-yellow py-2 px-6 rounded-lg hover:bg-brand-yellow hover:text-brand-black transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-yellow focus-visible:ring-offset-2 focus-visible:ring-offset-brand-black;
 }
 
 .btn-ghost {
-  @apply text-brand-white hover:bg-white/10 py-2 px-4 rounded transition-colors;
+  @apply text-brand-white hover:bg-white/10 py-2 px-4 rounded transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-yellow;
 }
 
 /* Card styles */
@@ -65,7 +65,7 @@ body {
 
 /* Input styles */
 .input {
-  @apply w-full bg-white/5 border border-white/20 rounded-lg px-4 py-2 text-brand-white placeholder-white/40 focus:outline-none focus:border-brand-yellow focus:ring-1 focus:ring-brand-yellow;
+  @apply w-full bg-white/5 border border-white/20 rounded-lg px-4 py-2 text-brand-white placeholder-white/40 focus-visible:outline-none focus-visible:border-brand-yellow focus-visible:ring-1 focus-visible:ring-brand-yellow;
 }
 
 /* Text utilities */
