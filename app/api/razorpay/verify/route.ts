@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import crypto from 'crypto'
+import { getRazorpayErrorMessage } from '@/lib/razorpay'
 
 const Razorpay = require('razorpay')
 
@@ -96,6 +97,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Verify error:', error)
-    return NextResponse.json({ error: 'Verification failed' }, { status: 500 })
+    return NextResponse.json(
+      { error: getRazorpayErrorMessage(error, 'Verification failed') },
+      { status: 500 }
+    )
   }
 }

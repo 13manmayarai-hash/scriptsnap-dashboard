@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import { getRazorpayErrorMessage } from '@/lib/razorpay'
 
 const Razorpay = require('razorpay')
 
@@ -79,7 +80,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Checkout error:', error)
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Failed to create order' },
+      { error: getRazorpayErrorMessage(error, 'Failed to create order') },
       { status: 500 }
     )
   }
