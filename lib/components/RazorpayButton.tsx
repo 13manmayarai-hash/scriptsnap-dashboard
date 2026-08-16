@@ -6,11 +6,13 @@ import { useRouter } from 'next/navigation'
 interface RazorpayButtonProps {
   tier: 'basic' | 'pro'
   tierName: string
+  variant?: 'solid' | 'outline'
 }
 
 export default function RazorpayButton({
   tier,
   tierName,
+  variant = 'solid',
 }: RazorpayButtonProps) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
@@ -133,7 +135,11 @@ export default function RazorpayButton({
       <button
         onClick={handlePayment}
         disabled={loading}
-        className="flex items-center justify-center min-h-[44px] w-full bg-brand-yellow text-brand-black font-semibold rounded md:rounded-lg hover:bg-yellow-400 transition-colors disabled:opacity-50 px-0.5 sm:px-2 md:px-6 text-xs md:text-base leading-tight focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-yellow focus-visible:ring-offset-2 focus-visible:ring-offset-brand-black"
+        className={`flex items-center justify-center min-h-[44px] w-full font-semibold rounded md:rounded-lg transition-colors disabled:opacity-50 px-0.5 sm:px-2 md:px-6 text-xs md:text-base leading-tight focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-yellow focus-visible:ring-offset-2 focus-visible:ring-offset-brand-black ${
+          variant === 'outline'
+            ? 'bg-brand-yellow/10 border border-brand-yellow text-brand-yellow hover:bg-brand-yellow/20'
+            : 'bg-brand-yellow text-brand-black hover:bg-yellow-400'
+        }`}
       >
         {loading ? '…' : 'Upgrade'}
       </button>
