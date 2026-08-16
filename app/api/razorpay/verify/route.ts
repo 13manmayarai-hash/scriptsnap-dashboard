@@ -3,13 +3,14 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import crypto from 'crypto'
 
+const Razorpay = require('razorpay')
+
 export async function POST(request: NextRequest) {
   try {
     const {
       razorpay_payment_id,
       razorpay_order_id,
       razorpay_signature,
-      tier,
     } = await request.json()
 
     // Verify Razorpay signature
@@ -19,6 +20,21 @@ export async function POST(request: NextRequest) {
 
     if (digest !== razorpay_signature) {
       return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
+    }
+
+    // Read the tier from the order Razorpay itself created, never from the
+    // client request body — the HMAC signature only covers order_id and
+    // payment_id, not tier, so a client-supplied tier could be swapped
+    // (e.g. pay for Basic, claim Pro) without this.
+    const razorpay = new Razorpay({
+      key_id: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+      key_secret: process.env.RAZORPAY_KEY_SECRET,
+    })
+    const order = await razorpay.orders.fetch(razorpay_order_id)
+    const tier = order.notes?.tier
+
+    if (tier !== 'basic' && tier !== 'pro') {
+      return NextResponse.json({ error: 'Invalid order' }, { status: 400 })
     }
 
     // Get user
@@ -44,6 +60,15 @@ export async function POST(request: NextRequest) {
 
     if (!user) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
+    }
+
+    // Order/payment IDs and their signature aren't secret to the paying
+    // browser once Razorpay's checkout handler returns them — without this
+    // check, replaying someone else's real (order_id, payment_id,
+    // signature) triple would upgrade the replaying user's own account
+    // using a payment they never made.
+    if (order.notes?.user_id !== user.id) {
+      return NextResponse.json({ error: 'Order does not belong to this user' }, { status: 403 })
     }
 
     // Update subscription
