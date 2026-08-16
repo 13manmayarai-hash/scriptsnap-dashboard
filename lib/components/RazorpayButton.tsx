@@ -102,9 +102,18 @@ export default function RazorpayButton({
           },
         }
 
-        // Step 5: Open Razorpay checkout
-        const razorpay = new (window as any).Razorpay(options)
-        razorpay.open()
+        // Step 5: Open Razorpay checkout.
+        // This callback runs after the outer try/catch's call stack has
+        // already finished, so exceptions here (e.g. window.Razorpay not
+        // actually available) would otherwise be uncatchable and leave the
+        // button stuck on "Processing..." with no visible error.
+        try {
+          const razorpay = new (window as any).Razorpay(options)
+          razorpay.open()
+        } catch (err) {
+          setError(err instanceof Error ? err.message : 'Failed to open payment gateway')
+          setLoading(false)
+        }
       }
 
       script.onerror = () => {
