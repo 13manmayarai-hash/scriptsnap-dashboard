@@ -28,7 +28,11 @@ function LoginForm() {
   const redirectTo = getSafeRedirect(searchParams.get('redirectTo'))
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
+  // Surfaces failures from the OAuth round trip (e.g. a provider error or a
+  // failed code exchange redirected back here via ?error=...) that would
+  // otherwise be invisible — the server-side code that detects them has no
+  // other way to reach the user.
+  const [error, setError] = useState(() => searchParams.get('error') || '')
   const [loading, setLoading] = useState(false)
 
   const handleLogin = async (e: React.FormEvent) => {
