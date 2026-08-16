@@ -80,9 +80,10 @@ export default function PricingPage() {
               }`}
             >
               {tier.highlighted && (
-                <div className="absolute -top-2 sm:-top-3 md:-top-4 left-1/2 -translate-x-1/2 whitespace-nowrap">
-                  <span className="bg-brand-yellow text-brand-black px-1 py-0.5 sm:px-3 sm:py-1 md:px-4 md:py-1 rounded-full text-[10px] sm:text-xs md:text-sm font-bold">
-                    Most Popular
+                <div className="absolute -top-2 sm:-top-3 md:-top-4 left-1/2 -translate-x-1/2 w-[90%] sm:w-auto flex justify-center">
+                  <span className="bg-brand-yellow text-brand-black px-1 py-0.5 sm:px-3 sm:py-1 md:px-4 md:py-1 rounded-full text-[9px] sm:text-xs md:text-sm font-bold text-center sm:whitespace-nowrap">
+                    <span className="sm:hidden">Popular</span>
+                    <span className="hidden sm:inline">Most Popular</span>
                   </span>
                 </div>
               )}

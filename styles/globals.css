@@ -16,6 +16,10 @@ body {
   background-color: #000000;
   color: #ffffff;
   font-family: system-ui, -apple-system, sans-serif;
+  /* Safety net: a single element overflowing its container (e.g. an
+     absolutely-positioned badge wider than its card on a narrow screen)
+     shouldn't be able to drag the whole page into horizontal scroll. */
+  overflow-x: hidden;
 }
 
 /* Custom scrollbar */
