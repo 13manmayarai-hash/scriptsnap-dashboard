@@ -59,59 +59,61 @@ export default function PricingPage() {
 
   return (
     <div className="min-h-screen bg-brand-black py-20">
-      <div className="max-w-7xl mx-auto px-6">
+      <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-6">
         {/* Header */}
-        <div className="text-center mb-20">
-          <h1 className="text-5xl font-bold text-white mb-4">
+        <div className="text-center mb-8 sm:mb-12 md:mb-20">
+          <h1 className="text-2xl sm:text-3xl md:text-5xl font-bold text-white mb-2 md:mb-4">
             Simple, Transparent Pricing
           </h1>
-          <p className="text-xl text-white/60">
+          <p className="text-sm sm:text-base md:text-xl text-white/60">
             Choose the perfect plan for your YouTube Shorts journey
           </p>
         </div>
 
-        {/* Pricing Cards */}
-        <div className="grid md:grid-cols-3 gap-8 mb-20">
+        {/* Pricing Cards — always 3 columns, even on phone screens, per request */}
+        <div className="grid grid-cols-3 gap-1.5 sm:gap-4 md:gap-8 mb-10 sm:mb-14 md:mb-20">
           {tiers.map((tier, i) => (
             <div
               key={i}
-              className={`card relative ${
+              className={`relative bg-white/5 border border-white/10 rounded-lg hover:border-white/20 transition-colors p-1.5 sm:p-4 md:p-6 ${
                 tier.highlighted ? 'ring-2 ring-brand-yellow md:scale-105' : ''
               }`}
             >
               {tier.highlighted && (
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                  <span className="bg-brand-yellow text-brand-black px-4 py-1 rounded-full text-sm font-bold">
+                <div className="absolute -top-2 sm:-top-3 md:-top-4 left-1/2 -translate-x-1/2 whitespace-nowrap">
+                  <span className="bg-brand-yellow text-brand-black px-1 py-0.5 sm:px-3 sm:py-1 md:px-4 md:py-1 rounded-full text-[8px] sm:text-xs md:text-sm font-bold">
                     Most Popular
                   </span>
                 </div>
               )}
 
-              <div className="mb-8">
-                <h2 className="text-3xl font-bold text-white mb-2">
+              <div className="mb-2 sm:mb-4 md:mb-8">
+                <h2 className="text-xs sm:text-lg md:text-3xl font-bold text-white mb-0.5 md:mb-2">
                   {tier.name}
                 </h2>
-                <p className="text-white/60 text-sm">{tier.description}</p>
+                <p className="hidden sm:block text-white/60 text-[10px] md:text-sm leading-snug">
+                  {tier.description}
+                </p>
               </div>
 
-              <div className="mb-8">
-                <div className="flex items-baseline gap-2">
-                  <span className="text-5xl font-bold text-white">
+              <div className="mb-2 sm:mb-4 md:mb-8">
+                <div className="flex items-baseline gap-0.5 md:gap-2">
+                  <span className="text-sm sm:text-xl md:text-5xl font-bold text-white">
                     ₹{tier.price}
                   </span>
-                  <span className="text-white/60">/month</span>
+                  <span className="text-[8px] sm:text-xs md:text-base text-white/60">/mo</span>
                 </div>
-                <p className="text-brand-yellow font-semibold mt-2">
-                  {tier.scripts} scripts/month
+                <p className="text-brand-yellow font-semibold text-[8px] sm:text-xs md:text-base mt-0.5 md:mt-2">
+                  {tier.scripts} scripts/mo
                 </p>
               </div>
 
               {/* CTA Button - Different for Free vs Paid */}
-              <div className="mb-8">
+              <div className="mb-2 sm:mb-4 md:mb-8">
                 {tier.price === 0 ? (
                   <Link
                     href="/auth/signup"
-                    className={`block w-full py-3 px-4 rounded-lg font-semibold text-center transition-colors ${
+                    className={`block w-full py-1 px-0.5 sm:py-2 sm:px-2 md:py-3 md:px-4 rounded md:rounded-lg font-semibold text-center leading-tight text-[8px] sm:text-xs md:text-base transition-colors ${
                       tier.highlighted
                         ? 'bg-brand-yellow text-brand-black hover:bg-yellow-400'
                         : 'bg-white/10 text-white hover:bg-white/20'
@@ -120,18 +122,19 @@ export default function PricingPage() {
                     {tier.cta}
                   </Link>
                 ) : (
-                  <RazorpayButton 
-                    tier={tier.tier as 'basic' | 'pro'} 
-                    tierName={tier.name} 
+                  <RazorpayButton
+                    tier={tier.tier as 'basic' | 'pro'}
+                    tierName={tier.name}
                   />
                 )}
               </div>
 
-              <div className="space-y-4">
+              <div className="hidden sm:block space-y-1 md:space-y-4">
                 {tier.features.map((feature, j) => (
-                  <div key={j} className="flex gap-3">
-                    <Check size={20} className="text-brand-yellow flex-shrink-0" />
-                    <span className="text-white/80 text-sm">{feature}</span>
+                  <div key={j} className="flex gap-1 md:gap-3">
+                    <Check size={12} className="md:hidden text-brand-yellow flex-shrink-0 mt-0.5" />
+                    <Check size={20} className="hidden md:block text-brand-yellow flex-shrink-0" />
+                    <span className="text-white/80 text-[10px] md:text-sm leading-snug">{feature}</span>
                   </div>
                 ))}
               </div>
