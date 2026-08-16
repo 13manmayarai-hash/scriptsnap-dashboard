@@ -81,7 +81,7 @@ export default function PricingPage() {
             >
               {tier.highlighted && (
                 <div className="absolute -top-2 sm:-top-3 md:-top-4 left-1/2 -translate-x-1/2 whitespace-nowrap">
-                  <span className="bg-brand-yellow text-brand-black px-1 py-0.5 sm:px-3 sm:py-1 md:px-4 md:py-1 rounded-full text-[8px] sm:text-xs md:text-sm font-bold">
+                  <span className="bg-brand-yellow text-brand-black px-1 py-0.5 sm:px-3 sm:py-1 md:px-4 md:py-1 rounded-full text-[10px] sm:text-xs md:text-sm font-bold">
                     Most Popular
                   </span>
                 </div>
@@ -101,9 +101,9 @@ export default function PricingPage() {
                   <span className="text-sm sm:text-xl md:text-5xl font-bold text-white">
                     ₹{tier.price}
                   </span>
-                  <span className="text-[8px] sm:text-xs md:text-base text-white/60">/mo</span>
+                  <span className="text-xs md:text-base text-white/60">/mo</span>
                 </div>
-                <p className="text-brand-yellow font-semibold text-[8px] sm:text-xs md:text-base mt-0.5 md:mt-2">
+                <p className="text-brand-yellow font-semibold text-xs md:text-base mt-0.5 md:mt-2">
                   {tier.scripts} scripts/mo
                 </p>
               </div>
@@ -113,7 +113,7 @@ export default function PricingPage() {
                 {tier.price === 0 ? (
                   <Link
                     href="/auth/signup"
-                    className={`block w-full py-1 px-0.5 sm:py-2 sm:px-2 md:py-3 md:px-4 rounded md:rounded-lg font-semibold text-center leading-tight text-[8px] sm:text-xs md:text-base transition-colors ${
+                    className={`flex items-center justify-center min-h-[44px] w-full px-0.5 sm:px-2 md:px-4 rounded md:rounded-lg font-semibold text-center leading-tight text-xs md:text-base transition-colors ${
                       tier.highlighted
                         ? 'bg-brand-yellow text-brand-black hover:bg-yellow-400'
                         : 'bg-white/10 text-white hover:bg-white/20'

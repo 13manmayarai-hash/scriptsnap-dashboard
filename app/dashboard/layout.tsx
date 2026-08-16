@@ -69,6 +69,14 @@ export default function DashboardLayout({
         {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
       </button>
 
+      {/* Backdrop — dismisses the mobile sidebar on tap-outside */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-30 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
       <aside
         className={`${
@@ -84,6 +92,7 @@ export default function DashboardLayout({
           <nav className="space-y-3">
             <Link
               href="/dashboard"
+              onClick={() => setSidebarOpen(false)}
               className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-brand-gold/10 transition"
             >
               <Sparkles size={20} />
@@ -91,6 +100,7 @@ export default function DashboardLayout({
             </Link>
             <Link
               href="/dashboard/library"
+              onClick={() => setSidebarOpen(false)}
               className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-brand-gold/10 transition"
             >
               <BarChart3 size={20} />

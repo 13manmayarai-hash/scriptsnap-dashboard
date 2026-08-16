@@ -133,11 +133,11 @@ export default function RazorpayButton({
       <button
         onClick={handlePayment}
         disabled={loading}
-        className="w-full bg-brand-yellow text-brand-black font-semibold rounded md:rounded-lg hover:bg-yellow-400 transition-colors disabled:opacity-50 py-1 px-0.5 sm:py-2 sm:px-2 md:py-3 md:px-6 text-[8px] sm:text-xs md:text-base leading-tight"
+        className="flex items-center justify-center min-h-[44px] w-full bg-brand-yellow text-brand-black font-semibold rounded md:rounded-lg hover:bg-yellow-400 transition-colors disabled:opacity-50 px-0.5 sm:px-2 md:px-6 text-xs md:text-base leading-tight"
       >
         {loading ? '...' : 'Upgrade'}
       </button>
-      {error && <p className="text-red-500 text-[8px] sm:text-xs md:text-sm mt-1 md:mt-2 break-words">{error}</p>}
+      {error && <p className="text-red-500 text-xs md:text-sm mt-1 md:mt-2 break-words">{error}</p>}
     </>
   )
 }
