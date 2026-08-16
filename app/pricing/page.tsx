@@ -81,8 +81,10 @@ export default function PricingPage() {
           {tiers.map((tier, i) => (
             <div
               key={i}
-              className={`relative bg-white/5 border border-white/10 rounded-lg hover:border-white/20 transition-colors p-1.5 sm:p-4 md:p-6 ${
-                tier.highlighted ? 'ring-2 ring-brand-yellow md:scale-105' : ''
+              className={`relative border rounded-lg transition-colors p-1.5 sm:p-4 md:p-6 ${
+                tier.highlighted
+                  ? 'bg-brand-yellow/10 border-brand-yellow ring-2 ring-brand-yellow md:scale-105'
+                  : 'bg-white/5 border-white/10 hover:border-white/20'
               }`}
             >
               {tier.highlighted && (
