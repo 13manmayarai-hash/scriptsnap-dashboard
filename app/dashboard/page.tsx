@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { Suspense, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { useAppStore } from '@/lib/store/app'
-import { TIER_SCRIPT_LIMITS } from '@/lib/tiers'
-import { Sparkles, Copy } from 'lucide-react'
+import { TIER_SCRIPT_LIMITS, TIER_NAMES, TIER_BENEFITS } from '@/lib/tiers'
+import { Sparkles, Copy, Check, X } from 'lucide-react'
 
 interface GeneratedScript {
   id: string
@@ -26,7 +27,19 @@ interface GeneratedScript {
 }
 
 export default function DashboardPage() {
+  return (
+    <Suspense fallback={null}>
+      <DashboardContent />
+    </Suspense>
+  )
+}
+
+function DashboardContent() {
   const { user, setUser } = useAppStore()
+  const searchParams = useSearchParams()
+  const [showPaymentSuccess, setShowPaymentSuccess] = useState(
+    searchParams.get('payment') === 'success'
+  )
   const [topic, setTopic] = useState('')
   const [duration, setDuration] = useState(30)
   const [category, setCategory] = useState('Cultural & Historical')
@@ -106,8 +119,45 @@ export default function DashboardPage() {
     setTimeout(() => setCopied(null), 2000)
   }
 
+  const tier = user?.subscription_tier || 'free'
+
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div>
+      {showPaymentSuccess && (
+        <div className="card mb-6 border border-brand-yellow/40 bg-brand-yellow/5">
+          <div className="flex justify-between items-start gap-4">
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0 mt-0.5 p-1.5 rounded-full bg-brand-yellow/20 text-brand-yellow">
+                <Check size={18} />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-white mb-1">
+                  Thank you! You're now on the {TIER_NAMES[tier]} plan
+                </h3>
+                <p className="text-white/60 text-sm mb-3">
+                  Here's what you get with {TIER_NAMES[tier]}:
+                </p>
+                <ul className="space-y-1.5">
+                  {TIER_BENEFITS[tier].map((benefit, i) => (
+                    <li key={i} className="flex gap-2 text-white text-sm">
+                      <Check size={16} className="text-brand-yellow flex-shrink-0 mt-0.5" />
+                      <span>{benefit}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowPaymentSuccess(false)}
+              className="flex-shrink-0 p-1.5 bg-white/10 hover:bg-white/20 rounded transition-colors"
+              aria-label="Dismiss"
+            >
+              <X size={16} />
+            </button>
+          </div>
+        </div>
+      )}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       {/* Form */}
       <div className="lg:col-span-1">
         <div className="card sticky top-6">
@@ -416,6 +466,7 @@ export default function DashboardPage() {
             </p>
           </div>
         )}
+      </div>
       </div>
     </div>
   )

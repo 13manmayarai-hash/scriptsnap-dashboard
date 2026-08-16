@@ -76,7 +76,12 @@ export async function POST(request: NextRequest) {
     const nextBillingDate = new Date()
     nextBillingDate.setDate(nextBillingDate.getDate() + 30)
 
-    const { error: updateError } = await supabase
+    // Supabase's update() does not error when the WHERE clause matches zero
+    // rows — it silently "succeeds" with nothing written. Select the
+    // updated row back so a zero-row match (RLS denying the write, a
+    // missing user row, etc.) is treated as the real failure it is,
+    // instead of reporting success to a payment that was never recorded.
+    const { data: updatedRows, error: updateError } = await supabase
       .from('users')
       .update({
         subscription_tier: tier,
@@ -85,9 +90,10 @@ export async function POST(request: NextRequest) {
         next_billing_date: nextBillingDate.toISOString(),
       })
       .eq('id', user.id)
+      .select('id')
 
-    if (updateError) {
-      console.error('Database error:', updateError)
+    if (updateError || !updatedRows || updatedRows.length === 0) {
+      console.error('Database error:', updateError ?? 'No matching user row was updated')
       return NextResponse.json(
         { error: 'Failed to update subscription' },
         { status: 500 }
