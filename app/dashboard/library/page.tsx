@@ -77,7 +77,7 @@ ${script.description}
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <p className="text-white/60">Loading library…</p>
+        <p className="text-ink-muted">Loading library…</p>
       </div>
     )
   }
@@ -85,9 +85,9 @@ ${script.description}
   if (scripts.length === 0) {
     return (
       <div className="card text-center py-16">
-        <div className="text-white/40 mb-4 text-5xl">📭</div>
-        <h2 className="text-2xl font-bold text-white mb-2">No Scripts Yet</h2>
-        <p className="text-white/60 mb-6">
+        <div className="text-ink-muted/70 mb-4 text-5xl">📭</div>
+        <h2 className="text-2xl font-bold text-ink mb-2">No Scripts Yet</h2>
+        <p className="text-ink-muted mb-6">
           Generate your first script to see it appear here.
         </p>
         <a
@@ -105,7 +105,7 @@ ${script.description}
       {/* Scripts List */}
       <div className="lg:col-span-1">
         <div className="card">
-          <h2 className="text-xl font-bold mb-4 text-gradient">
+          <h2 className="text-xl font-bold mb-4 heading-serif">
             📚 Library ({scripts.length})
           </h2>
           <div className="space-y-2 max-h-[600px] overflow-y-auto">
@@ -115,17 +115,17 @@ ${script.description}
                 onClick={() => setSelectedScript(script)}
                 className={`w-full text-left p-3 rounded-lg transition-colors ${
                   selectedScript?.id === script.id
-                    ? 'bg-brand-yellow/20 border border-brand-yellow'
-                    : 'bg-white/5 hover:bg-white/10 border border-white/10'
+                    ? 'bg-sage/20 border border-sage'
+                    : 'bg-warm-surface-alt hover:bg-ink/5 border border-warm-border'
                 }`}
               >
-                <p className="font-semibold text-white truncate text-sm">
+                <p className="font-semibold text-ink truncate text-sm">
                   {script.title}
                 </p>
-                <p className="text-xs text-white/50 truncate">
+                <p className="text-xs text-ink-muted truncate">
                   {script.topic} • {script.tone}
                 </p>
-                <p className="text-xs text-white/40 mt-1">
+                <p className="text-xs text-ink-muted/70 mt-1">
                   {new Date(script.created_at).toLocaleDateString()}
                 </p>
               </button>
@@ -142,20 +142,20 @@ ${script.description}
             <div className="card">
               <div className="flex justify-between items-start mb-4">
                 <div>
-                  <h1 className="text-3xl font-bold text-white mb-2">
+                  <h1 className="text-3xl font-bold text-ink mb-2">
                     {selectedScript.title}
                   </h1>
                   <div className="flex gap-2 flex-wrap">
-                    <span className="inline-block bg-brand-yellow/20 text-brand-yellow px-3 py-1 rounded text-xs font-medium">
+                    <span className="inline-block bg-sage/20 text-sage px-3 py-1 rounded text-xs font-medium">
                       {selectedScript.category}
                     </span>
-                    <span className="inline-block bg-white/10 text-white/70 px-3 py-1 rounded text-xs font-medium">
+                    <span className="inline-block bg-ink/5 text-ink-muted px-3 py-1 rounded text-xs font-medium">
                       {selectedScript.tone}
                     </span>
-                    <span className="inline-block bg-white/10 text-white/70 px-3 py-1 rounded text-xs font-medium">
+                    <span className="inline-block bg-ink/5 text-ink-muted px-3 py-1 rounded text-xs font-medium">
                       {selectedScript.duration}s
                     </span>
-                    <span className="inline-block bg-white/10 text-white/70 px-3 py-1 rounded text-xs font-medium">
+                    <span className="inline-block bg-ink/5 text-ink-muted px-3 py-1 rounded text-xs font-medium">
                       {selectedScript.word_count} words
                     </span>
                   </div>
@@ -165,8 +165,8 @@ ${script.description}
 
             {/* Description */}
             <div className="card">
-              <h3 className="text-sm font-semibold text-white/60 mb-2">DESCRIPTION</h3>
-              <p className="text-white text-sm leading-relaxed">
+              <h3 className="text-sm font-semibold text-ink-muted mb-2">DESCRIPTION</h3>
+              <p className="text-ink text-sm leading-relaxed">
                 {selectedScript.description}
               </p>
             </div>
@@ -174,26 +174,26 @@ ${script.description}
             {/* Script Content */}
             <div className="card">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-sm font-semibold text-white/60">SCRIPT</h3>
+                <h3 className="text-sm font-semibold text-ink-muted">SCRIPT</h3>
                 <div className="flex gap-2">
                   <button
                     onClick={() => handleCopy(selectedScript.script)}
-                    className="flex items-center gap-2 px-3 py-2 bg-white/10 hover:bg-white/20 rounded text-white text-sm transition-colors"
+                    className="flex items-center gap-2 px-3 py-2 bg-ink/5 hover:bg-ink/10 rounded text-ink text-sm transition-colors"
                   >
                     <Copy size={16} aria-hidden="true" />
                     <span aria-live="polite">{copied ? 'Copied!' : 'Copy'}</span>
                   </button>
                   <button
                     onClick={() => handleDownload(selectedScript)}
-                    className="flex items-center gap-2 px-3 py-2 bg-white/10 hover:bg-white/20 rounded text-white text-sm transition-colors"
+                    className="flex items-center gap-2 px-3 py-2 bg-ink/5 hover:bg-ink/10 rounded text-ink text-sm transition-colors"
                   >
                     <Download size={16} aria-hidden="true" />
                     Download
                   </button>
                 </div>
               </div>
-              <div className="bg-black/50 border border-white/10 rounded-lg p-4">
-                <p className="text-white whitespace-pre-wrap text-sm leading-relaxed font-mono">
+              <div className="bg-warm-surface-alt border border-warm-border rounded-lg p-4">
+                <p className="text-ink whitespace-pre-wrap text-sm leading-relaxed font-mono">
                   {selectedScript.script}
                 </p>
               </div>
@@ -203,12 +203,12 @@ ${script.description}
             <div className="card">
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <p className="text-white/60 text-xs">TOPIC</p>
-                  <p className="text-white font-semibold">{selectedScript.topic}</p>
+                  <p className="text-ink-muted text-xs">TOPIC</p>
+                  <p className="text-ink font-semibold">{selectedScript.topic}</p>
                 </div>
                 <div>
-                  <p className="text-white/60 text-xs">CREATED</p>
-                  <p className="text-white font-semibold">
+                  <p className="text-ink-muted text-xs">CREATED</p>
+                  <p className="text-ink font-semibold">
                     {new Date(selectedScript.created_at).toLocaleDateString()}
                   </p>
                 </div>
@@ -218,7 +218,7 @@ ${script.description}
             {/* Delete Button */}
             <button
               onClick={() => handleDelete(selectedScript.id)}
-              className="w-full flex items-center justify-center gap-2 btn-secondary py-3 text-red-400 hover:text-red-300"
+              className="w-full flex items-center justify-center gap-2 btn-secondary py-3 text-red-600 hover:text-red-700"
             >
               <Trash2 size={18} aria-hidden="true" />
               Delete Script
@@ -226,7 +226,7 @@ ${script.description}
           </div>
         ) : (
           <div className="card text-center py-20">
-            <p className="text-white/40">← Select a script to view details</p>
+            <p className="text-ink-muted/70">← Select a script to view details</p>
           </div>
         )}
       </div>

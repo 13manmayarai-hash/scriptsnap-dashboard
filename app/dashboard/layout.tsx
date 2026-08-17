@@ -60,17 +60,17 @@ export default function DashboardLayout({
   if (!isMounted) return null
 
   return (
-    <div className="flex h-screen bg-brand-black text-brand-white">
+    <div className="flex h-screen bg-warm-bg text-ink">
       <a
         href="#main-content"
-        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[60] focus:bg-brand-yellow focus:text-brand-black focus:px-4 focus:py-2 focus:rounded-lg"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[60] focus:bg-sage focus:text-white focus:px-4 focus:py-2 focus:rounded-lg"
       >
         Skip to main content
       </a>
 
       {/* Mobile menu button */}
       <button
-        className="fixed top-4 left-4 z-50 md:hidden"
+        className="fixed top-4 left-4 z-50 md:hidden text-ink"
         onClick={() => setSidebarOpen(!sidebarOpen)}
         aria-label={sidebarOpen ? 'Close menu' : 'Open menu'}
         aria-expanded={sidebarOpen}
@@ -90,19 +90,19 @@ export default function DashboardLayout({
       <aside
         className={`${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        } md:translate-x-0 fixed md:static w-64 h-screen bg-brand-black border-r border-brand-gold/20 p-6 transition-transform z-40 overflow-y-auto overscroll-contain`}
+        } md:translate-x-0 fixed md:static w-64 h-screen bg-warm-surface-alt border-r border-warm-border p-6 transition-transform z-40 overflow-y-auto overscroll-contain`}
       >
         <div className="space-y-8">
           <div>
-            <h1 className="text-2xl font-bold text-brand-gold">ScriptSnap</h1>
-            <p className="text-sm text-brand-white/60">Dashboard</p>
+            <h1 className="text-2xl font-bold heading-serif text-sage">ScriptSnap</h1>
+            <p className="text-sm text-ink-muted">Dashboard</p>
           </div>
 
           <nav className="space-y-3">
             <Link
               href="/dashboard"
               onClick={() => setSidebarOpen(false)}
-              className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-brand-gold/10 transition"
+              className="flex items-center gap-3 px-4 py-3 rounded-lg text-ink hover:bg-sage/10 transition"
             >
               <Sparkles size={20} aria-hidden="true" />
               <span>Generate Script</span>
@@ -110,24 +110,24 @@ export default function DashboardLayout({
             <Link
               href="/dashboard/library"
               onClick={() => setSidebarOpen(false)}
-              className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-brand-gold/10 transition"
+              className="flex items-center gap-3 px-4 py-3 rounded-lg text-ink hover:bg-sage/10 transition"
             >
               <BarChart3 size={20} aria-hidden="true" />
               <span>Library</span>
             </Link>
           </nav>
 
-          <div className="pt-4 border-t border-brand-gold/20 space-y-3">
+          <div className="pt-4 border-t border-warm-border space-y-3">
             <div className="text-sm">
-              <p className="text-brand-white/60">Tier</p>
-              <p className="font-semibold text-brand-gold capitalize">
+              <p className="text-ink-muted">Tier</p>
+              <p className="font-semibold text-sage capitalize">
                 {user?.subscription_tier || 'free'}
               </p>
             </div>
 
             <button
               onClick={handleLogout}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-red-600 hover:bg-red-700 transition"
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-red-600 text-white hover:bg-red-700 transition"
             >
               <LogOut size={20} aria-hidden="true" />
               <span>Logout</span>

@@ -81,17 +81,17 @@ function LoginForm() {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-brand-black">
+    <div className="flex items-center justify-center min-h-screen bg-warm-bg">
       <div className="w-full max-w-md">
         <div className="card">
-          <h1 className="text-3xl font-bold text-gradient mb-2">🎬 ScriptSnap</h1>
-          <p className="text-white/60 mb-8">AI YouTube Shorts Script Generator</p>
+          <h1 className="text-3xl font-bold heading-serif mb-2">🎬 ScriptSnap</h1>
+          <p className="text-ink-muted mb-8">AI YouTube Shorts Script Generator</p>
 
           {/* Google Sign-In Button */}
           <button
             onClick={handleGoogleSignIn}
             disabled={loading}
-            className="w-full bg-white text-brand-black font-semibold py-3 px-6 rounded-lg hover:bg-gray-100 transition-colors mb-6 flex items-center justify-center gap-2"
+            className="w-full bg-white text-ink border border-warm-border font-semibold py-3 px-6 rounded-lg hover:bg-warm-surface-alt transition-colors mb-6 flex items-center justify-center gap-2"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24" aria-hidden="true">
               <path
@@ -116,10 +116,10 @@ function LoginForm() {
 
           <div className="relative mb-6">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-white/20"></div>
+              <div className="w-full border-t border-warm-border"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white/5 text-white/60">Or with email</span>
+              <span className="px-2 bg-warm-surface text-ink-muted">Or with email</span>
             </div>
           </div>
 
@@ -170,9 +170,9 @@ function LoginForm() {
             </button>
           </form>
 
-          <p className="text-center text-sm text-white/60 mt-6">
+          <p className="text-center text-sm text-ink-muted mt-6">
             Don't have an account?{' '}
-            <Link href="/auth/signup" className="text-brand-yellow hover:underline">
+            <Link href="/auth/signup" className="text-sage hover:underline">
               Sign up
             </Link>
           </p>

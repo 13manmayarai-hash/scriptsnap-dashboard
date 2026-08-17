@@ -124,23 +124,23 @@ function DashboardContent() {
   return (
     <div>
       {showPaymentSuccess && (
-        <div className="card mb-6 border border-brand-yellow/40 bg-brand-yellow/5">
+        <div className="card mb-6 border border-sage/40 bg-sage/5">
           <div className="flex justify-between items-start gap-4">
             <div className="flex items-start gap-3">
-              <div className="flex-shrink-0 mt-0.5 p-1.5 rounded-full bg-brand-yellow/20 text-brand-yellow">
+              <div className="flex-shrink-0 mt-0.5 p-1.5 rounded-full bg-sage/20 text-sage">
                 <Check size={18} aria-hidden="true" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-white mb-1">
+                <h3 className="text-lg font-bold text-ink mb-1">
                   Thank you! You're now on the {TIER_NAMES[tier]} plan
                 </h3>
-                <p className="text-white/60 text-sm mb-3">
+                <p className="text-ink-muted text-sm mb-3">
                   Here's what you get with {TIER_NAMES[tier]}:
                 </p>
                 <ul className="space-y-1.5">
                   {TIER_BENEFITS[tier].map((benefit, i) => (
-                    <li key={i} className="flex gap-2 text-white text-sm">
-                      <Check size={16} aria-hidden="true" className="text-brand-yellow flex-shrink-0 mt-0.5" />
+                    <li key={i} className="flex gap-2 text-ink text-sm">
+                      <Check size={16} aria-hidden="true" className="text-sage flex-shrink-0 mt-0.5" />
                       <span>{benefit}</span>
                     </li>
                   ))}
@@ -149,7 +149,7 @@ function DashboardContent() {
             </div>
             <button
               onClick={() => setShowPaymentSuccess(false)}
-              className="flex-shrink-0 p-1.5 bg-white/10 hover:bg-white/20 rounded transition-colors"
+              className="flex-shrink-0 p-1.5 bg-ink/5 hover:bg-ink/10 rounded transition-colors"
               aria-label="Dismiss"
             >
               <X size={16} aria-hidden="true" />
@@ -161,7 +161,7 @@ function DashboardContent() {
       {/* Form */}
       <div className="lg:col-span-1">
         <div className="card sticky top-6">
-          <h2 className="text-2xl font-bold text-gradient mb-6">
+          <h2 className="text-2xl font-bold heading-serif mb-6">
             🎬 Generate Script
           </h2>
 
@@ -181,7 +181,7 @@ function DashboardContent() {
                 disabled={loading}
                 required
               />
-              <p className="text-xs text-white/40 mt-1">What's your video about?</p>
+              <p className="text-xs text-ink-muted/70 mt-1">What's your video about?</p>
             </div>
 
             {/* Context */}
@@ -196,7 +196,7 @@ function DashboardContent() {
                 className="input h-24 resize-none"
                 disabled={loading}
               />
-              <p className="text-xs text-white/40 mt-1">Make the script more personalized</p>
+              <p className="text-xs text-ink-muted/70 mt-1">Make the script more personalized</p>
             </div>
 
             {/* Keywords */}
@@ -211,7 +211,7 @@ function DashboardContent() {
                 className="input h-20 resize-none"
                 disabled={loading}
               />
-              <p className="text-xs text-white/40 mt-1">Specific details to include</p>
+              <p className="text-xs text-ink-muted/70 mt-1">Specific details to include</p>
             </div>
 
             {/* Duration */}
@@ -230,7 +230,7 @@ function DashboardContent() {
                 className="w-full"
                 disabled={loading}
               />
-              <p className="text-xs text-white/40 mt-1">15-90 seconds</p>
+              <p className="text-xs text-ink-muted/70 mt-1">15-90 seconds</p>
             </div>
 
             {/* Category */}
@@ -266,8 +266,8 @@ function DashboardContent() {
                     disabled={loading}
                     className={`py-2 px-3 rounded-lg font-medium text-sm transition-colors ${
                       tone === t
-                        ? 'bg-brand-yellow text-brand-black'
-                        : 'bg-white/10 text-white hover:bg-white/20'
+                        ? 'bg-sage text-white'
+                        : 'bg-ink/5 text-ink hover:bg-ink/10'
                     }`}
                   >
                     {t}
@@ -294,8 +294,8 @@ function DashboardContent() {
           </form>
 
           {/* Tier Info */}
-          <div className="mt-6 pt-6 border-t border-white/10">
-            <p className="text-xs text-white/60">
+          <div className="mt-6 pt-6 border-t border-warm-border">
+            <p className="text-xs text-ink-muted">
               <span className="font-semibold capitalize">{user?.subscription_tier || 'free'}</span> plan: {user?.scripts_generated_month || 0} / {TIER_SCRIPT_LIMITS[user?.subscription_tier || 'free']} used this month
             </p>
           </div>
@@ -310,16 +310,16 @@ function DashboardContent() {
             <div className="card">
               <div className="flex justify-between items-start gap-4">
                 <div className="flex-1">
-                  <h1 className="text-3xl font-bold text-white mb-3">
+                  <h1 className="text-3xl font-bold text-ink mb-3">
                     {script.title}
                   </h1>
-                  <p className="text-white/60 text-sm">
+                  <p className="text-ink-muted text-sm">
                     {script.duration}s • {script.category} • {script.tone}
                   </p>
                 </div>
                 <button
                   onClick={() => handleCopy(script.title, 'main-title')}
-                  className="flex-shrink-0 p-2 bg-white/10 hover:bg-white/20 rounded transition-colors"
+                  className="flex-shrink-0 p-2 bg-ink/5 hover:bg-ink/10 rounded transition-colors"
                   aria-label="Copy title"
                 >
                   <Copy size={18} aria-hidden="true" />
@@ -329,9 +329,9 @@ function DashboardContent() {
 
             {/* Script */}
             <div className="card">
-              <h3 className="text-sm font-semibold text-white/60 mb-3">SCRIPT ({script.word_count} words)</h3>
-              <div className="bg-black/50 border border-white/10 rounded-lg p-4 mb-4">
-                <p className="text-white whitespace-pre-wrap font-mono text-sm leading-relaxed">
+              <h3 className="text-sm font-semibold text-ink-muted mb-3">SCRIPT ({script.word_count} words)</h3>
+              <div className="bg-warm-surface-alt border border-warm-border rounded-lg p-4 mb-4">
+                <p className="text-ink whitespace-pre-wrap font-mono text-sm leading-relaxed">
                   {script.script}
                 </p>
               </div>
@@ -347,11 +347,11 @@ function DashboardContent() {
 
             {/* Key Points */}
             <div className="card">
-              <h3 className="text-sm font-semibold text-white/60 mb-3">KEY POINTS</h3>
+              <h3 className="text-sm font-semibold text-ink-muted mb-3">KEY POINTS</h3>
               <ul className="space-y-2">
                 {script.keyPoints.map((point, i) => (
-                  <li key={i} className="flex gap-3 text-white text-sm">
-                    <span className="text-brand-yellow font-bold flex-shrink-0">•</span>
+                  <li key={i} className="flex gap-3 text-ink text-sm">
+                    <span className="text-sage font-bold flex-shrink-0">•</span>
                     <span>{point}</span>
                   </li>
                 ))}
@@ -360,10 +360,10 @@ function DashboardContent() {
 
             {/* Description & SEO */}
             <div className="card">
-              <h3 className="text-sm font-semibold text-white/60 mb-3">
+              <h3 className="text-sm font-semibold text-ink-muted mb-3">
                 DESCRIPTION
               </h3>
-              <p className="text-white text-sm mb-4 leading-relaxed whitespace-pre-wrap">
+              <p className="text-ink text-sm mb-4 leading-relaxed whitespace-pre-wrap">
                 {script.description}
               </p>
               <button
@@ -378,13 +378,13 @@ function DashboardContent() {
 
             {/* Hashtags */}
             <div className="card">
-              <h3 className="text-sm font-semibold text-white/60 mb-3">HASHTAGS</h3>
+              <h3 className="text-sm font-semibold text-ink-muted mb-3">HASHTAGS</h3>
               <div className="space-y-2">
                 <div className="flex flex-wrap gap-2">
                   {script.hashtags.map((tag, i) => (
                     <span
                       key={i}
-                      className="inline-block bg-brand-yellow/20 text-brand-yellow px-3 py-1 rounded text-sm font-medium"
+                      className="inline-block bg-sage/20 text-sage px-3 py-1 rounded text-sm font-medium"
                     >
                       {tag}
                     </span>
@@ -403,10 +403,10 @@ function DashboardContent() {
 
             {/* Pinned Comment */}
             <div className="card">
-              <h3 className="text-sm font-semibold text-white/60 mb-3">
+              <h3 className="text-sm font-semibold text-ink-muted mb-3">
                 PINNED COMMENT
               </h3>
-              <p className="text-white text-sm mb-4 italic">
+              <p className="text-ink text-sm mb-4 italic">
                 "{script.pinned_comment}"
               </p>
               <button
@@ -421,24 +421,24 @@ function DashboardContent() {
 
             {/* Alternative Titles */}
             <div className="card">
-              <h3 className="text-sm font-semibold text-white/60 mb-3">
+              <h3 className="text-sm font-semibold text-ink-muted mb-3">
                 10 TITLE VARIATIONS
               </h3>
               <div className="space-y-2">
                 {script.alternativeTitles.map((alt, i) => (
                   <div
                     key={i}
-                    className="p-3 bg-white/5 border border-white/10 rounded-lg flex justify-between items-start gap-3"
+                    className="p-3 bg-warm-surface-alt border border-warm-border rounded-lg flex justify-between items-start gap-3"
                   >
                     <div className="flex-1">
-                      <p className="text-xs text-white/50 font-semibold mb-1">
+                      <p className="text-xs text-ink-muted font-semibold mb-1">
                         {alt.style}
                       </p>
-                      <p className="text-white text-sm">{alt.title}</p>
+                      <p className="text-ink text-sm">{alt.title}</p>
                     </div>
                     <button
                       onClick={() => handleCopy(alt.title, `alt-${i}`)}
-                      className="flex-shrink-0 p-2 bg-white/10 hover:bg-white/20 rounded transition-colors"
+                      className="flex-shrink-0 p-2 bg-ink/5 hover:bg-ink/10 rounded transition-colors"
                       aria-label={`Copy title: ${alt.title}`}
                     >
                       <Copy size={16} aria-hidden="true" />
@@ -452,18 +452,18 @@ function DashboardContent() {
             <div className="card">
               <div className="grid grid-cols-3 gap-4 text-center">
                 <div>
-                  <p className="text-white/60 text-xs">WORD COUNT</p>
-                  <p className="text-white text-lg font-bold">
+                  <p className="text-ink-muted text-xs">WORD COUNT</p>
+                  <p className="text-ink text-lg font-bold">
                     {script.word_count}
                   </p>
                 </div>
                 <div>
-                  <p className="text-white/60 text-xs">DURATION</p>
-                  <p className="text-white text-lg font-bold">{script.duration}s</p>
+                  <p className="text-ink-muted text-xs">DURATION</p>
+                  <p className="text-ink text-lg font-bold">{script.duration}s</p>
                 </div>
                 <div>
-                  <p className="text-white/60 text-xs">SERIES</p>
-                  <p className="text-white text-lg font-bold">
+                  <p className="text-ink-muted text-xs">SERIES</p>
+                  <p className="text-ink text-lg font-bold">
                     {script.is_series ? 'Yes' : 'No'}
                   </p>
                 </div>
@@ -472,11 +472,11 @@ function DashboardContent() {
           </div>
         ) : (
           <div className="card text-center py-20">
-            <Sparkles size={48} className="mx-auto text-brand-yellow/50 mb-4" />
-            <h3 className="text-xl font-semibold text-white mb-2">
+            <Sparkles size={48} className="mx-auto text-sage/50 mb-4" />
+            <h3 className="text-xl font-semibold text-ink mb-2">
               No Script Generated Yet
             </h3>
-            <p className="text-white/60">
+            <p className="text-ink-muted">
               Fill out the form and click "Generate Script" to get started! ✨
             </p>
           </div>

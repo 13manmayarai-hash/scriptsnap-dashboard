@@ -9,13 +9,18 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        'brand-black': '#000000',
-        'brand-white': '#FFFFFF',
-        'brand-yellow': '#FFD700',
-        // Alias used throughout the dashboard sidebar (logo, tier label,
-        // borders) — was previously undefined, so those utilities
-        // generated no CSS and silently lost their styling.
-        'brand-gold': '#FFD700',
+        // Warm/editorial palette — extended app-wide from the landing
+        // page's approved design (see app/page.tsx, HANDOFF.md from the
+        // original design pass). Replaces the earlier dark brand-black/
+        // brand-yellow theme.
+        'warm-bg': '#F7F5F0',
+        'warm-surface': '#FFFFFF',
+        'warm-surface-alt': '#FBFAF6',
+        'warm-border': '#E0DDD3',
+        ink: '#20201E',
+        'ink-muted': '#706E68',
+        sage: '#7A8B72',
+        'sage-hover': '#697B62',
       },
       fontFamily: {
         sans: ['system-ui', 'sans-serif'],

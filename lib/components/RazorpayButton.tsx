@@ -93,7 +93,7 @@ export default function RazorpayButton({
             }
           },
           theme: {
-            color: '#FFD700',
+            color: '#7A8B72',
           },
           modal: {
             ondismiss: () => {
@@ -133,7 +133,7 @@ export default function RazorpayButton({
       <button
         onClick={handlePayment}
         disabled={loading}
-        className="flex items-center justify-center min-h-[44px] w-full bg-brand-yellow text-brand-black font-semibold rounded md:rounded-lg hover:bg-yellow-400 transition-colors disabled:opacity-50 px-0.5 sm:px-2 md:px-6 text-xs md:text-base leading-tight focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-yellow focus-visible:ring-offset-2 focus-visible:ring-offset-brand-black"
+        className="flex items-center justify-center min-h-[44px] w-full bg-sage text-white font-semibold rounded md:rounded-lg hover:bg-sage-hover transition-colors disabled:opacity-50 px-0.5 sm:px-2 md:px-6 text-xs md:text-base leading-tight focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sage focus-visible:ring-offset-2 focus-visible:ring-offset-warm-bg"
       >
         {loading ? '…' : 'Upgrade'}
       </button>
