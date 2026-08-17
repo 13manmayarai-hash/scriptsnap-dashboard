@@ -1,0 +1,300 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { createClient } from '@/lib/supabase/client'
+import { useAppStore } from '@/lib/store/app'
+import { TIER_SCRIPT_LIMITS } from '@/lib/tiers'
+import { LANGUAGES } from '@/lib/languages'
+import { Sparkles, ChevronDown } from 'lucide-react'
+import ErrorMessage from '@/lib/components/ui/ErrorMessage'
+
+interface TonePreset {
+  id: string
+  name: string
+  style_description: string
+}
+
+interface Category {
+  id: string
+  name: string
+}
+
+const DEFAULT_CATEGORIES = [
+  'Cultural & Historical',
+  'Art & Design',
+  'Science & Nature',
+  'Fashion & Style',
+  'Food & Craft',
+  'Tech & Engineering',
+]
+
+const DEFAULT_TONES: TonePreset[] = [
+  { id: 'meditative', name: 'Meditative', style_description: 'Calming language, reflective questions, a sense of mindfulness.' },
+  { id: 'balanced', name: 'Balanced', style_description: 'Informative and engaging without being extreme.' },
+  { id: 'energetic', name: 'Energetic', style_description: 'Exclamation marks, building excitement, a sense of urgency.' },
+]
+
+export default function NewScriptPage() {
+  const router = useRouter()
+  const { user, setUser } = useAppStore()
+  const [topic, setTopic] = useState('')
+  const [duration, setDuration] = useState(30)
+  const [categories, setCategories] = useState<Category[]>(
+    DEFAULT_CATEGORIES.map((name) => ({ id: name, name }))
+  )
+  const [category, setCategory] = useState('Cultural & Historical')
+  const [tonePresets, setTonePresets] = useState<TonePreset[]>(DEFAULT_TONES)
+  const [toneId, setToneId] = useState(DEFAULT_TONES[0].id)
+  const [language, setLanguage] = useState('english')
+  const [context, setContext] = useState('')
+  const [keywords, setKeywords] = useState('')
+  const [showMore, setShowMore] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    const loadPersonalization = async () => {
+      const supabase = createClient()
+      const { data: { user: authUser } } = await supabase.auth.getUser()
+      if (!authUser) return
+
+      const [{ data: presets }, { data: cats }] = await Promise.all([
+        supabase
+          .from('tone_presets')
+          .select('id, name, style_description')
+          .eq('user_id', authUser.id)
+          .order('created_at', { ascending: true }),
+        supabase
+          .from('categories')
+          .select('id, name')
+          .eq('user_id', authUser.id)
+          .order('created_at', { ascending: true }),
+      ])
+
+      if (presets && presets.length > 0) {
+        setTonePresets(presets)
+        setToneId(presets[0].id)
+      }
+      if (cats && cats.length > 0) {
+        setCategories(cats)
+        setCategory(cats[0].name)
+      }
+    }
+
+    loadPersonalization()
+  }, [])
+
+  const handleGenerate = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    setError('')
+
+    try {
+      const keywordList = keywords
+        .split(/[,\n]/)
+        .map((k) => k.trim())
+        .filter((k) => k.length > 0)
+
+      const selectedTone = tonePresets.find((t) => t.id === toneId) || tonePresets[0]
+
+      const response = await fetch('/api/generate-script', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({
+          topic,
+          duration,
+          category,
+          tone: selectedTone.name,
+          toneStyleDescription: selectedTone.style_description,
+          language,
+          context,
+          keywords: keywordList,
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null)
+        throw new Error(errorData?.error || 'Failed to generate script')
+      }
+
+      const data = await response.json()
+
+      if (user) {
+        setUser({ ...user, scripts_generated_month: user.scripts_generated_month + 1 })
+      }
+
+      router.push(`/dashboard/scripts/${data.id}`)
+    } catch (err) {
+      console.error('Error:', err)
+      setError(err instanceof Error ? err.message : 'Failed to generate script')
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="mx-auto max-w-xl">
+      <h1 className="mb-1 text-2xl font-bold heading-serif">What are you making?</h1>
+      <p className="mb-6 text-sm text-ink-muted">
+        Describe the topic and ScriptSnap writes a full script, title options, description, hashtags, and a pinned comment.
+      </p>
+
+      <form onSubmit={handleGenerate} className="card space-y-5">
+        <div>
+          <label htmlFor="script-topic" className="mb-2 block text-sm font-medium">Topic</label>
+          <input
+            id="script-topic"
+            name="topic"
+            type="text"
+            autoComplete="off"
+            value={topic}
+            onChange={(e) => setTopic(e.target.value)}
+            placeholder="e.g., Japanese pottery, Coffee roasting…"
+            className="input"
+            disabled={loading}
+            required
+          />
+        </div>
+
+        <div>
+          <span className="mb-2 block text-sm font-medium" id="tone-label">Tone</span>
+          <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-labelledby="tone-label">
+            {tonePresets.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                role="radio"
+                aria-checked={toneId === t.id}
+                onClick={() => setToneId(t.id)}
+                disabled={loading}
+                title={t.style_description}
+                className={`min-h-[44px] truncate rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                  toneId === t.id ? 'bg-sage text-white' : 'bg-warm-surface-alt text-ink hover:bg-ink/5'
+                }`}
+              >
+                {t.name}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <label htmlFor="script-duration" className="mb-2 block text-sm font-medium">
+            Video length: {duration}s
+          </label>
+          <input
+            id="script-duration"
+            name="duration"
+            type="range"
+            min="15"
+            max="90"
+            value={duration}
+            onChange={(e) => setDuration(parseInt(e.target.value))}
+            className="w-full"
+            disabled={loading}
+          />
+        </div>
+
+        <div>
+          <button
+            type="button"
+            onClick={() => setShowMore((v) => !v)}
+            aria-expanded={showMore}
+            aria-controls="more-options"
+            className="flex min-h-[44px] items-center gap-1.5 text-sm font-medium text-ink-muted hover:text-ink"
+          >
+            <ChevronDown
+              size={16}
+              aria-hidden="true"
+              className={`transition-transform ${showMore ? 'rotate-180' : ''}`}
+            />
+            {showMore ? 'Hide options' : 'More options'}
+          </button>
+
+          {showMore && (
+            <div id="more-options" className="mt-4 space-y-4">
+              <div>
+                <label htmlFor="script-context" className="mb-2 block text-sm font-medium">Tell ScriptSnap more (optional)</label>
+                <textarea
+                  id="script-context"
+                  name="context"
+                  value={context}
+                  onChange={(e) => setContext(e.target.value)}
+                  placeholder="Describe what's happening in the footage, any specific details you want included…"
+                  className="input h-24 resize-none"
+                  disabled={loading}
+                />
+              </div>
+
+              <div>
+                <label htmlFor="script-keywords" className="mb-2 block text-sm font-medium">Keywords (optional)</label>
+                <textarea
+                  id="script-keywords"
+                  name="keywords"
+                  value={keywords}
+                  onChange={(e) => setKeywords(e.target.value)}
+                  placeholder="e.g. 'sustainable', 'handmade', 'ancient technique' — one per line or comma-separated"
+                  className="input h-20 resize-none"
+                  disabled={loading}
+                />
+              </div>
+
+              <div>
+                <div className="mb-2 flex items-center justify-between">
+                  <label htmlFor="script-category" className="block text-sm font-medium">Category</label>
+                  <Link href="/dashboard/settings" className="text-xs text-sage hover:underline">Manage</Link>
+                </div>
+                <select
+                  id="script-category"
+                  name="category"
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  className="input"
+                  disabled={loading}
+                >
+                  {categories.map((cat) => (
+                    <option key={cat.id} value={cat.name}>{cat.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label htmlFor="script-language" className="mb-2 block text-sm font-medium">Output language</label>
+                <select
+                  id="script-language"
+                  name="language"
+                  value={language}
+                  onChange={(e) => setLanguage(e.target.value)}
+                  className="input"
+                  disabled={loading}
+                >
+                  {LANGUAGES.map((l) => (
+                    <option key={l.key} value={l.key}>{l.label}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <button
+          type="submit"
+          disabled={loading || !topic}
+          className="btn-primary flex w-full items-center justify-center gap-2 py-3"
+        >
+          <Sparkles size={18} aria-hidden="true" />
+          {loading ? 'Generating…' : 'Generate Script'}
+        </button>
+
+        {error && <ErrorMessage>{error}</ErrorMessage>}
+
+        <p className="text-center text-xs text-ink-muted">
+          <span className="font-semibold capitalize">{user?.subscription_tier || 'free'}</span> plan:{' '}
+          {user?.scripts_generated_month || 0} / {TIER_SCRIPT_LIMITS[user?.subscription_tier || 'free']} used this month
+        </p>
+      </form>
+    </div>
+  )
+}

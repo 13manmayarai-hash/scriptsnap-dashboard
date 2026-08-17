@@ -9,6 +9,7 @@ import Topbar from './Topbar'
 
 const PAGE_META: Record<string, { title: string; breadcrumb?: string }> = {
   '/dashboard': { title: 'Dashboard' },
+  '/dashboard/new': { title: 'New Script' },
   '/dashboard/library': { title: 'Scripts' },
   '/dashboard/ideas': { title: 'Ideas' },
   '/dashboard/calendar': { title: 'Calendar' },
@@ -19,6 +20,13 @@ const PAGE_META: Record<string, { title: string; breadcrumb?: string }> = {
   '/dashboard/billing': { title: 'Usage & Billing', breadcrumb: 'Settings' },
   '/dashboard/tone-presets': { title: 'Tone & Voice', breadcrumb: 'Settings' },
   '/dashboard/categories': { title: 'Categories', breadcrumb: 'Settings' },
+}
+
+function pageMeta(pathname: string): { title: string; breadcrumb?: string } {
+  if (pathname.startsWith('/dashboard/scripts/')) {
+    return { title: 'Script', breadcrumb: 'Scripts' }
+  }
+  return PAGE_META[pathname] || { title: 'Dashboard' }
 }
 
 export default function AppShell({
@@ -38,7 +46,8 @@ export default function AppShell({
   const [searchQuery, setSearchQuery] = useState('')
   const { topbarAction, topbarSaveState } = useAppStore()
 
-  const meta = PAGE_META[pathname] || { title: 'Dashboard' }
+  const meta = pageMeta(pathname)
+  const action = topbarAction || (pathname === '/dashboard/new' ? undefined : { label: 'New script', href: '/dashboard/new' })
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
@@ -84,7 +93,7 @@ export default function AppShell({
           title={meta.title}
           breadcrumb={meta.breadcrumb}
           saveState={topbarSaveState || undefined}
-          action={topbarAction || undefined}
+          action={action}
           email={email}
           tier={tier}
           onMenuClick={() => setDrawerOpen((v) => !v)}

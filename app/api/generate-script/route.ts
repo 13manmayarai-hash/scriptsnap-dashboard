@@ -271,6 +271,8 @@ Generate the script now:`
           pinned_comment: pinnedComment,
           alternative_titles: alternativeTitles,
           word_count: wordCount,
+          key_points: keyPoints,
+          is_series: false,
           guideline_passed: guidelineCheck.passed,
           guideline_flags: guidelineCheck.flags,
         })
