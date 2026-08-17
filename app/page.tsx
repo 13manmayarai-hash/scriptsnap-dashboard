@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -38,6 +38,49 @@ import {
   Check,
   X as XIcon,
 } from 'lucide-react'
+
+// Fades an element up into place the first time it scrolls into view
+// (rather than on every scroll in/out) — a single IntersectionObserver
+// per element, disconnected once triggered. Respects prefers-reduced-motion
+// via the .reveal CSS rule in globals.css.
+function Reveal({
+  children,
+  className = '',
+  delayMs = 0,
+}: {
+  children: ReactNode
+  className?: string
+  delayMs?: number
+}) {
+  const ref = useRef<HTMLDivElement>(null)
+  const [visible, setVisible] = useState(false)
+
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true)
+          observer.disconnect()
+        }
+      },
+      { threshold: 0.2 }
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+
+  return (
+    <div
+      ref={ref}
+      className={`reveal ${visible ? 'in-view' : ''} ${className}`}
+      style={delayMs ? { transitionDelay: `${delayMs}ms` } : undefined}
+    >
+      {children}
+    </div>
+  )
+}
 
 // Logged-in visitors don't belong on the marketing page — send them
 // straight to the app. Anonymous visitors see the landing page below
@@ -451,7 +494,7 @@ function HowItWorks() {
   return (
     <section id="how-it-works" className="scroll-mt-6 border-t border-[#E2DFD6] bg-[#F1EFE8] py-20 sm:py-28">
       <div className="mx-auto max-w-[1380px] px-6 lg:px-10">
-        <div className="mx-auto mb-14 max-w-[620px] text-center">
+        <Reveal className="mx-auto mb-14 max-w-[620px] text-center">
           <span className="font-serif text-[15px] italic text-[#7A8B72]">How it works</span>
           <h2 className="mt-3 text-[clamp(28px,4vw,42px)] font-semibold tracking-[-0.02em] text-balance">
             One prompt, a full content kit.
@@ -459,10 +502,12 @@ function HowItWorks() {
           <p className="mt-4 text-[16px] text-[#706E68]">
             Five steps, in order — this is the same flow that&rsquo;s live in the product today.
           </p>
-        </div>
+        </Reveal>
         <div className="mx-auto flex max-w-[820px] flex-col gap-4">
           {FLOW_STEPS.map((step, i) => (
-            <FlowStep key={step.title} step={i + 1} {...step} />
+            <Reveal key={step.title} delayMs={i * 80}>
+              <FlowStep step={i + 1} {...step} />
+            </Reveal>
           ))}
         </div>
       </div>
@@ -489,7 +534,7 @@ function Moat() {
     <section className="py-20 sm:py-28">
       <div className="mx-auto max-w-[1380px] px-6 lg:px-10">
         <div className="grid items-center gap-12 lg:grid-cols-[1.1fr_.9fr] lg:gap-16">
-          <div>
+          <Reveal>
             <span className="font-serif text-[15px] italic text-[#7A8B72]">Why it&rsquo;s different</span>
             <h2 className="mt-3 text-[clamp(26px,3.6vw,38px)] font-semibold tracking-[-0.02em] text-balance">
               Personalization is the moat.
@@ -506,14 +551,14 @@ function Moat() {
               tones, your categories, the kind of video you actually make &mdash; not a one-size-fits-all
               prompt everyone else is typing too.
             </p>
-          </div>
-          <div className="flex flex-col gap-3">
+          </Reveal>
+          <Reveal delayMs={120} className="flex flex-col gap-3">
             <MoatStep num="20" title="Shorts from one creator" description="The starting point" />
             <p className="text-center text-[13px] text-[#9C9686]">↓ shapes</p>
             <MoatStep num="1" title="Tone preset, refined" description="Style and pacing, not a generic template" />
             <p className="text-center text-[13px] text-[#9C9686]">↓ powers</p>
             <MoatStep num="∞" title="Scripts that sound like you" description="Every generation, in your tone, ready to post" />
-          </div>
+          </Reveal>
         </div>
       </div>
     </section>
@@ -526,16 +571,16 @@ function TrustFeatures() {
   return (
     <section className="border-t border-[#E2DFD6] bg-[#F1EFE8] py-20 sm:py-28">
       <div className="mx-auto max-w-[1380px] px-6 lg:px-10">
-        <div className="mx-auto mb-14 max-w-[660px] text-center">
+        <Reveal className="mx-auto mb-14 max-w-[660px] text-center">
           <h2 className="text-[clamp(28px,4vw,42px)] font-semibold tracking-[-0.02em] text-balance">
             Built to keep getting better &mdash; and keep you covered
           </h2>
           <p className="mt-4 text-[16px] text-[#706E68]">
             A voice profile that keeps learning, and a real policy check before you publish.
           </p>
-        </div>
+        </Reveal>
         <div className="grid gap-5 md:grid-cols-2">
-          <div className="rounded-[16px] border border-[#E0DDD3] bg-white p-8">
+          <Reveal className="rounded-[16px] border border-[#E0DDD3] bg-white p-8">
             <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-[13px] bg-[#7A8B72] text-white">
               <RefreshCw size={22} aria-hidden="true" strokeWidth={2} />
             </div>
@@ -559,8 +604,8 @@ function TrustFeatures() {
                 </div>
               ))}
             </div>
-          </div>
-          <div className="rounded-[16px] border border-[#E0DDD3] bg-white p-8">
+          </Reveal>
+          <Reveal delayMs={100} className="rounded-[16px] border border-[#E0DDD3] bg-white p-8">
             <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-[13px] bg-[#7A8B72] text-white">
               <ShieldCheck size={22} aria-hidden="true" strokeWidth={2} />
             </div>
@@ -579,7 +624,7 @@ function TrustFeatures() {
                 Mentions a brand name — worth verifying usage rights
               </div>
             </div>
-          </div>
+          </Reveal>
         </div>
       </div>
     </section>
@@ -603,26 +648,25 @@ function KitShowcase() {
   return (
     <section id="kit" className="py-20 sm:py-28">
       <div className="mx-auto max-w-[1380px] px-6 lg:px-10">
-        <div className="mx-auto mb-14 max-w-[620px] text-center">
+        <Reveal className="mx-auto mb-14 max-w-[620px] text-center">
           <h2 className="text-[clamp(28px,4vw,42px)] font-semibold tracking-[-0.02em] text-balance">
             Every generation is a full content kit
           </h2>
           <p className="mt-4 text-[16px] text-[#706E68]">
             Not just a script — everything you&rsquo;d otherwise write by hand, one field at a time.
           </p>
-        </div>
+        </Reveal>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {KIT_ITEMS.map(({ icon: Icon, title, sample }) => (
-            <div
-              key={title}
-              className="rounded-[12px] border border-[#E0DDD3] bg-white p-6 transition-colors hover:border-[#7A8B72]/50"
-            >
-              <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-[9px] bg-[#EFF1E8] text-[#5C7A52]">
-                <Icon size={18} aria-hidden="true" />
+          {KIT_ITEMS.map(({ icon: Icon, title, sample }, i) => (
+            <Reveal key={title} delayMs={(i % 4) * 70}>
+              <div className="h-full rounded-[12px] border border-[#E0DDD3] bg-white p-6 transition-colors hover:border-[#7A8B72]/50">
+                <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-[9px] bg-[#EFF1E8] text-[#5C7A52]">
+                  <Icon size={18} aria-hidden="true" />
+                </div>
+                <h4 className="text-[14.5px] font-semibold">{title}</h4>
+                <p className="mt-1.5 font-mono text-[12px] leading-5 text-[#9C9686]">{sample}</p>
               </div>
-              <h4 className="text-[14.5px] font-semibold">{title}</h4>
-              <p className="mt-1.5 font-mono text-[12px] leading-5 text-[#9C9686]">{sample}</p>
-            </div>
+            </Reveal>
           ))}
         </div>
       </div>
@@ -672,7 +716,7 @@ function Comparison() {
   return (
     <section className="border-t border-[#E2DFD6] bg-[#F1EFE8] py-20 sm:py-28">
       <div className="mx-auto max-w-[1380px] px-6 lg:px-10">
-        <div className="mx-auto mb-14 max-w-[660px] text-center">
+        <Reveal className="mx-auto mb-14 max-w-[660px] text-center">
           <h2 className="text-[clamp(28px,4vw,42px)] font-semibold tracking-[-0.02em] text-balance">
             Built for one creator&rsquo;s voice &mdash; not everyone&rsquo;s average
           </h2>
@@ -680,8 +724,8 @@ function Comparison() {
             Most AI writing tools either give you a generic template or price real personalization
             for an agency budget. ScriptSnap does neither.
           </p>
-        </div>
-        <div className="grid overflow-hidden rounded-[16px] border border-[#E0DDD3] md:grid-cols-3">
+        </Reveal>
+        <Reveal className="grid overflow-hidden rounded-[16px] border border-[#E0DDD3] md:grid-cols-3">
           {COMPARE_COLUMNS.map((col, i) => (
             <div
               key={col.name}
@@ -705,7 +749,76 @@ function Comparison() {
               </ul>
             </div>
           ))}
+        </Reveal>
+      </div>
+    </section>
+  )
+}
+
+/* ---------- Pricing teaser (real tiers — full checkout lives at /pricing) ---------- */
+
+const priceFormatter = new Intl.NumberFormat('en-IN', {
+  style: 'currency',
+  currency: 'INR',
+  maximumFractionDigits: 0,
+})
+
+const PRICING_TIERS = [
+  { name: 'Free', price: 0, scripts: 5, description: 'Enough to see if it actually sounds like you.', featured: false },
+  { name: 'Basic', price: 199, scripts: 50, description: 'For a creator publishing 1–2 Shorts a day.', featured: true },
+  { name: 'Pro', price: 499, scripts: 200, description: 'For high-frequency creators testing more variants.', featured: false },
+]
+
+function PricingTeaser() {
+  return (
+    <section id="pricing" className="scroll-mt-6 border-t border-[#E2DFD6] bg-[#F1EFE8] py-20 sm:py-28">
+      <div className="mx-auto max-w-[1380px] px-6 lg:px-10">
+        <Reveal className="mx-auto mb-14 max-w-[620px] text-center">
+          <h2 className="text-[clamp(28px,4vw,42px)] font-semibold tracking-[-0.02em] text-balance">
+            Simple pricing, priced for a solo creator
+          </h2>
+          <p className="mt-4 text-[16px] text-[#706E68]">
+            Start free, upgrade when the time it saves is obviously worth more than the plan.
+          </p>
+        </Reveal>
+        <div className="mx-auto grid max-w-[980px] grid-cols-1 gap-5 sm:grid-cols-3">
+          {PRICING_TIERS.map((tier, i) => (
+            <Reveal key={tier.name} delayMs={i * 90}>
+              <div
+                className={`relative flex h-full flex-col rounded-[16px] border p-7 ${
+                  tier.featured ? 'border-[#7A8B72] bg-[#EFF1E8]' : 'border-[#E0DDD3] bg-white'
+                }`}
+              >
+                {tier.featured && (
+                  <span className="absolute -top-3 left-7 rounded-full bg-[#7A8B72] px-3 py-1 text-[11px] font-bold text-white">
+                    Most popular
+                  </span>
+                )}
+                <h4 className="text-[16px] font-semibold">{tier.name}</h4>
+                <div className="mt-2 font-serif text-[36px] font-bold">
+                  {priceFormatter.format(tier.price)}
+                  <span className="ml-1 text-[14px] font-sans font-normal text-[#9C9686]">/mo</span>
+                </div>
+                <p className="mt-2 text-[13.5px] text-[#706E68]">{tier.description}</p>
+                <p className="mt-4 text-[13.5px] font-semibold text-[#5C7A52]">{tier.scripts} scripts / month</p>
+                <div className="mt-6">
+                  <Button
+                    href={tier.price === 0 ? '/auth/signup' : '/pricing'}
+                    variant={tier.featured ? 'primary' : 'secondary'}
+                    className="w-full"
+                  >
+                    {tier.price === 0 ? 'Start free' : 'View plan'}
+                  </Button>
+                </div>
+              </div>
+            </Reveal>
+          ))}
         </div>
+        <p className="mt-8 text-center text-[13px] text-[#9C9686]">
+          <Link href="/pricing" className="text-[#5C7A52] underline hover:no-underline">
+            See full pricing &amp; FAQ →
+          </Link>
+        </p>
       </div>
     </section>
   )
@@ -717,7 +830,7 @@ function FinalCta() {
   return (
     <section className="py-20 sm:py-28">
       <div className="mx-auto max-w-[1380px] px-6 lg:px-10">
-        <div className="rounded-[24px] border border-[#E0DDD3] bg-[#FBFAF6] px-6 py-16 text-center sm:px-10 sm:py-20">
+        <Reveal className="rounded-[24px] border border-[#E0DDD3] bg-[#FBFAF6] px-6 py-16 text-center sm:px-10 sm:py-20">
           <h2 className="text-[clamp(28px,4.5vw,44px)] font-semibold tracking-[-0.02em] text-balance">
             Stop staring at a blank page.
           </h2>
@@ -730,7 +843,7 @@ function FinalCta() {
               Generate your first script free
             </Button>
           </div>
-        </div>
+        </Reveal>
       </div>
     </section>
   )
@@ -752,7 +865,7 @@ function LandingPage() {
           <nav className="hidden items-center gap-10 md:flex">
             <a href="#how-it-works" className="text-[14px] text-[#484742] transition hover:text-[#20201E]">How it works</a>
             <a href="#kit" className="text-[14px] text-[#484742] transition hover:text-[#20201E]">Content kit</a>
-            <Link href="/pricing" className="text-[14px] text-[#484742] transition hover:text-[#20201E]">Pricing</Link>
+            <a href="#pricing" className="text-[14px] text-[#484742] transition hover:text-[#20201E]">Pricing</a>
           </nav>
           <div className="flex items-center gap-5">
             <Link href="/auth/login" className="hidden text-[14px] font-medium sm:block">Log in</Link>
@@ -763,7 +876,33 @@ function LandingPage() {
 
       <main id="main-content">
         <section className="mx-auto max-w-[1380px] px-6 pb-8 pt-16 lg:px-10 lg:pt-20">
-          <div className="grid items-center gap-14 lg:grid-cols-[.95fr_1.05fr]">
+          {/* Floating decorative icons live in the gutter between the two
+              hero columns — genuinely empty space at any width, so they
+              can't collide with the headline or get clipped behind the
+              artwork card the way absolute-positioned-by-section-percent
+              coordinates did. */}
+          <div className="relative grid items-center gap-14 lg:grid-cols-[.95fr_1.05fr]">
+            <div
+              className="animate-float absolute left-[47%] top-[10%] z-10 hidden -translate-x-1/2 rounded-[14px] border border-[#E0DDD3] bg-white p-3 text-[#7A8B72] lg:block"
+              style={{ animationDelay: '0s' }}
+              aria-hidden="true"
+            >
+              <PenTool size={20} />
+            </div>
+            <div
+              className="animate-float absolute left-[47%] top-[45%] z-10 hidden -translate-x-1/2 rounded-[14px] border border-[#E0DDD3] bg-white p-3 text-[#B8863A] lg:block"
+              style={{ animationDelay: '1.1s' }}
+              aria-hidden="true"
+            >
+              <Sparkles size={20} />
+            </div>
+            <div
+              className="animate-float absolute left-[47%] top-[80%] z-10 hidden -translate-x-1/2 rounded-[14px] border border-[#E0DDD3] bg-white p-3 text-[#5C7A52] lg:block"
+              style={{ animationDelay: '2.1s' }}
+              aria-hidden="true"
+            >
+              <ShieldCheck size={20} />
+            </div>
             <div className="animate-fade-up">
               <div className="mb-6 inline-block">
                 <span className="font-serif text-[17px] italic text-[#30302B]">for one creator, trained on his voice</span>
@@ -807,6 +946,7 @@ function LandingPage() {
         <TrustFeatures />
         <KitShowcase />
         <Comparison />
+        <PricingTeaser />
         <FinalCta />
       </main>
 
