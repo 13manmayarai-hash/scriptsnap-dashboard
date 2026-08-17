@@ -25,9 +25,18 @@ import {
   Image as ImageIcon,
   PenLine,
   ShieldCheck,
+  ShieldAlert,
   Clock3,
   Languages,
   Wand2,
+  PenTool,
+  Hash,
+  Pin,
+  Layers,
+  ListOrdered,
+  RefreshCw,
+  Check,
+  X as XIcon,
 } from 'lucide-react'
 
 // Logged-in visitors don't belong on the marketing page — send them
@@ -331,8 +340,7 @@ function ToolsPanel() {
 function ProductPreview() {
   return (
     <div
-      id="how-it-works"
-      className="mt-20 scroll-mt-6 overflow-hidden rounded-[14px] border border-[#DCD9CF] bg-[#FBFAF6] shadow-[0_20px_60px_rgba(40,39,33,0.07)] animate-fade-up"
+      className="mt-20 overflow-hidden rounded-[14px] border border-[#DCD9CF] bg-[#FBFAF6] shadow-[0_20px_60px_rgba(40,39,33,0.07)] animate-fade-up"
       style={{ animationDelay: '150ms' }}
     >
       {/* This is a fixed-proportions screenshot of the real dashboard, not
@@ -384,6 +392,350 @@ function Feature({ number, title, description }: { number: string; title: string
   )
 }
 
+/* ---------- How it works (storyboard) ---------- */
+
+const FLOW_STEPS = [
+  {
+    icon: PenTool,
+    title: 'Describe the video',
+    description: 'Topic, duration, category, tone, output language — plus optional context or keywords to steer it. No blank page, no staring at a cursor.',
+  },
+  {
+    icon: Sparkles,
+    title: 'Claude writes it, in your voice',
+    description: 'Claude Sonnet 5 generates the script against your own tone presets — trained on the kind of videos you actually make, not a generic template everyone else gets too.',
+  },
+  {
+    icon: ShieldCheck,
+    title: "Checked against YouTube's guidelines",
+    description: 'Before you see the result, ScriptSnap scans it for monetization and policy risk — flagged lines you might want a second look at, not just a script and a shrug.',
+  },
+  {
+    icon: FileText,
+    title: 'Get your full content kit',
+    description: 'Script, title, 10 title variations, description, hashtags, pinned comment, and key points — the metadata that normally takes just as long to write as the script itself.',
+  },
+  {
+    icon: RefreshCw,
+    title: 'Copy it in — and it learns for next time',
+    description: 'Paste it straight into YouTube, no rewriting. Every script you keep or edit feeds your tone presets, so the next one sounds even more like you.',
+  },
+]
+
+function FlowStep({
+  step,
+  icon: Icon,
+  title,
+  description,
+}: {
+  step: number
+  icon: typeof PenTool
+  title: string
+  description: string
+}) {
+  return (
+    <div className="grid grid-cols-[52px_1fr] gap-5 rounded-[14px] border border-[#E0DDD3] bg-white p-6 sm:p-7">
+      <div className="flex h-[52px] w-[52px] flex-shrink-0 items-center justify-center rounded-[13px] bg-[#7A8B72] text-white">
+        <Icon size={22} aria-hidden="true" strokeWidth={2} />
+      </div>
+      <div>
+        <span className="font-mono text-[11px] text-[#9C9686]">STEP {step}</span>
+        <h3 className="mt-1 text-[19px] font-semibold tracking-[-0.01em]">{title}</h3>
+        <p className="mt-1.5 text-[14px] leading-6 text-[#706E68]">{description}</p>
+      </div>
+    </div>
+  )
+}
+
+function HowItWorks() {
+  return (
+    <section id="how-it-works" className="scroll-mt-6 border-t border-[#E2DFD6] bg-[#F1EFE8] py-20 sm:py-28">
+      <div className="mx-auto max-w-[1380px] px-6 lg:px-10">
+        <div className="mx-auto mb-14 max-w-[620px] text-center">
+          <span className="font-serif text-[15px] italic text-[#7A8B72]">How it works</span>
+          <h2 className="mt-3 text-[clamp(28px,4vw,42px)] font-semibold tracking-[-0.02em] text-balance">
+            One prompt, a full content kit.
+          </h2>
+          <p className="mt-4 text-[16px] text-[#706E68]">
+            Five steps, in order — this is the same flow that&rsquo;s live in the product today.
+          </p>
+        </div>
+        <div className="mx-auto flex max-w-[820px] flex-col gap-4">
+          {FLOW_STEPS.map((step, i) => (
+            <FlowStep key={step.title} step={i + 1} {...step} />
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+/* ---------- Moat / founder story ---------- */
+
+function MoatStep({ num, title, description }: { num: string; title: string; description: string }) {
+  return (
+    <div className="flex items-center gap-4 rounded-[12px] border border-[#E0DDD3] bg-white p-5">
+      <span className="w-14 flex-shrink-0 font-serif text-[28px] font-bold text-[#7A8B72]">{num}</span>
+      <div>
+        <h4 className="text-[15px] font-semibold">{title}</h4>
+        <p className="text-[13px] text-[#9C9686]">{description}</p>
+      </div>
+    </div>
+  )
+}
+
+function Moat() {
+  return (
+    <section className="py-20 sm:py-28">
+      <div className="mx-auto max-w-[1380px] px-6 lg:px-10">
+        <div className="grid items-center gap-12 lg:grid-cols-[1.1fr_.9fr] lg:gap-16">
+          <div>
+            <span className="font-serif text-[15px] italic text-[#7A8B72]">Why it&rsquo;s different</span>
+            <h2 className="mt-3 text-[clamp(26px,3.6vw,38px)] font-semibold tracking-[-0.02em] text-balance">
+              Personalization is the moat.
+            </h2>
+            <p className="mt-5 text-[16px] leading-7 text-[#706E68]">
+              Rajiv runs <span className="font-medium text-[#3A3934]">@technosaze</span> on YouTube.
+              He trained the first version of this script generator on roughly twenty of his own
+              Shorts &mdash; and it worked well enough to write in his voice, for his kind of video,
+              that the plan became a small SaaS other solo creators could pay for.
+            </p>
+            <p className="mt-4 text-[16px] leading-7 text-[#706E68]">
+              Generic AI writing tools produce competent, generic scripts. ScriptSnap is built
+              around <span className="font-medium text-[#3A3934]">your</span> cadence &mdash; your
+              tones, your categories, the kind of video you actually make &mdash; not a one-size-fits-all
+              prompt everyone else is typing too.
+            </p>
+          </div>
+          <div className="flex flex-col gap-3">
+            <MoatStep num="20" title="Shorts from one creator" description="The starting point" />
+            <p className="text-center text-[13px] text-[#9C9686]">↓ shapes</p>
+            <MoatStep num="1" title="Tone preset, refined" description="Style and pacing, not a generic template" />
+            <p className="text-center text-[13px] text-[#9C9686]">↓ powers</p>
+            <MoatStep num="∞" title="Scripts that sound like you" description="Every generation, in your tone, ready to post" />
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+/* ---------- Trust: learning + guideline check ---------- */
+
+function TrustFeatures() {
+  return (
+    <section className="border-t border-[#E2DFD6] bg-[#F1EFE8] py-20 sm:py-28">
+      <div className="mx-auto max-w-[1380px] px-6 lg:px-10">
+        <div className="mx-auto mb-14 max-w-[660px] text-center">
+          <h2 className="text-[clamp(28px,4vw,42px)] font-semibold tracking-[-0.02em] text-balance">
+            Built to keep getting better &mdash; and keep you covered
+          </h2>
+          <p className="mt-4 text-[16px] text-[#706E68]">
+            A voice profile that keeps learning, and a real policy check before you publish.
+          </p>
+        </div>
+        <div className="grid gap-5 md:grid-cols-2">
+          <div className="rounded-[16px] border border-[#E0DDD3] bg-white p-8">
+            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-[13px] bg-[#7A8B72] text-white">
+              <RefreshCw size={22} aria-hidden="true" strokeWidth={2} />
+            </div>
+            <h3 className="text-[19px] font-semibold">Gets smarter every session</h3>
+            <p className="mt-2 text-[14.5px] leading-6 text-[#706E68]">
+              Every script you keep, edit, or regenerate refines your tone presets &mdash; a voice
+              profile that fits your actual style better the more you use it.
+            </p>
+            <div className="mt-5 flex flex-col gap-2.5">
+              {[
+                { label: 'Session 1', pct: 22 },
+                { label: 'Session 6', pct: 61 },
+                { label: 'Session 20', pct: 94 },
+              ].map((row) => (
+                <div key={row.label} className="flex items-center gap-3 text-[12px] text-[#9C9686]">
+                  <span className="w-[70px] flex-shrink-0">{row.label}</span>
+                  <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-[#EAE7DD]">
+                    <span className="block h-full rounded-full bg-[#7A8B72]" style={{ width: `${row.pct}%` }} />
+                  </div>
+                  <span className="w-8 flex-shrink-0 text-right font-medium text-[#5D5B55]">{row.pct}%</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="rounded-[16px] border border-[#E0DDD3] bg-white p-8">
+            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-[13px] bg-[#7A8B72] text-white">
+              <ShieldCheck size={22} aria-hidden="true" strokeWidth={2} />
+            </div>
+            <h3 className="text-[19px] font-semibold">Checks YouTube guidelines before you post</h3>
+            <p className="mt-2 text-[14.5px] leading-6 text-[#706E68]">
+              Every script is scanned for monetization and policy risk &mdash; copyright mentions,
+              restricted claims, advertiser-unfriendly language &mdash; so you catch it before YouTube does.
+            </p>
+            <div className="mt-5 flex flex-col gap-2">
+              <div className="flex items-start gap-2.5 rounded-[10px] border border-[#CFE0C8] bg-[#EFF3EA] px-3.5 py-2.5 text-[13px] text-[#3A3934]">
+                <ShieldCheck size={16} aria-hidden="true" className="mt-0.5 flex-shrink-0 text-[#5C7A52]" />
+                No policy risks flagged in this script
+              </div>
+              <div className="flex items-start gap-2.5 rounded-[10px] border border-[#E9D9B8] bg-[#FBF3E4] px-3.5 py-2.5 text-[13px] text-[#3A3934]">
+                <ShieldAlert size={16} aria-hidden="true" className="mt-0.5 flex-shrink-0 text-[#B8863A]" />
+                Mentions a brand name — worth verifying usage rights
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+/* ---------- Content-kit showcase ---------- */
+
+const KIT_ITEMS = [
+  { icon: PenTool, title: 'Full script', sample: 'Hook → beats → CTA, paced for Shorts' },
+  { icon: Sparkles, title: 'Title', sample: '"6 Hours of Filming for 40 Seconds"' },
+  { icon: ListOrdered, title: '10 title variations', sample: 'Ready to A/B test' },
+  { icon: FileText, title: 'Description', sample: 'SEO-formatted, ready to paste' },
+  { icon: Hash, title: 'Hashtags', sample: '#shortscreator #dayinthelife +6' },
+  { icon: Pin, title: 'Pinned comment', sample: 'Drafted to drive replies' },
+  { icon: ShieldCheck, title: 'Guideline check', sample: 'Policy risk, flagged before you post' },
+  { icon: Layers, title: 'Tone presets', sample: 'Your trained voice, reusable every time' },
+]
+
+function KitShowcase() {
+  return (
+    <section id="kit" className="py-20 sm:py-28">
+      <div className="mx-auto max-w-[1380px] px-6 lg:px-10">
+        <div className="mx-auto mb-14 max-w-[620px] text-center">
+          <h2 className="text-[clamp(28px,4vw,42px)] font-semibold tracking-[-0.02em] text-balance">
+            Every generation is a full content kit
+          </h2>
+          <p className="mt-4 text-[16px] text-[#706E68]">
+            Not just a script — everything you&rsquo;d otherwise write by hand, one field at a time.
+          </p>
+        </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {KIT_ITEMS.map(({ icon: Icon, title, sample }) => (
+            <div
+              key={title}
+              className="rounded-[12px] border border-[#E0DDD3] bg-white p-6 transition-colors hover:border-[#7A8B72]/50"
+            >
+              <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-[9px] bg-[#EFF1E8] text-[#5C7A52]">
+                <Icon size={18} aria-hidden="true" />
+              </div>
+              <h4 className="text-[14.5px] font-semibold">{title}</h4>
+              <p className="mt-1.5 font-mono text-[12px] leading-5 text-[#9C9686]">{sample}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+/* ---------- Comparison ---------- */
+
+const COMPARE_COLUMNS = [
+  {
+    name: 'ScriptSnap',
+    tag: 'Built for solo Shorts creators',
+    featured: true,
+    rows: [
+      { yes: true, text: 'Trained on your own videos, learns further every session' },
+      { yes: true, text: 'Built-in YouTube guideline risk check' },
+      { yes: true, text: 'Regional language support — Hindi, Tamil, Telugu & more' },
+      { yes: true, text: 'INR pricing, Razorpay billing, built for solo creators' },
+    ],
+  },
+  {
+    name: 'Generic AI writers',
+    tag: "ChatGPT, Claude, vidIQ's free generator",
+    featured: false,
+    rows: [
+      { yes: false, text: 'Re-explain your voice every session' },
+      { yes: false, text: 'No YouTube policy risk-checking built in' },
+      { yes: true, text: 'Free or cheap to try' },
+      { yes: false, text: 'Not YouTube-Shorts-structured by default' },
+    ],
+  },
+  {
+    name: 'Agency brand-voice tools',
+    tag: 'Jasper and similar',
+    featured: false,
+    rows: [
+      { yes: true, text: 'Real brand-voice training' },
+      { yes: false, text: 'Priced and packaged for agencies ($49/mo+)' },
+      { yes: false, text: 'General marketing copy, not Shorts-native' },
+      { yes: false, text: 'Built for teams, not a solo creator' },
+    ],
+  },
+]
+
+function Comparison() {
+  return (
+    <section className="border-t border-[#E2DFD6] bg-[#F1EFE8] py-20 sm:py-28">
+      <div className="mx-auto max-w-[1380px] px-6 lg:px-10">
+        <div className="mx-auto mb-14 max-w-[660px] text-center">
+          <h2 className="text-[clamp(28px,4vw,42px)] font-semibold tracking-[-0.02em] text-balance">
+            Built for one creator&rsquo;s voice &mdash; not everyone&rsquo;s average
+          </h2>
+          <p className="mt-4 text-[16px] text-[#706E68]">
+            Most AI writing tools either give you a generic template or price real personalization
+            for an agency budget. ScriptSnap does neither.
+          </p>
+        </div>
+        <div className="grid overflow-hidden rounded-[16px] border border-[#E0DDD3] md:grid-cols-3">
+          {COMPARE_COLUMNS.map((col, i) => (
+            <div
+              key={col.name}
+              className={`p-8 ${i < 2 ? 'border-b border-[#E0DDD3] md:border-b-0 md:border-r' : ''} ${
+                col.featured ? 'bg-[#EFF1E8]' : 'bg-white'
+              }`}
+            >
+              <h4 className="text-[16px] font-semibold">{col.name}</h4>
+              <span className="mt-1 block text-[12px] text-[#9C9686]">{col.tag}</span>
+              <ul className="mt-5 flex flex-col gap-3">
+                {col.rows.map((row, j) => (
+                  <li key={j} className="flex items-start gap-2.5 text-[14px] text-[#4A4842]">
+                    {row.yes ? (
+                      <Check size={16} aria-hidden="true" className="mt-0.5 flex-shrink-0 text-[#5C7A52]" />
+                    ) : (
+                      <XIcon size={16} aria-hidden="true" className="mt-0.5 flex-shrink-0 text-[#B0796B]" />
+                    )}
+                    {row.text}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+/* ---------- Final CTA ---------- */
+
+function FinalCta() {
+  return (
+    <section className="py-20 sm:py-28">
+      <div className="mx-auto max-w-[1380px] px-6 lg:px-10">
+        <div className="rounded-[24px] border border-[#E0DDD3] bg-[#FBFAF6] px-6 py-16 text-center sm:px-10 sm:py-20">
+          <h2 className="text-[clamp(28px,4.5vw,44px)] font-semibold tracking-[-0.02em] text-balance">
+            Stop staring at a blank page.
+          </h2>
+          <p className="mx-auto mt-4 max-w-[460px] text-[16px] text-[#706E68]">
+            Describe your next Short and see your first script — full content kit, guideline check
+            included — in under a minute. Free, no card required.
+          </p>
+          <div className="mt-8">
+            <Button href="/auth/signup" icon={<ArrowRight size={17} aria-hidden="true" />}>
+              Generate your first script free
+            </Button>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
 function LandingPage() {
   return (
     <div className="min-h-screen bg-[#F7F5F0] text-[#20201E]" style={{ colorScheme: 'light' }}>
@@ -398,8 +750,8 @@ function LandingPage() {
         <div className="mx-auto flex h-[76px] max-w-[1380px] items-center justify-between px-6 lg:px-10">
           <Logo />
           <nav className="hidden items-center gap-10 md:flex">
-            <a href="#features" className="text-[14px] text-[#484742] transition hover:text-[#20201E]">Features</a>
             <a href="#how-it-works" className="text-[14px] text-[#484742] transition hover:text-[#20201E]">How it works</a>
+            <a href="#kit" className="text-[14px] text-[#484742] transition hover:text-[#20201E]">Content kit</a>
             <Link href="/pricing" className="text-[14px] text-[#484742] transition hover:text-[#20201E]">Pricing</Link>
           </nav>
           <div className="flex items-center gap-5">
@@ -442,13 +794,20 @@ function LandingPage() {
           <ProductPreview />
         </section>
 
-        <section id="features" className="border-t border-[#E2DFD6] bg-[#F1EFE8]">
+        <section className="border-t border-[#E2DFD6] bg-[#F1EFE8]">
           <div className="mx-auto grid max-w-[1380px] grid-cols-1 divide-y divide-[#DDD9CF] px-6 py-0 md:grid-cols-3 md:divide-x md:divide-y-0 lg:px-10">
             <Feature number="01" title="Write faster" description="Turn a topic into a full script and content kit in under a minute, not an afternoon." />
             <Feature number="02" title="Sound like yourself" description="Trained on your own back-catalog, so every script sounds like you, not a generic AI voice." />
             <Feature number="03" title="Post with confidence" description="Every script is checked against YouTube's Community Guidelines before you post — copyright, monetization risk, all of it." />
           </div>
         </section>
+
+        <HowItWorks />
+        <Moat />
+        <TrustFeatures />
+        <KitShowcase />
+        <Comparison />
+        <FinalCta />
       </main>
 
       <footer className="bg-[#20201E] px-6 py-12 text-[#F4F1E9] lg:px-10">
