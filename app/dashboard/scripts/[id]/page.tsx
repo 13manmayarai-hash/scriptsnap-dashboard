@@ -1,12 +1,27 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { LANGUAGES } from '@/lib/languages'
+import { useAppStore } from '@/lib/store/app'
 import ScriptRating from '@/lib/components/ScriptRating'
-import { ArrowLeft, Copy, Download, Trash2, ShieldAlert, ShieldCheck } from 'lucide-react'
+import ErrorMessage from '@/lib/components/ui/ErrorMessage'
+import {
+  ArrowLeft,
+  Copy,
+  Download,
+  Trash2,
+  ShieldAlert,
+  ShieldCheck,
+  Wand2,
+  Scissors,
+  Maximize2,
+  Sparkles,
+  Undo2,
+  Loader2,
+} from 'lucide-react'
 
 interface Script {
   id: string
@@ -22,20 +37,43 @@ interface Script {
   pinned_comment: string
   alternative_titles: Array<{ style: string; title: string }>
   key_points: string[]
-  word_count: number
-  is_series: boolean
   guideline_passed: boolean
   guideline_flags: Array<{ severity: string; note: string }>
   created_at: string
 }
 
+interface Analysis {
+  score: number
+  tone: string
+  audience: string
+  readability: string
+  hookStrength: string
+  suggestions: string[]
+}
+
+type AiAction = 'rewrite' | 'shorten' | 'expand' | 'hook' | 'tone' | 'alternatives' | 'analyze'
+
+const TONE_OPTIONS = ['Conversational', 'Energetic', 'Calm', 'Dramatic', 'Playful', 'Formal']
+
 export default function ScriptWorkspacePage() {
   const params = useParams<{ id: string }>()
   const router = useRouter()
+  const { setTopbarSaveState } = useAppStore()
+
   const [script, setScript] = useState<Script | null>(null)
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
   const [copied, setCopied] = useState<string | null>(null)
+
+  const [scriptText, setScriptText] = useState('')
+  const savedTextRef = useRef('')
+  const [previousText, setPreviousText] = useState<string | null>(null)
+
+  const [aiLoading, setAiLoading] = useState<AiAction | null>(null)
+  const [aiError, setAiError] = useState('')
+  const [alternatives, setAlternatives] = useState<string[] | null>(null)
+  const [showToneMenu, setShowToneMenu] = useState(false)
+  const [analysis, setAnalysis] = useState<Analysis | null>(null)
 
   useEffect(() => {
     const load = async () => {
@@ -50,7 +88,7 @@ export default function ScriptWorkspacePage() {
       const { data } = await supabase
         .from('scripts')
         .select(
-          'id, topic, category, tone, language, duration, script, title, description, hashtags, pinned_comment, alternative_titles, key_points, word_count, is_series, guideline_passed, guideline_flags, created_at'
+          'id, topic, category, tone, language, duration, script, title, description, hashtags, pinned_comment, alternative_titles, key_points, guideline_passed, guideline_flags, created_at'
         )
         .eq('id', params.id)
         .eq('user_id', user.id)
@@ -60,16 +98,97 @@ export default function ScriptWorkspacePage() {
         setNotFound(true)
       } else {
         setScript(data as Script)
+        setScriptText(data.script)
+        savedTextRef.current = data.script
       }
       setLoading(false)
     }
     load()
   }, [params.id])
 
+  useEffect(() => {
+    return () => setTopbarSaveState(null)
+  }, [setTopbarSaveState])
+
+  // Autosave — debounced, so we're not writing on every keystroke.
+  useEffect(() => {
+    if (!script || scriptText === savedTextRef.current) return
+
+    setTopbarSaveState('Unsaved changes')
+    const timeout = setTimeout(async () => {
+      setTopbarSaveState('Saving…')
+      const supabase = createClient()
+      const { error } = await supabase
+        .from('scripts')
+        .update({ script: scriptText, word_count: scriptText.trim().split(/\s+/).filter(Boolean).length })
+        .eq('id', script.id)
+
+      if (error) {
+        setTopbarSaveState("Couldn't save")
+      } else {
+        savedTextRef.current = scriptText
+        setTopbarSaveState('Saved ✓')
+        setTimeout(() => setTopbarSaveState(null), 2000)
+      }
+    }, 1200)
+
+    return () => clearTimeout(timeout)
+  }, [scriptText, script, setTopbarSaveState])
+
   const handleCopy = (text: string, id: string) => {
     navigator.clipboard.writeText(text)
     setCopied(id)
     setTimeout(() => setCopied(null), 2000)
+  }
+
+  const runAiAction = useCallback(
+    async (action: AiAction, tone?: string) => {
+      if (!script) return
+      setAiError('')
+      setAiLoading(action)
+      try {
+        const response = await fetch(`/api/scripts/${script.id}/action`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
+          body: JSON.stringify({ action, text: scriptText, tone }),
+        })
+        if (!response.ok) {
+          const err = await response.json().catch(() => null)
+          throw new Error(err?.error || 'AI action failed')
+        }
+        const data = await response.json()
+
+        if (action === 'alternatives') {
+          setAlternatives(data.alternatives || [])
+        } else if (action === 'analyze') {
+          setAnalysis(data.analysis)
+        } else {
+          setPreviousText(scriptText)
+          setScriptText(data.result)
+        }
+      } catch (err) {
+        setAiError(err instanceof Error ? err.message : 'AI action failed')
+      } finally {
+        setAiLoading(null)
+        setShowToneMenu(false)
+      }
+    },
+    [script, scriptText]
+  )
+
+  const handleUndo = () => {
+    if (previousText === null) return
+    setScriptText(previousText)
+    setPreviousText(null)
+  }
+
+  const useAlternative = (alt: string) => {
+    setPreviousText(scriptText)
+    // Replace the opening line/sentence with the chosen hook.
+    const rest = scriptText.split(/\n/).slice(1).join('\n')
+    setScriptText(rest ? `${alt}\n${rest}` : alt)
+    setAlternatives(null)
   }
 
   const handleDownload = async () => {
@@ -88,13 +207,7 @@ export default function ScriptWorkspacePage() {
         y = margin
       }
     }
-
-    const writeParagraph = (
-      text: string,
-      fontSize: number,
-      lineHeight: number,
-      style: 'normal' | 'bold' | 'italic' = 'normal'
-    ) => {
+    const writeParagraph = (text: string, fontSize: number, lineHeight: number, style: 'normal' | 'bold' = 'normal') => {
       doc.setFont('helvetica', style)
       doc.setFontSize(fontSize)
       const lines = doc.splitTextToSize(text, maxWidth) as string[]
@@ -108,13 +221,13 @@ export default function ScriptWorkspacePage() {
     writeParagraph(script.title, 18, 22, 'bold')
     y += 4
     writeParagraph(
-      `${script.duration}s  •  ${script.category}  •  ${script.tone}  •  ${script.word_count} words  •  ${new Date(script.created_at).toLocaleDateString()}`,
+      `${script.duration}s  •  ${script.category}  •  ${script.tone}  •  ${new Date(script.created_at).toLocaleDateString()}`,
       10,
       14
     )
     y += 14
     writeParagraph('SCRIPT', 11, 16, 'bold')
-    writeParagraph(script.script, 11, 15)
+    writeParagraph(scriptText, 11, 15)
     y += 14
     writeParagraph('DESCRIPTION', 11, 16, 'bold')
     writeParagraph(script.description, 11, 15)
@@ -142,18 +255,24 @@ export default function ScriptWorkspacePage() {
     return (
       <div className="card py-16 text-center">
         <h1 className="mb-2 text-xl font-bold heading-serif">Script not found</h1>
-        <p className="mb-6 text-sm text-ink-muted">
-          It may have been deleted, or the link is wrong.
-        </p>
-        <Link href="/dashboard/library" className="btn-primary inline-flex">
-          Back to Scripts
-        </Link>
+        <p className="mb-6 text-sm text-ink-muted">It may have been deleted, or the link is wrong.</p>
+        <Link href="/dashboard/library" className="btn-primary inline-flex">Back to Scripts</Link>
       </div>
     )
   }
 
+  const wordCount = scriptText.trim() ? scriptText.trim().split(/\s+/).length : 0
+  const charCount = scriptText.length
+
+  const AI_BUTTONS: { action: AiAction; label: string; icon: typeof Wand2 }[] = [
+    { action: 'rewrite', label: 'Rewrite', icon: Wand2 },
+    { action: 'shorten', label: 'Shorten', icon: Scissors },
+    { action: 'expand', label: 'Expand', icon: Maximize2 },
+    { action: 'hook', label: 'Improve Hook', icon: Sparkles },
+  ]
+
   return (
-    <div className="mx-auto max-w-4xl space-y-4">
+    <div className="mx-auto max-w-6xl space-y-4">
       <Link href="/dashboard/library" className="inline-flex items-center gap-1.5 text-sm text-ink-muted hover:text-ink">
         <ArrowLeft size={15} aria-hidden="true" />
         Back to Scripts
@@ -183,6 +302,183 @@ export default function ScriptWorkspacePage() {
         </div>
       </div>
 
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_280px]">
+        {/* Editor */}
+        <div className="card">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <h2 className="text-sm font-semibold text-ink-muted">SCRIPT</h2>
+            <p className="text-xs text-ink-faint">{wordCount} words • {charCount} characters</p>
+          </div>
+
+          <label htmlFor="script-editor" className="sr-only">Script content</label>
+          <textarea
+            id="script-editor"
+            value={scriptText}
+            onChange={(e) => setScriptText(e.target.value)}
+            className="input mb-3 h-64 resize-y font-mono text-sm leading-relaxed"
+            spellCheck={true}
+          />
+
+          <div className="mb-3 flex flex-wrap items-center gap-2">
+            {AI_BUTTONS.map(({ action, label, icon: Icon }) => (
+              <button
+                key={action}
+                onClick={() => runAiAction(action)}
+                disabled={aiLoading !== null || !scriptText.trim()}
+                className="btn-secondary flex items-center gap-1.5 px-3 py-2 text-xs"
+              >
+                {aiLoading === action ? (
+                  <Loader2 size={14} aria-hidden="true" className="animate-spin" />
+                ) : (
+                  <Icon size={14} aria-hidden="true" />
+                )}
+                {label}
+              </button>
+            ))}
+
+            <div className="relative">
+              <button
+                onClick={() => setShowToneMenu((v) => !v)}
+                disabled={aiLoading !== null || !scriptText.trim()}
+                aria-haspopup="menu"
+                aria-expanded={showToneMenu}
+                className="btn-secondary flex items-center gap-1.5 px-3 py-2 text-xs"
+              >
+                {aiLoading === 'tone' ? (
+                  <Loader2 size={14} aria-hidden="true" className="animate-spin" />
+                ) : (
+                  <Wand2 size={14} aria-hidden="true" />
+                )}
+                Change Tone
+              </button>
+              {showToneMenu && (
+                <div role="menu" className="absolute left-0 z-10 mt-1 w-40 rounded-lg border border-warm-border bg-warm-surface p-1 shadow-lg">
+                  {TONE_OPTIONS.map((t) => (
+                    <button
+                      key={t}
+                      role="menuitem"
+                      onClick={() => runAiAction('tone', t)}
+                      className="block min-h-[36px] w-full rounded px-3 text-left text-sm text-ink hover:bg-warm-surface-alt"
+                    >
+                      {t}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <button
+              onClick={() => runAiAction('alternatives')}
+              disabled={aiLoading !== null || !scriptText.trim()}
+              className="btn-secondary flex items-center gap-1.5 px-3 py-2 text-xs"
+            >
+              {aiLoading === 'alternatives' ? (
+                <Loader2 size={14} aria-hidden="true" className="animate-spin" />
+              ) : (
+                <Sparkles size={14} aria-hidden="true" />
+              )}
+              Alternatives
+            </button>
+
+            {previousText !== null && (
+              <button
+                onClick={handleUndo}
+                className="btn-ghost flex items-center gap-1.5 px-3 py-2 text-xs"
+              >
+                <Undo2 size={14} aria-hidden="true" />
+                Undo last change
+              </button>
+            )}
+          </div>
+
+          {aiError && <ErrorMessage className="mb-3">{aiError}</ErrorMessage>}
+
+          {alternatives && alternatives.length > 0 && (
+            <div className="mb-3 space-y-2 rounded-lg border border-warm-border bg-warm-surface-alt p-3">
+              <p className="text-xs font-semibold text-ink-muted">ALTERNATIVE OPENINGS</p>
+              {alternatives.map((alt, i) => (
+                <div key={i} className="flex items-start justify-between gap-2 rounded border border-warm-border bg-warm-surface p-2">
+                  <p className="flex-1 text-sm text-ink">{alt}</p>
+                  <button onClick={() => useAlternative(alt)} className="btn-secondary flex-shrink-0 px-2 py-1 text-xs">
+                    Use this
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <button
+              onClick={() => handleCopy(scriptText, 'script')}
+              className={`btn-secondary flex-1 text-sm ${copied === 'script' ? 'bg-sage/10' : ''}`}
+            >
+              {copied === 'script' ? '✓ Copied!' : 'Copy Script'}
+            </button>
+            <button onClick={handleDownload} className="btn-secondary flex flex-1 items-center justify-center gap-2 text-sm">
+              <Download size={15} aria-hidden="true" />
+              Download PDF
+            </button>
+          </div>
+        </div>
+
+        {/* Insights panel */}
+        <div className="card h-fit">
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-ink-muted">INSIGHTS</h2>
+            <button
+              onClick={() => runAiAction('analyze')}
+              disabled={aiLoading !== null || !scriptText.trim()}
+              className="flex min-h-[32px] items-center gap-1 text-xs text-sage hover:underline disabled:opacity-50"
+            >
+              {aiLoading === 'analyze' ? <Loader2 size={12} aria-hidden="true" className="animate-spin" /> : null}
+              {analysis ? 'Re-check' : 'Check script'}
+            </button>
+          </div>
+
+          {!analysis ? (
+            <p className="text-sm text-ink-muted">Run a check to see a score, tone read, and suggestions for this script.</p>
+          ) : (
+            <div className="space-y-4">
+              <div>
+                <p className="text-xs text-ink-muted">SCRIPT SCORE</p>
+                <p className="font-serif text-3xl font-bold text-sage">{analysis.score}</p>
+              </div>
+              <dl className="space-y-2 text-sm">
+                <div className="flex justify-between gap-2">
+                  <dt className="text-ink-muted">Tone</dt>
+                  <dd className="text-right font-medium text-ink">{analysis.tone}</dd>
+                </div>
+                <div className="flex justify-between gap-2">
+                  <dt className="text-ink-muted">Audience</dt>
+                  <dd className="text-right font-medium text-ink">{analysis.audience}</dd>
+                </div>
+                <div className="flex justify-between gap-2">
+                  <dt className="text-ink-muted">Readability</dt>
+                  <dd className="text-right font-medium text-ink">{analysis.readability}</dd>
+                </div>
+                <div className="flex justify-between gap-2">
+                  <dt className="text-ink-muted">Hook strength</dt>
+                  <dd className="text-right font-medium text-ink">{analysis.hookStrength}</dd>
+                </div>
+              </dl>
+              {analysis.suggestions?.length > 0 && (
+                <div>
+                  <p className="mb-1.5 text-xs text-ink-muted">SUGGESTIONS</p>
+                  <ul className="space-y-1.5">
+                    {analysis.suggestions.map((s, i) => (
+                      <li key={i} className="flex gap-2 text-sm text-ink">
+                        <span className="flex-shrink-0 text-sage">•</span>
+                        <span>{s}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
       <div
         className={`card flex items-start gap-3 ${
           script.guideline_passed ? 'border-sage/40 bg-sage/5' : 'border-amber-400/50 bg-amber-50'
@@ -204,25 +500,6 @@ export default function ScriptWorkspacePage() {
               ))}
             </ul>
           )}
-        </div>
-      </div>
-
-      <div className="card">
-        <h2 className="mb-3 text-sm font-semibold text-ink-muted">SCRIPT ({script.word_count} words)</h2>
-        <div className="mb-4 rounded-lg border border-warm-border bg-warm-surface-alt p-4">
-          <p className="whitespace-pre-wrap font-mono text-sm leading-relaxed text-ink">{script.script}</p>
-        </div>
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <button
-            onClick={() => handleCopy(script.script, 'script')}
-            className={`btn-secondary flex-1 text-sm ${copied === 'script' ? 'bg-sage/10' : ''}`}
-          >
-            {copied === 'script' ? '✓ Copied!' : 'Copy Script'}
-          </button>
-          <button onClick={handleDownload} className="btn-secondary flex flex-1 items-center justify-center gap-2 text-sm">
-            <Download size={15} aria-hidden="true" />
-            Download PDF
-          </button>
         </div>
       </div>
 
@@ -255,9 +532,7 @@ export default function ScriptWorkspacePage() {
         <h2 className="mb-3 text-sm font-semibold text-ink-muted">HASHTAGS</h2>
         <div className="mb-4 flex flex-wrap gap-2">
           {script.hashtags.map((tag, i) => (
-            <span key={i} className="inline-block rounded bg-sage/20 px-3 py-1 text-sm font-medium text-sage">
-              {tag}
-            </span>
+            <span key={i} className="inline-block rounded bg-sage/20 px-3 py-1 text-sm font-medium text-sage">{tag}</span>
           ))}
         </div>
         <button
