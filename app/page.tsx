@@ -131,15 +131,12 @@ function Button({
   className?: string
   href: string
 }) {
-  const base =
-    'inline-flex min-h-[46px] items-center justify-center gap-2 rounded-[7px] px-6 text-[15px] font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7A8B72] focus-visible:ring-offset-2 focus-visible:ring-offset-[#F7F5F0]'
-  const variants = {
-    primary: 'bg-[#7A8B72] text-white hover:bg-[#697B62] active:scale-[0.98]',
-    secondary:
-      'border border-[#AEB5A6] bg-transparent text-[#20201E] hover:bg-[#F0EEE7] active:scale-[0.98]',
-  }
+  const base = variant === 'primary' ? 'btn-primary' : 'btn-secondary'
   return (
-    <Link href={href} className={`${base} ${variants[variant]} ${className}`}>
+    <Link
+      href={href}
+      className={`${base} inline-flex min-h-[46px] items-center justify-center gap-2 text-[15px] ${className}`}
+    >
       {children}
       {icon}
     </Link>
@@ -971,9 +968,9 @@ function LandingPage() {
             <p className="mt-2 text-[12px] text-[#AAA79F]">Built solo by a YouTube Shorts creator.</p>
           </div>
           <div className="flex gap-7 text-[12px] text-[#AAA79F]">
-            <a href="#" className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7A8B72] rounded">Privacy</a>
-            <a href="#" className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7A8B72] rounded">Terms</a>
-            <a href="#" className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7A8B72] rounded">Contact</a>
+            <a href="#" className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sage rounded">Privacy</a>
+            <a href="#" className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sage rounded">Terms</a>
+            <a href="#" className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sage rounded">Contact</a>
           </div>
         </div>
       </footer>
