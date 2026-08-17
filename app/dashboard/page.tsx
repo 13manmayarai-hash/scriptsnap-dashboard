@@ -216,7 +216,7 @@ function DashboardHome() {
             <ul className="space-y-1.5">
               {upcoming.map((entry) => (
                 <li key={entry.id} className="flex justify-between gap-2 text-sm text-ink">
-                  <span className="truncate">{entry.title}</span>
+                  <span className="min-w-0 flex-1 truncate">{entry.title}</span>
                   <span className="flex-shrink-0 text-xs text-ink-faint">
                     {new Date(entry.scheduled_date + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                   </span>

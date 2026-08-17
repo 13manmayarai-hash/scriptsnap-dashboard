@@ -73,11 +73,11 @@ export default function Topbar({
       <div className="flex flex-shrink-0 items-center gap-2">
         {action &&
           (action.href ? (
-            <Link href={action.href} className="btn-primary px-4 py-2 text-sm">
+            <Link href={action.href} className="btn-primary px-2.5 py-2 text-xs sm:px-4 sm:text-sm">
               {action.label}
             </Link>
           ) : (
-            <button onClick={action.onClick} className="btn-primary px-4 py-2 text-sm">
+            <button onClick={action.onClick} className="btn-primary px-2.5 py-2 text-xs sm:px-4 sm:text-sm">
               {action.label}
             </button>
           ))}
