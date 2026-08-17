@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { Suspense, useEffect, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { useAppStore } from '@/lib/store/app'
@@ -37,9 +37,18 @@ const DEFAULT_TONES: TonePreset[] = [
 ]
 
 export default function NewScriptPage() {
+  return (
+    <Suspense fallback={null}>
+      <NewScriptForm />
+    </Suspense>
+  )
+}
+
+function NewScriptForm() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { user, setUser } = useAppStore()
-  const [topic, setTopic] = useState('')
+  const [topic, setTopic] = useState(searchParams.get('topic') || '')
   const [duration, setDuration] = useState(30)
   const [categories, setCategories] = useState<Category[]>(
     DEFAULT_CATEGORIES.map((name) => ({ id: name, name }))
@@ -48,9 +57,9 @@ export default function NewScriptPage() {
   const [tonePresets, setTonePresets] = useState<TonePreset[]>(DEFAULT_TONES)
   const [toneId, setToneId] = useState(DEFAULT_TONES[0].id)
   const [language, setLanguage] = useState('english')
-  const [context, setContext] = useState('')
+  const [context, setContext] = useState(searchParams.get('context') || '')
   const [keywords, setKeywords] = useState('')
-  const [showMore, setShowMore] = useState(false)
+  const [showMore, setShowMore] = useState(!!searchParams.get('context'))
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 

@@ -1,12 +1,83 @@
-import { LayoutTemplate } from 'lucide-react'
-import ComingSoon from '@/lib/components/ui/ComingSoon'
+'use client'
+
+import { useRouter } from 'next/navigation'
+import { LayoutTemplate, ArrowRight } from 'lucide-react'
+
+const TEMPLATES = [
+  {
+    name: 'YouTube Short',
+    description: 'A reliable general-purpose Shorts structure.',
+    context: 'Structure: open with a hook in the first sentence, deliver the core idea in the middle, end with a punchy takeaway or call to action.',
+  },
+  {
+    name: 'Educational',
+    description: 'Teach one clear idea, fast.',
+    context: 'Structure: state what the viewer will learn, explain it simply with one concrete example, end with why it matters.',
+  },
+  {
+    name: 'Storytelling',
+    description: 'A short narrative arc.',
+    context: 'Structure: set up a situation, build tension or curiosity, resolve it with a satisfying or surprising ending.',
+  },
+  {
+    name: 'Product Review',
+    description: 'Quick verdict format.',
+    context: 'Structure: say what the product is, give one standout pro, one honest con, and a clear verdict.',
+  },
+  {
+    name: 'Commentary',
+    description: 'Your take on something.',
+    context: 'Structure: state the topic, give your opinion clearly, back it up with one reason, invite disagreement in the comments.',
+  },
+  {
+    name: 'Listicle',
+    description: 'A countdown or list format.',
+    context: 'Structure: introduce the list and its size, deliver each item briefly and punchily, end with the strongest or most surprising item.',
+  },
+  {
+    name: 'Hook → Context → Reveal',
+    description: 'Classic curiosity-gap structure.',
+    context: 'Structure: open with an intriguing hook, give just enough context to build curiosity, deliver a satisfying reveal at the end.',
+  },
+  {
+    name: 'Problem → Tension → Solution',
+    description: 'Pain-point framing.',
+    context: 'Structure: state a relatable problem, build tension around why it matters, resolve with a clear solution or insight.',
+  },
+]
 
 export default function TemplatesPage() {
+  const router = useRouter()
+
+  const useTemplate = (context: string) => {
+    router.push(`/dashboard/new?context=${encodeURIComponent(context)}`)
+  }
+
   return (
-    <ComingSoon
-      icon={LayoutTemplate}
-      title="Templates"
-      description="Ready-made script structures (Hook → Context → Reveal, Problem → Tension → Solution, and more) you can start a script from — landing shortly."
-    />
+    <div className="max-w-3xl">
+      <div className="mb-2 flex items-center gap-3">
+        <LayoutTemplate size={24} aria-hidden="true" className="text-sage" />
+        <h1 className="text-2xl font-bold heading-serif">Templates</h1>
+      </div>
+      <p className="mb-6 text-sm text-ink-muted">
+        Pick a structure — it pre-fills the generator so you just add your topic.
+      </p>
+
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        {TEMPLATES.map((template) => (
+          <button
+            key={template.name}
+            onClick={() => useTemplate(template.context)}
+            className="card-hover flex flex-col items-start text-left"
+          >
+            <p className="mb-1 text-sm font-semibold text-ink">{template.name}</p>
+            <p className="mb-3 text-xs text-ink-muted">{template.description}</p>
+            <span className="mt-auto flex items-center gap-1 text-xs font-medium text-sage">
+              Use template <ArrowRight size={13} aria-hidden="true" />
+            </span>
+          </button>
+        ))}
+      </div>
+    </div>
   )
 }

@@ -17,6 +17,17 @@ interface RecentScript {
   word_count: number
 }
 
+interface IdeaPreview {
+  id: string
+  text: string
+}
+
+interface UpcomingEntry {
+  id: string
+  title: string
+  scheduled_date: string
+}
+
 function greeting(): string {
   const hour = new Date().getHours()
   if (hour < 12) return 'Good morning'
@@ -39,6 +50,8 @@ function DashboardHome() {
     searchParams.get('payment') === 'success'
   )
   const [recentScripts, setRecentScripts] = useState<RecentScript[]>([])
+  const [ideas, setIdeas] = useState<IdeaPreview[]>([])
+  const [upcoming, setUpcoming] = useState<UpcomingEntry[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -50,14 +63,34 @@ function DashboardHome() {
         return
       }
 
-      const { data } = await supabase
-        .from('scripts')
-        .select('id, title, topic, category, created_at, word_count')
-        .eq('user_id', authUser.id)
-        .order('created_at', { ascending: false })
-        .limit(5)
+      const todayKey = new Date().toISOString().slice(0, 10)
 
-      setRecentScripts(data || [])
+      const [{ data: scripts }, { data: ideaRows }, { data: entries }] = await Promise.all([
+        supabase
+          .from('scripts')
+          .select('id, title, topic, category, created_at, word_count')
+          .eq('user_id', authUser.id)
+          .order('created_at', { ascending: false })
+          .limit(5),
+        supabase
+          .from('ideas')
+          .select('id, text')
+          .eq('user_id', authUser.id)
+          .eq('status', 'new')
+          .order('created_at', { ascending: false })
+          .limit(3),
+        supabase
+          .from('calendar_entries')
+          .select('id, title, scheduled_date')
+          .eq('user_id', authUser.id)
+          .gte('scheduled_date', todayKey)
+          .order('scheduled_date', { ascending: true })
+          .limit(3),
+      ])
+
+      setRecentScripts(scripts || [])
+      setIdeas(ideaRows || [])
+      setUpcoming(entries || [])
       setLoading(false)
     }
     load()
@@ -152,18 +185,45 @@ function DashboardHome() {
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="card">
-          <div className="mb-2 flex items-center gap-2 text-ink-muted">
-            <Lightbulb size={15} aria-hidden="true" />
-            <h2 className="text-xs font-semibold uppercase tracking-wide">Ideas to explore</h2>
+          <div className="mb-2 flex items-center justify-between">
+            <div className="flex items-center gap-2 text-ink-muted">
+              <Lightbulb size={15} aria-hidden="true" />
+              <h2 className="text-xs font-semibold uppercase tracking-wide">Ideas to explore</h2>
+            </div>
+            <Link href="/dashboard/ideas" className="text-xs text-sage hover:underline">Open</Link>
           </div>
-          <p className="text-sm text-ink-muted">Ideas is coming soon — a place to park quick thoughts before they become scripts.</p>
+          {ideas.length === 0 ? (
+            <p className="text-sm text-ink-muted">No ideas parked yet.</p>
+          ) : (
+            <ul className="space-y-1.5">
+              {ideas.map((idea) => (
+                <li key={idea.id} className="truncate text-sm text-ink">{idea.text}</li>
+              ))}
+            </ul>
+          )}
         </div>
         <div className="card">
-          <div className="mb-2 flex items-center gap-2 text-ink-muted">
-            <CalendarDays size={15} aria-hidden="true" />
-            <h2 className="text-xs font-semibold uppercase tracking-wide">Upcoming content</h2>
+          <div className="mb-2 flex items-center justify-between">
+            <div className="flex items-center gap-2 text-ink-muted">
+              <CalendarDays size={15} aria-hidden="true" />
+              <h2 className="text-xs font-semibold uppercase tracking-wide">Upcoming content</h2>
+            </div>
+            <Link href="/dashboard/calendar" className="text-xs text-sage hover:underline">Open</Link>
           </div>
-          <p className="text-sm text-ink-muted">Calendar is coming soon — plan what's going out and when.</p>
+          {upcoming.length === 0 ? (
+            <p className="text-sm text-ink-muted">Nothing planned yet.</p>
+          ) : (
+            <ul className="space-y-1.5">
+              {upcoming.map((entry) => (
+                <li key={entry.id} className="flex justify-between gap-2 text-sm text-ink">
+                  <span className="truncate">{entry.title}</span>
+                  <span className="flex-shrink-0 text-xs text-ink-faint">
+                    {new Date(entry.scheduled_date + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </div>
 

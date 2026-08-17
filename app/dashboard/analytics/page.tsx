@@ -9,6 +9,7 @@ interface Stats {
   avgWordCount: number
   topTone: string | null
   topCategory: string | null
+  contentPlanned: number
 }
 
 function mostCommon(values: string[]): string | null {
@@ -39,10 +40,14 @@ export default function AnalyticsPage() {
         return
       }
 
-      const { data } = await supabase
-        .from('scripts')
-        .select('word_count, tone, category')
-        .eq('user_id', user.id)
+      const [{ data }, { count: plannedCount }] = await Promise.all([
+        supabase.from('scripts').select('word_count, tone, category').eq('user_id', user.id),
+        supabase
+          .from('calendar_entries')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', user.id)
+          .gte('scheduled_date', new Date().toISOString().slice(0, 10)),
+      ])
 
       const scripts = data || []
       const wordCounts = scripts.map((s) => s.word_count).filter((w): w is number => typeof w === 'number')
@@ -54,6 +59,7 @@ export default function AnalyticsPage() {
           : 0,
         topTone: mostCommon(scripts.map((s) => s.tone).filter(Boolean)),
         topCategory: mostCommon(scripts.map((s) => s.category).filter(Boolean)),
+        contentPlanned: plannedCount || 0,
       })
       setLoading(false)
     }
@@ -73,7 +79,7 @@ export default function AnalyticsPage() {
     { icon: Type, label: 'Average script length', value: stats?.avgWordCount ? `${stats.avgWordCount} words` : '—' },
     { icon: Mic2, label: 'Most-used tone', value: stats?.topTone || '—' },
     { icon: Tags, label: 'Most-used category', value: stats?.topCategory || '—' },
-    { icon: CalendarDays, label: 'Content planned', value: '0', note: 'Calendar is coming soon' },
+    { icon: CalendarDays, label: 'Content planned', value: String(stats?.contentPlanned ?? 0) },
   ]
 
   return (
@@ -90,14 +96,13 @@ export default function AnalyticsPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          {cards.map(({ icon: Icon, label, value, note }) => (
+          {cards.map(({ icon: Icon, label, value }) => (
             <div key={label} className="card">
               <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-soft-accent text-sage">
                 <Icon size={16} aria-hidden="true" />
               </div>
               <p className="text-xs uppercase tracking-wide text-ink-muted">{label}</p>
               <p className="mt-1 text-2xl font-bold heading-serif capitalize">{value}</p>
-              {note && <p className="mt-1 text-xs text-ink-faint">{note}</p>}
             </div>
           ))}
         </div>
