@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Tags, Plus, Trash2 } from 'lucide-react'
+import ErrorMessage from '@/lib/components/ui/ErrorMessage'
 
 interface Category {
   id: string
@@ -103,9 +104,7 @@ export default function CategoriesPage() {
           </button>
         </form>
         {error && (
-          <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-3 mt-3" aria-live="polite">
-            <p className="text-sm text-red-500">{error}</p>
-          </div>
+          <ErrorMessage className="mt-3">{error}</ErrorMessage>
         )}
       </div>
 
@@ -115,7 +114,7 @@ export default function CategoriesPage() {
             <p className="font-medium text-ink">{cat.name}</p>
             <button
               onClick={() => handleDelete(cat.id)}
-              className="flex-shrink-0 p-2 bg-ink/5 hover:bg-ink/10 rounded transition-colors text-red-600"
+              className="flex-shrink-0 p-2 bg-ink/5 hover:bg-ink/10 rounded transition-colors text-error"
               aria-label={`Delete ${cat.name}`}
             >
               <Trash2 size={16} aria-hidden="true" />

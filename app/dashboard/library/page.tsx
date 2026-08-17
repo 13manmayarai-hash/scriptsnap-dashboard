@@ -329,7 +329,7 @@ function LibraryContent() {
                 {/* Delete Button */}
                 <button
                   onClick={() => handleDelete(selectedScript.id)}
-                  className="w-full flex items-center justify-center gap-2 btn-secondary py-3 text-red-600 hover:text-red-700"
+                  className="w-full flex items-center justify-center gap-2 btn-secondary py-3 text-error hover:text-error-hover"
                 >
                   <Trash2 size={18} aria-hidden="true" />
                   Delete Script

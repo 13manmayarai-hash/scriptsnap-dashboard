@@ -89,7 +89,7 @@ export default function ScriptRating({ scriptId }: { scriptId: string }) {
         aria-pressed={rating === -1}
         aria-label="This script wasn't helpful"
         className={`p-2 rounded transition-colors ${
-          rating === -1 ? 'bg-red-500/15 text-red-600' : 'bg-ink/5 text-ink-muted hover:bg-ink/10'
+          rating === -1 ? 'bg-error/15 text-error' : 'bg-ink/5 text-ink-muted hover:bg-ink/10'
         }`}
       >
         <ThumbsDown size={16} aria-hidden="true" />

@@ -9,6 +9,7 @@ import { TIER_SCRIPT_LIMITS, TIER_NAMES, TIER_BENEFITS } from '@/lib/tiers'
 import { LANGUAGES } from '@/lib/languages'
 import { Sparkles, Copy, Check, X, ShieldAlert, ShieldCheck } from 'lucide-react'
 import ScriptRating from '@/lib/components/ScriptRating'
+import ErrorMessage from '@/lib/components/ui/ErrorMessage'
 
 interface GuidelineFlag {
   severity: 'info' | 'warning'
@@ -374,9 +375,7 @@ function DashboardContent() {
             </button>
 
             {error && (
-              <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-3" aria-live="polite">
-                <p className="text-sm text-red-500">{error}</p>
-              </div>
+              <ErrorMessage>{error}</ErrorMessage>
             )}
           </form>
 

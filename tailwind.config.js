@@ -19,8 +19,12 @@ module.exports = {
         'warm-border': '#E0DDD3',
         ink: '#20201E',
         'ink-muted': '#706E68',
+        'ink-faint': '#918D84',
         sage: '#7A8B72',
         'sage-hover': '#697B62',
+        'soft-accent': '#EFF1E8',
+        error: '#B85C5C',
+        'error-hover': '#9C4444',
       },
       fontFamily: {
         sans: ['system-ui', 'sans-serif'],

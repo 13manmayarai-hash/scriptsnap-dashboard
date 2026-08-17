@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { SettingsIcon, Check } from 'lucide-react'
+import ErrorMessage from '@/lib/components/ui/ErrorMessage'
 
 export default function SettingsPage() {
   const [email, setEmail] = useState('')
@@ -109,9 +110,7 @@ export default function SettingsPage() {
           </div>
 
           {error && (
-            <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-3" aria-live="polite">
-              <p className="text-sm text-red-500">{error}</p>
-            </div>
+            <ErrorMessage>{error}</ErrorMessage>
           )}
           {success && (
             <div className="bg-sage/10 border border-sage/40 rounded-lg p-3 flex items-center gap-2" aria-live="polite">

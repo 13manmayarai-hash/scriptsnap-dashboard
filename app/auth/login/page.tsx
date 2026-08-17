@@ -4,6 +4,7 @@ import { Suspense, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
+import ErrorMessage from '@/lib/components/ui/ErrorMessage'
 
 // Only allow same-app relative paths (must start with a single `/`) so this
 // can't be abused as an open redirect. Blocks both `//host` (protocol-
@@ -156,9 +157,7 @@ function LoginForm() {
             </div>
 
             {error && (
-              <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-3" aria-live="polite">
-                <p className="text-sm text-red-500">{error}</p>
-              </div>
+              <ErrorMessage>{error}</ErrorMessage>
             )}
 
             <button

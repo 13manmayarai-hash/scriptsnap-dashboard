@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Mic2, Plus, Trash2 } from 'lucide-react'
+import ErrorMessage from '@/lib/components/ui/ErrorMessage'
 
 interface TonePreset {
   id: string
@@ -116,9 +117,7 @@ export default function TonePresetsPage() {
             />
           </div>
           {error && (
-            <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-3" aria-live="polite">
-              <p className="text-sm text-red-500">{error}</p>
-            </div>
+            <ErrorMessage>{error}</ErrorMessage>
           )}
           <button type="submit" disabled={saving} className="btn-primary flex items-center justify-center gap-2 w-full sm:w-auto px-6">
             <Plus size={18} aria-hidden="true" />
@@ -136,7 +135,7 @@ export default function TonePresetsPage() {
             </div>
             <button
               onClick={() => handleDelete(preset.id)}
-              className="flex-shrink-0 p-2 bg-ink/5 hover:bg-ink/10 rounded transition-colors text-red-600"
+              className="flex-shrink-0 p-2 bg-ink/5 hover:bg-ink/10 rounded transition-colors text-error"
               aria-label={`Delete ${preset.name}`}
             >
               <Trash2 size={16} aria-hidden="true" />

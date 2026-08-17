@@ -194,7 +194,7 @@ export default function DashboardLayout({
 
             <button
               onClick={handleLogout}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-red-600 text-white hover:bg-red-700 transition"
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-error text-white hover:bg-error-hover transition"
             >
               <LogOut size={20} aria-hidden="true" />
               <span>Logout</span>

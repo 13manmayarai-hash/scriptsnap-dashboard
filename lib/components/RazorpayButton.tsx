@@ -138,7 +138,7 @@ export default function RazorpayButton({
         {loading ? '…' : 'Upgrade'}
       </button>
       {error && (
-        <p className="text-red-500 text-xs md:text-sm mt-1 md:mt-2 break-words" aria-live="polite">
+        <p className="text-error text-xs md:text-sm mt-1 md:mt-2 break-words" aria-live="polite">
           {error}
         </p>
       )}

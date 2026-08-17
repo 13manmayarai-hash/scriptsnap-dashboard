@@ -41,17 +41,20 @@ body {
   background: #697B62;
 }
 
-/* Button styles */
+/* Button styles — every variant keeps a 44px minimum touch target and an
+   explicit disabled state, per the accessibility requirements in the UI
+   refactor brief. Only the primary variant carries the sage brand color;
+   secondary is a neutral outline so it doesn't compete with primary CTAs. */
 .btn-primary {
-  @apply bg-sage text-white font-semibold py-2 px-6 rounded-lg hover:bg-sage-hover transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sage focus-visible:ring-offset-2 focus-visible:ring-offset-warm-bg;
+  @apply inline-flex min-h-[44px] items-center justify-center gap-2 bg-sage text-white font-semibold py-2 px-6 rounded-lg hover:bg-sage-hover transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sage focus-visible:ring-offset-2 focus-visible:ring-offset-warm-bg disabled:opacity-50 disabled:cursor-not-allowed;
 }
 
 .btn-secondary {
-  @apply bg-transparent border border-sage text-sage py-2 px-6 rounded-lg hover:bg-sage hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sage focus-visible:ring-offset-2 focus-visible:ring-offset-warm-bg;
+  @apply inline-flex min-h-[44px] items-center justify-center gap-2 bg-transparent border border-warm-border text-ink py-2 px-6 rounded-lg hover:bg-warm-surface-alt transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sage focus-visible:ring-offset-2 focus-visible:ring-offset-warm-bg disabled:opacity-50 disabled:cursor-not-allowed;
 }
 
 .btn-ghost {
-  @apply text-ink hover:bg-ink/5 py-2 px-4 rounded transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sage;
+  @apply inline-flex min-h-[44px] items-center justify-center gap-2 text-ink-muted hover:bg-warm-surface-alt py-2 px-4 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sage disabled:opacity-50 disabled:cursor-not-allowed;
 }
 
 /* Card styles */
@@ -71,7 +74,7 @@ input[type='range'] {
 
 /* Input styles */
 .input {
-  @apply w-full bg-warm-surface border border-warm-border rounded-lg px-4 py-2 text-ink placeholder-ink-muted/60 focus-visible:outline-none focus-visible:border-sage focus-visible:ring-1 focus-visible:ring-sage;
+  @apply w-full min-h-[44px] bg-warm-surface border border-warm-border rounded-lg px-4 py-2 text-ink placeholder-ink-faint focus-visible:outline-none focus-visible:border-sage focus-visible:ring-1 focus-visible:ring-sage;
 }
 
 /* Text utilities */
