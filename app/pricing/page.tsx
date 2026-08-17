@@ -93,10 +93,10 @@ export default function PricingPage() {
                   aria-hidden="true"
                 >
                   <div
-                    className="absolute inset-x-0 top-0 h-40"
+                    className="absolute inset-0"
                     style={{
                       background:
-                        'radial-gradient(120% 100% at 50% 0%, rgba(122,139,114,0.30), rgba(122,139,114,0) 70%)',
+                        'linear-gradient(135deg, rgba(59,130,246,0.32) 0%, rgba(59,130,246,0) 55%)',
                     }}
                   />
                 </div>
