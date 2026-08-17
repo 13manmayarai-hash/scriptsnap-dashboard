@@ -1,11 +1,34 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { useAppStore } from '@/lib/store/app'
-import { Sparkles, BarChart3, LogOut, Menu, X } from 'lucide-react'
+import {
+  Sparkles,
+  BarChart3,
+  LogOut,
+  Menu,
+  X,
+  Mic2,
+  Tags,
+  CreditCard,
+  Settings as SettingsIcon,
+  Search,
+} from 'lucide-react'
+
+const NAV_LINKS = [
+  { href: '/dashboard', label: 'Generate Script', icon: Sparkles },
+  { href: '/dashboard/library', label: 'Library', icon: BarChart3 },
+  { href: '/dashboard/tone-presets', label: 'Tone & Voice', icon: Mic2 },
+  { href: '/dashboard/categories', label: 'Categories', icon: Tags },
+]
+
+const ACCOUNT_LINKS = [
+  { href: '/dashboard/billing', label: 'Usage & Billing', icon: CreditCard },
+  { href: '/dashboard/settings', label: 'Settings', icon: SettingsIcon },
+]
 
 export default function DashboardLayout({
   children,
@@ -13,9 +36,11 @@ export default function DashboardLayout({
   children: React.ReactNode
 }) {
   const router = useRouter()
+  const pathname = usePathname()
   const { user, setUser } = useAppStore()
   const [isMounted, setIsMounted] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
 
   useEffect(() => {
     setIsMounted(true)
@@ -57,6 +82,14 @@ export default function DashboardLayout({
     router.push('/auth/login')
   }
 
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault()
+    setSidebarOpen(false)
+    const params = new URLSearchParams()
+    if (searchQuery.trim()) params.set('q', searchQuery.trim())
+    router.push(`/dashboard/library${params.toString() ? `?${params}` : ''}`)
+  }
+
   if (!isMounted) return null
 
   return (
@@ -92,30 +125,64 @@ export default function DashboardLayout({
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         } md:translate-x-0 fixed md:static w-64 h-screen bg-warm-surface-alt border-r border-warm-border p-6 transition-transform z-40 overflow-y-auto overscroll-contain`}
       >
-        <div className="space-y-8">
+        <div className="space-y-6">
           <div>
             <h1 className="text-2xl font-bold heading-serif text-sage">ScriptSnap</h1>
             <p className="text-sm text-ink-muted">Dashboard</p>
           </div>
 
-          <nav className="space-y-3">
-            <Link
-              href="/dashboard"
-              onClick={() => setSidebarOpen(false)}
-              className="flex items-center gap-3 px-4 py-3 rounded-lg text-ink hover:bg-sage/10 transition"
-            >
-              <Sparkles size={20} aria-hidden="true" />
-              <span>Generate Script</span>
-            </Link>
-            <Link
-              href="/dashboard/library"
-              onClick={() => setSidebarOpen(false)}
-              className="flex items-center gap-3 px-4 py-3 rounded-lg text-ink hover:bg-sage/10 transition"
-            >
-              <BarChart3 size={20} aria-hidden="true" />
-              <span>Library</span>
-            </Link>
+          <form onSubmit={handleSearch} className="relative">
+            <Search size={15} aria-hidden="true" className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted" />
+            <input
+              type="search"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search scripts…"
+              className="input pl-8 text-sm py-2"
+              aria-label="Search scripts"
+            />
+          </form>
+
+          <nav className="space-y-1">
+            {NAV_LINKS.map(({ href, label, icon: Icon }) => {
+              const active = pathname === href
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  onClick={() => setSidebarOpen(false)}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition ${
+                    active ? 'bg-sage/15 text-sage font-medium' : 'text-ink hover:bg-sage/10'
+                  }`}
+                >
+                  <Icon size={20} aria-hidden="true" />
+                  <span>{label}</span>
+                </Link>
+              )
+            })}
           </nav>
+
+          <div className="pt-4 border-t border-warm-border">
+            <p className="text-xs font-semibold text-ink-muted uppercase tracking-wide px-4 mb-1">Account</p>
+            <nav className="space-y-1">
+              {ACCOUNT_LINKS.map(({ href, label, icon: Icon }) => {
+                const active = pathname === href
+                return (
+                  <Link
+                    key={href}
+                    href={href}
+                    onClick={() => setSidebarOpen(false)}
+                    className={`flex items-center gap-3 px-4 py-3 rounded-lg transition ${
+                      active ? 'bg-sage/15 text-sage font-medium' : 'text-ink hover:bg-sage/10'
+                    }`}
+                  >
+                    <Icon size={20} aria-hidden="true" />
+                    <span>{label}</span>
+                  </Link>
+                )
+              })}
+            </nav>
+          </div>
 
           <div className="pt-4 border-t border-warm-border space-y-3">
             <div className="text-sm">

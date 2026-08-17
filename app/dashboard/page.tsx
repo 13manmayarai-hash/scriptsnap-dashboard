@@ -1,10 +1,18 @@
 'use client'
 
-import { Suspense, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
+import Link from 'next/link'
+import { createClient } from '@/lib/supabase/client'
 import { useAppStore } from '@/lib/store/app'
 import { TIER_SCRIPT_LIMITS, TIER_NAMES, TIER_BENEFITS } from '@/lib/tiers'
-import { Sparkles, Copy, Check, X } from 'lucide-react'
+import { LANGUAGES } from '@/lib/languages'
+import { Sparkles, Copy, Check, X, ShieldAlert, ShieldCheck } from 'lucide-react'
+
+interface GuidelineFlag {
+  severity: 'info' | 'warning'
+  note: string
+}
 
 interface GeneratedScript {
   id: string
@@ -12,6 +20,7 @@ interface GeneratedScript {
   duration: number
   category: string
   tone: string
+  language: string
   context: string
   keywords: string[]
   script: string
@@ -24,7 +33,34 @@ interface GeneratedScript {
   word_count: number
   created_at: string
   is_series: boolean
+  guidelineCheck?: { passed: boolean; flags: GuidelineFlag[] }
 }
+
+interface TonePreset {
+  id: string
+  name: string
+  style_description: string
+}
+
+interface Category {
+  id: string
+  name: string
+}
+
+const DEFAULT_CATEGORIES = [
+  'Cultural & Historical',
+  'Art & Design',
+  'Science & Nature',
+  'Fashion & Style',
+  'Food & Craft',
+  'Tech & Engineering',
+]
+
+const DEFAULT_TONES: TonePreset[] = [
+  { id: 'meditative', name: 'Meditative', style_description: 'Calming language, reflective questions, a sense of mindfulness.' },
+  { id: 'balanced', name: 'Balanced', style_description: 'Informative and engaging without being extreme.' },
+  { id: 'energetic', name: 'Energetic', style_description: 'Exclamation marks, building excitement, a sense of urgency.' },
+]
 
 export default function DashboardPage() {
   return (
@@ -42,8 +78,13 @@ function DashboardContent() {
   )
   const [topic, setTopic] = useState('')
   const [duration, setDuration] = useState(30)
+  const [categories, setCategories] = useState<Category[]>(
+    DEFAULT_CATEGORIES.map((name) => ({ id: name, name }))
+  )
   const [category, setCategory] = useState('Cultural & Historical')
-  const [tone, setTone] = useState('Meditative')
+  const [tonePresets, setTonePresets] = useState<TonePreset[]>(DEFAULT_TONES)
+  const [toneId, setToneId] = useState(DEFAULT_TONES[0].id)
+  const [language, setLanguage] = useState('english')
   const [context, setContext] = useState('')
   const [keywords, setKeywords] = useState('')
   const [loading, setLoading] = useState(false)
@@ -51,16 +92,37 @@ function DashboardContent() {
   const [copied, setCopied] = useState<string | null>(null)
   const [error, setError] = useState('')
 
-  const categories = [
-    'Cultural & Historical',
-    'Art & Design',
-    'Science & Nature',
-    'Fashion & Style',
-    'Food & Craft',
-    'Tech & Engineering',
-  ]
+  useEffect(() => {
+    const loadPersonalization = async () => {
+      const supabase = createClient()
+      const { data: { user: authUser } } = await supabase.auth.getUser()
+      if (!authUser) return
 
-  const tones = ['Meditative', 'Balanced', 'Energetic']
+      const [{ data: presets }, { data: cats }] = await Promise.all([
+        supabase
+          .from('tone_presets')
+          .select('id, name, style_description')
+          .eq('user_id', authUser.id)
+          .order('created_at', { ascending: true }),
+        supabase
+          .from('categories')
+          .select('id, name')
+          .eq('user_id', authUser.id)
+          .order('created_at', { ascending: true }),
+      ])
+
+      if (presets && presets.length > 0) {
+        setTonePresets(presets)
+        setToneId(presets[0].id)
+      }
+      if (cats && cats.length > 0) {
+        setCategories(cats)
+        setCategory(cats[0].name)
+      }
+    }
+
+    loadPersonalization()
+  }, [])
 
   const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -74,6 +136,8 @@ function DashboardContent() {
         .map(k => k.trim())
         .filter(k => k.length > 0)
 
+      const selectedTone = tonePresets.find((t) => t.id === toneId) || tonePresets[0]
+
       const response = await fetch('/api/generate-script', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -82,7 +146,9 @@ function DashboardContent() {
           topic,
           duration,
           category,
-          tone,
+          tone: selectedTone.name,
+          toneStyleDescription: selectedTone.style_description,
+          language,
           context,
           keywords: keywordList,
         }),
@@ -98,12 +164,6 @@ function DashboardContent() {
 
       if (user) {
         setUser({ ...user, scripts_generated_month: user.scripts_generated_month + 1 })
-      }
-
-      if (typeof window !== 'undefined') {
-        const scripts = JSON.parse(localStorage.getItem('scriptsnap_scripts') || '[]')
-        scripts.unshift(data)
-        localStorage.setItem('scriptsnap_scripts', JSON.stringify(scripts))
       }
     } catch (err) {
       console.error('Error:', err)
@@ -235,7 +295,10 @@ function DashboardContent() {
 
             {/* Category */}
             <div>
-              <label htmlFor="script-category" className="block text-sm font-medium mb-2">Category</label>
+              <div className="flex items-center justify-between mb-2">
+                <label htmlFor="script-category" className="block text-sm font-medium">Category</label>
+                <Link href="/dashboard/categories" className="text-xs text-sage hover:underline">Manage</Link>
+              </div>
               <select
                 id="script-category"
                 name="category"
@@ -245,8 +308,27 @@ function DashboardContent() {
                 disabled={loading}
               >
                 {categories.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
+                  <option key={cat.id} value={cat.name}>
+                    {cat.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Language */}
+            <div>
+              <label htmlFor="script-language" className="block text-sm font-medium mb-2">Output Language</label>
+              <select
+                id="script-language"
+                name="language"
+                value={language}
+                onChange={(e) => setLanguage(e.target.value)}
+                className="input"
+                disabled={loading}
+              >
+                {LANGUAGES.map((l) => (
+                  <option key={l.key} value={l.key}>
+                    {l.label}
                   </option>
                 ))}
               </select>
@@ -254,23 +336,27 @@ function DashboardContent() {
 
             {/* Tone */}
             <div>
-              <span className="block text-sm font-medium mb-2" id="tone-label">Tone</span>
+              <div className="flex items-center justify-between mb-2">
+                <span className="block text-sm font-medium" id="tone-label">Tone</span>
+                <Link href="/dashboard/tone-presets" className="text-xs text-sage hover:underline">Manage</Link>
+              </div>
               <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-labelledby="tone-label">
-                {tones.map((t) => (
+                {tonePresets.map((t) => (
                   <button
-                    key={t}
+                    key={t.id}
                     type="button"
                     role="radio"
-                    aria-checked={tone === t}
-                    onClick={() => setTone(t)}
+                    aria-checked={toneId === t.id}
+                    onClick={() => setToneId(t.id)}
                     disabled={loading}
-                    className={`py-2 px-3 rounded-lg font-medium text-sm transition-colors ${
-                      tone === t
+                    title={t.style_description}
+                    className={`py-2 px-3 rounded-lg font-medium text-sm transition-colors truncate ${
+                      toneId === t.id
                         ? 'bg-sage text-white'
                         : 'bg-ink/5 text-ink hover:bg-ink/10'
                     }`}
                   >
-                    {t}
+                    {t.name}
                   </button>
                 ))}
               </div>
@@ -306,6 +392,39 @@ function DashboardContent() {
       <div className="lg:col-span-2">
         {script ? (
           <div className="space-y-4">
+            {/* Guideline Check */}
+            {script.guidelineCheck && (
+              <div
+                className={`card flex items-start gap-3 ${
+                  script.guidelineCheck.passed
+                    ? 'border-sage/40 bg-sage/5'
+                    : 'border-amber-400/50 bg-amber-50'
+                }`}
+              >
+                {script.guidelineCheck.passed ? (
+                  <ShieldCheck size={20} aria-hidden="true" className="text-sage flex-shrink-0 mt-0.5" />
+                ) : (
+                  <ShieldAlert size={20} aria-hidden="true" className="text-amber-600 flex-shrink-0 mt-0.5" />
+                )}
+                <div>
+                  <p className="text-sm font-semibold text-ink">
+                    {script.guidelineCheck.passed
+                      ? 'No policy risks flagged'
+                      : 'Worth a second look before posting'}
+                  </p>
+                  {script.guidelineCheck.flags.length > 0 && (
+                    <ul className="mt-1 space-y-0.5">
+                      {script.guidelineCheck.flags.map((flag, i) => (
+                        <li key={i} className="text-sm text-ink-muted">
+                          {flag.note}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Main Title */}
             <div className="card">
               <div className="flex justify-between items-start gap-4">
@@ -315,6 +434,9 @@ function DashboardContent() {
                   </h1>
                   <p className="text-ink-muted text-sm">
                     {script.duration}s • {script.category} • {script.tone}
+                    {script.language && script.language !== 'english' && (
+                      <> • {LANGUAGES.find((l) => l.key === script.language)?.label || script.language}</>
+                    )}
                   </p>
                 </div>
                 <button

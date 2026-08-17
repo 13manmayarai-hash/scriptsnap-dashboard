@@ -8,6 +8,58 @@ const client = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 })
 
+const LANGUAGE_NAMES: Record<string, string> = {
+  english: 'English',
+  hindi: 'Hindi',
+  tamil: 'Tamil',
+  telugu: 'Telugu',
+  hinglish: 'Hinglish (a natural mix of Hindi and English, written in Latin script, the way Indian creators actually speak it)',
+}
+
+interface GuidelineCheck {
+  passed: boolean
+  flags: Array<{ severity: 'info' | 'warning'; note: string }>
+}
+
+async function checkGuidelines(script: string): Promise<GuidelineCheck> {
+  try {
+    const message = await client.messages.create({
+      model: 'claude-sonnet-5',
+      max_tokens: 300,
+      thinking: { type: 'disabled' },
+      output_config: { effort: 'low' },
+      messages: [
+        {
+          role: 'user',
+          content: `Review this YouTube Shorts script for YouTube Community Guidelines and advertiser-friendly content risk (copyright mentions, restricted claims, demonetization-risk language). Respond with ONLY a JSON object, no other text: {"passed": boolean, "flags": [{"severity": "info"|"warning", "note": "short reason"}]}. Empty flags array if nothing to flag.
+
+SCRIPT:
+${script}`,
+        },
+      ],
+    })
+
+    const textBlock = message.content.find(
+      (block): block is Anthropic.TextBlock => block.type === 'text'
+    )
+    if (!textBlock) return { passed: true, flags: [] }
+
+    const jsonMatch = textBlock.text.match(/\{[\s\S]*\}/)
+    if (!jsonMatch) return { passed: true, flags: [] }
+
+    const parsed = JSON.parse(jsonMatch[0])
+    return {
+      passed: typeof parsed.passed === 'boolean' ? parsed.passed : true,
+      flags: Array.isArray(parsed.flags) ? parsed.flags : [],
+    }
+  } catch (err) {
+    // The guideline check is a value-add, not a gate — a failure here
+    // should never block a script the creator already paid quota for.
+    console.error('Guideline check failed:', err)
+    return { passed: true, flags: [] }
+  }
+}
+
 export async function POST(request: NextRequest) {
   // Hoisted so the catch block can refund a reserved quota slot if
   // generation fails after the limit check passed
@@ -75,12 +127,14 @@ export async function POST(request: NextRequest) {
     quotaReserved = true
 
     const body = await request.json()
-    const { topic, duration, category, tone, context, keywords } = body
+    const { topic, duration, category, tone, toneStyleDescription, context, keywords, language } = body
 
     const durationSeconds = parseInt(duration) || 60
+    const languageKey = typeof language === 'string' && LANGUAGE_NAMES[language] ? language : 'english'
+    const languageName = LANGUAGE_NAMES[languageKey]
 
     // Build keywords list separately to avoid nested template literal issues
-    const keywordsList = keywords && keywords.length > 0 
+    const keywordsList = keywords && keywords.length > 0
       ? `KEY POINTS TO INCLUDE:\n${keywords.map((kw: string) => `- ${kw}`).join('\n')}\n`
       : ''
 
@@ -91,14 +145,14 @@ TOPIC: ${topic}
 CATEGORY: ${category}
 TONE: ${tone}
 DURATION: ${durationSeconds} seconds
-
+${languageKey !== 'english' ? `\nOUTPUT LANGUAGE: Write the script in ${languageName}, not English.\n` : ''}
 ${context ? `VIDEO CONTEXT:\n${context}\n` : ''}
 ${keywordsList}
 
 TONE GUIDELINES:
-- If Meditative: Use calming language, ask reflective questions, create mindfulness
+${toneStyleDescription ? `- ${tone}: ${toneStyleDescription}` : `- If Meditative: Use calming language, ask reflective questions, create mindfulness
 - If Balanced: Be informative and engaging without being extreme
-- If Energetic: Use exclamation marks, build excitement, create urgency
+- If Energetic: Use exclamation marks, build excitement, create urgency`}
 
 REQUIREMENTS:
 1. Script should be approximately ${Math.floor(durationSeconds * 2.5)} words (about 2-2.5 words per second)
@@ -131,6 +185,8 @@ Generate the script now:`
       throw new Error('No text content in Claude response')
     }
     const scriptContent = textBlock.text
+
+    const guidelineCheck = await checkGuidelines(scriptContent)
 
     // Generate description
     let description = `📍 Watch this ${durationSeconds}-second deep dive into ${topic}\n`
@@ -186,25 +242,65 @@ Generate the script now:`
       `LIKE and SUBSCRIBE for more! ✨`,
       `Tag someone who needs this! 👇`,
     ]
+    const pinnedComment = pinnedComments[Math.floor(Math.random() * pinnedComments.length)]
+    const wordCount = scriptContent.split(' ').length
+    const title = `Discover ${topic}`
+
+    // Persist the generation — previously this only ever lived in the
+    // browser's localStorage, so it vanished on a new device and couldn't
+    // back Recent Scripts, Categories, or search. A failure here shouldn't
+    // lose the script the creator already paid quota for, so it's a
+    // best-effort insert rather than a hard failure.
+    let savedId: string | null = null
+    try {
+      const { data: inserted } = await supabase
+        .from('scripts')
+        .insert({
+          user_id: authUser.id,
+          topic,
+          duration: durationSeconds,
+          category,
+          context: context || null,
+          keywords: keywords || [],
+          tone,
+          language: languageKey,
+          script: scriptContent,
+          title,
+          description,
+          hashtags,
+          pinned_comment: pinnedComment,
+          alternative_titles: alternativeTitles,
+          word_count: wordCount,
+          guideline_passed: guidelineCheck.passed,
+          guideline_flags: guidelineCheck.flags,
+        })
+        .select('id, created_at')
+        .single()
+      savedId = inserted?.id ?? null
+    } catch (saveErr) {
+      console.error('Failed to persist script:', saveErr)
+    }
 
     return NextResponse.json({
-      id: `script_${Date.now()}`,
+      id: savedId || `script_${Date.now()}`,
       topic,
       duration: durationSeconds,
       category,
       tone,
+      language: languageKey,
       context,
       keywords: keywords || [],
-      title: `Discover ${topic}`,
+      title,
       script: scriptContent,
       description,
       hashtags,
-      pinned_comment: pinnedComments[Math.floor(Math.random() * pinnedComments.length)],
+      pinned_comment: pinnedComment,
       alternativeTitles,
-      word_count: scriptContent.split(' ').length,
+      word_count: wordCount,
       keyPoints,
       created_at: new Date().toISOString(),
       is_series: false,
+      guidelineCheck,
     })
   } catch (error) {
     // A reserved quota slot that never produced a script shouldn't cost
