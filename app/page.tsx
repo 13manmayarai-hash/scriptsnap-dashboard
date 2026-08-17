@@ -790,18 +790,32 @@ function PricingTeaser() {
                 }`}
               >
                 {tier.featured && (
-                  <span className="absolute -top-3 left-7 rounded-full bg-[#7A8B72] px-3 py-1 text-[11px] font-bold text-white">
+                  <div
+                    className="pointer-events-none absolute inset-0 z-0 overflow-hidden rounded-[16px]"
+                    aria-hidden="true"
+                  >
+                    <div
+                      className="absolute inset-x-0 top-0 h-40"
+                      style={{
+                        background:
+                          'radial-gradient(120% 100% at 50% 0%, rgba(122,139,114,0.30), rgba(122,139,114,0) 70%)',
+                      }}
+                    />
+                  </div>
+                )}
+                {tier.featured && (
+                  <span className="absolute -top-3 left-7 z-10 rounded-full bg-[#7A8B72] px-3 py-1 text-[11px] font-bold text-white">
                     Most popular
                   </span>
                 )}
-                <h4 className="text-[16px] font-semibold">{tier.name}</h4>
-                <div className="mt-2 font-serif text-[36px] font-bold">
+                <h4 className="relative z-10 text-[16px] font-semibold">{tier.name}</h4>
+                <div className="relative z-10 mt-2 font-serif text-[36px] font-bold">
                   {priceFormatter.format(tier.price)}
                   <span className="ml-1 text-[14px] font-sans font-normal text-[#9C9686]">/mo</span>
                 </div>
-                <p className="mt-2 text-[13.5px] text-[#706E68]">{tier.description}</p>
-                <p className="mt-4 text-[13.5px] font-semibold text-[#5C7A52]">{tier.scripts} scripts / month</p>
-                <div className="mt-6">
+                <p className="relative z-10 mt-2 text-[13.5px] text-[#706E68]">{tier.description}</p>
+                <p className="relative z-10 mt-4 text-[13.5px] font-semibold text-[#5C7A52]">{tier.scripts} scripts / month</p>
+                <div className="relative z-10 mt-6">
                   <Button
                     href={tier.price === 0 ? '/auth/signup' : '/pricing'}
                     variant={tier.featured ? 'primary' : 'secondary'}

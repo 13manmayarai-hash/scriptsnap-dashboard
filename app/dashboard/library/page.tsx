@@ -139,7 +139,7 @@ ${script.description}
       ) : scripts.length === 0 ? (
         <div className="card text-center py-16">
           <div className="text-ink-muted/70 mb-4 text-5xl">📭</div>
-          <h2 className="text-2xl font-bold text-ink mb-2">
+          <h2 className="text-2xl font-bold heading-serif mb-2">
             {query ? 'No scripts match your search' : 'No Scripts Yet'}
           </h2>
           <p className="text-ink-muted mb-6">
@@ -196,7 +196,7 @@ ${script.description}
                 <div className="card">
                   <div className="flex justify-between items-start mb-4">
                     <div>
-                      <h1 className="text-3xl font-bold text-ink mb-2">
+                      <h1 className="text-3xl font-bold heading-serif mb-2">
                         {selectedScript.title}
                       </h1>
                       <div className="flex gap-2 flex-wrap">

@@ -88,7 +88,22 @@ export default function PricingPage() {
               }`}
             >
               {tier.highlighted && (
-                <div className="absolute -top-2 sm:-top-3 md:-top-4 left-1/2 -translate-x-1/2 w-[90%] sm:w-auto flex justify-center">
+                <div
+                  className="pointer-events-none absolute inset-0 z-0 overflow-hidden rounded-lg"
+                  aria-hidden="true"
+                >
+                  <div
+                    className="absolute inset-x-0 top-0 h-40"
+                    style={{
+                      background:
+                        'radial-gradient(120% 100% at 50% 0%, rgba(122,139,114,0.30), rgba(122,139,114,0) 70%)',
+                    }}
+                  />
+                </div>
+              )}
+
+              {tier.highlighted && (
+                <div className="absolute -top-2 sm:-top-3 md:-top-4 left-1/2 z-10 -translate-x-1/2 w-[90%] sm:w-auto flex justify-center">
                   <span className="bg-sage text-white px-1 py-0.5 sm:px-3 sm:py-1 md:px-4 md:py-1 rounded-full text-[9px] sm:text-xs md:text-sm font-bold text-center sm:whitespace-nowrap">
                     <span className="sm:hidden">Popular</span>
                     <span className="hidden sm:inline">Most Popular</span>
@@ -96,7 +111,7 @@ export default function PricingPage() {
                 </div>
               )}
 
-              <div className="mb-2 sm:mb-4 md:mb-8">
+              <div className="relative z-10 mb-2 sm:mb-4 md:mb-8">
                 <h2 className="text-xs sm:text-lg md:text-3xl font-bold text-ink mb-0.5 md:mb-2">
                   {tier.name}
                 </h2>
@@ -105,7 +120,7 @@ export default function PricingPage() {
                 </p>
               </div>
 
-              <div className="mb-2 sm:mb-4 md:mb-8">
+              <div className="relative z-10 mb-2 sm:mb-4 md:mb-8">
                 <div className="flex items-baseline gap-0.5 md:gap-2">
                   <span className="text-sm sm:text-xl md:text-5xl font-bold text-ink">
                     {priceFormatter.format(tier.price)}
@@ -118,7 +133,7 @@ export default function PricingPage() {
               </div>
 
               {/* CTA Button - Different for Free vs Paid */}
-              <div className="mb-2 sm:mb-4 md:mb-8">
+              <div className="relative z-10 mb-2 sm:mb-4 md:mb-8">
                 {tier.price === 0 ? (
                   <Link
                     href="/auth/signup"
@@ -138,7 +153,7 @@ export default function PricingPage() {
                 )}
               </div>
 
-              <div className="hidden sm:block space-y-1 md:space-y-4">
+              <div className="relative z-10 hidden sm:block space-y-1 md:space-y-4">
                 {tier.features.map((feature, j) => (
                   <div key={j} className="flex gap-1 md:gap-3">
                     <Check size={12} aria-hidden="true" className="md:hidden text-sage flex-shrink-0 mt-0.5" />

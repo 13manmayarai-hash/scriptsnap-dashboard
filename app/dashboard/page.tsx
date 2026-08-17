@@ -429,7 +429,7 @@ function DashboardContent() {
             <div className="card">
               <div className="flex justify-between items-start gap-4">
                 <div className="flex-1">
-                  <h1 className="text-3xl font-bold text-ink mb-3">
+                  <h1 className="text-3xl font-bold heading-serif mb-3">
                     {script.title}
                   </h1>
                   <p className="text-ink-muted text-sm">
