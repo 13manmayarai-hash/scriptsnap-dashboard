@@ -8,6 +8,7 @@ import { useAppStore } from '@/lib/store/app'
 import { TIER_SCRIPT_LIMITS, TIER_NAMES, TIER_BENEFITS } from '@/lib/tiers'
 import { LANGUAGES } from '@/lib/languages'
 import { Sparkles, Copy, Check, X, ShieldAlert, ShieldCheck } from 'lucide-react'
+import ScriptRating from '@/lib/components/ScriptRating'
 
 interface GuidelineFlag {
   severity: 'info' | 'warning'
@@ -439,13 +440,16 @@ function DashboardContent() {
                     )}
                   </p>
                 </div>
-                <button
-                  onClick={() => handleCopy(script.title, 'main-title')}
-                  className="flex-shrink-0 p-2 bg-ink/5 hover:bg-ink/10 rounded transition-colors"
-                  aria-label="Copy title"
-                >
-                  <Copy size={18} aria-hidden="true" />
-                </button>
+                <div className="flex flex-shrink-0 items-center gap-1">
+                  <ScriptRating scriptId={script.id} />
+                  <button
+                    onClick={() => handleCopy(script.title, 'main-title')}
+                    className="p-2 bg-ink/5 hover:bg-ink/10 rounded transition-colors"
+                    aria-label="Copy title"
+                  >
+                    <Copy size={18} aria-hidden="true" />
+                  </button>
+                </div>
               </div>
             </div>
 

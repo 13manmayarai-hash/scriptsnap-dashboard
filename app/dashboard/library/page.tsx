@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { LANGUAGES } from '@/lib/languages'
 import { Trash2, Copy, Download, Search, ShieldAlert, ShieldCheck } from 'lucide-react'
+import ScriptRating from '@/lib/components/ScriptRating'
 
 interface Script {
   id: string
@@ -90,30 +91,55 @@ function LibraryContent() {
     setSelectedScript(null)
   }
 
-  const handleDownload = (script: Script) => {
-    const content = `
-TITLE: ${script.title}
-TOPIC: ${script.topic}
-CATEGORY: ${script.category}
-TONE: ${script.tone}
-DURATION: ${script.duration}s
-WORD COUNT: ${script.word_count}
-DATE: ${new Date(script.created_at).toLocaleDateString()}
+  const handleDownload = async (script: Script) => {
+    const { jsPDF } = await import('jspdf')
+    const doc = new jsPDF({ unit: 'pt', format: 'a4' })
+    const pageWidth = doc.internal.pageSize.getWidth()
+    const pageHeight = doc.internal.pageSize.getHeight()
+    const margin = 48
+    const maxWidth = pageWidth - margin * 2
+    let y = margin
 
-SCRIPT:
-${script.script}
+    const ensureSpace = (lineHeight: number) => {
+      if (y + lineHeight > pageHeight - margin) {
+        doc.addPage()
+        y = margin
+      }
+    }
 
-DESCRIPTION:
-${script.description}
-    `.trim()
+    const writeParagraph = (
+      text: string,
+      fontSize: number,
+      lineHeight: number,
+      style: 'normal' | 'bold' | 'italic' = 'normal'
+    ) => {
+      doc.setFont('helvetica', style)
+      doc.setFontSize(fontSize)
+      const lines = doc.splitTextToSize(text, maxWidth) as string[]
+      for (const line of lines) {
+        ensureSpace(lineHeight)
+        doc.text(line, margin, y)
+        y += lineHeight
+      }
+    }
 
-    const element = document.createElement('a')
-    element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(content))
-    element.setAttribute('download', `${script.title.replace(/\s+/g, '_')}.txt`)
-    element.style.display = 'none'
-    document.body.appendChild(element)
-    element.click()
-    document.body.removeChild(element)
+    writeParagraph(script.title, 18, 22, 'bold')
+    y += 4
+    writeParagraph(
+      `${script.duration}s  •  ${script.category}  •  ${script.tone}  •  ${script.word_count} words  •  ${new Date(script.created_at).toLocaleDateString()}`,
+      10,
+      14
+    )
+    y += 14
+
+    writeParagraph('SCRIPT', 11, 16, 'bold')
+    writeParagraph(script.script, 11, 15)
+    y += 14
+
+    writeParagraph('DESCRIPTION', 11, 16, 'bold')
+    writeParagraph(script.description, 11, 15)
+
+    doc.save(`${script.title.replace(/\s+/g, '_')}.pdf`)
   }
 
   const languageLabel = (key: string) => LANGUAGES.find((l) => l.key === key)?.label || key
@@ -194,7 +220,7 @@ ${script.description}
               <div className="space-y-4">
                 {/* Header */}
                 <div className="card">
-                  <div className="flex justify-between items-start mb-4">
+                  <div className="flex justify-between items-start mb-4 gap-4">
                     <div>
                       <h1 className="text-3xl font-bold heading-serif mb-2">
                         {selectedScript.title}
@@ -219,6 +245,7 @@ ${script.description}
                         )}
                       </div>
                     </div>
+                    <ScriptRating scriptId={selectedScript.id} />
                   </div>
                 </div>
 
