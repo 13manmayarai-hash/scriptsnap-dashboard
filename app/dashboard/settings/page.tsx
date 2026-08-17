@@ -1,9 +1,16 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { SettingsIcon, Check } from 'lucide-react'
+import { SettingsIcon, Check, Mic2, Tags, CreditCard, ChevronRight } from 'lucide-react'
 import ErrorMessage from '@/lib/components/ui/ErrorMessage'
+
+const QUICK_LINKS = [
+  { href: '/dashboard/tone-presets', label: 'Tone & Voice presets', description: 'How the generator writes for you', icon: Mic2 },
+  { href: '/dashboard/categories', label: 'Categories', description: 'Your custom content categories', icon: Tags },
+  { href: '/dashboard/billing', label: 'Usage & Billing', description: 'Current plan and monthly usage', icon: CreditCard },
+]
 
 export default function SettingsPage() {
   const [email, setEmail] = useState('')
@@ -74,6 +81,28 @@ export default function SettingsPage() {
         <div>
           <p className="text-xs text-ink-muted">Email</p>
           <p className="text-ink font-medium">{email}</p>
+        </div>
+      </div>
+
+      <div className="card mb-6">
+        <h2 className="text-sm font-semibold text-ink-muted mb-3">PERSONALIZATION</h2>
+        <div className="divide-y divide-warm-border">
+          {QUICK_LINKS.map(({ href, label, description, icon: Icon }) => (
+            <Link
+              key={href}
+              href={href}
+              className="flex min-h-[44px] items-center gap-3 py-3 first:pt-0 last:pb-0 group"
+            >
+              <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-soft-accent text-sage">
+                <Icon size={16} aria-hidden="true" />
+              </span>
+              <span className="flex-1">
+                <span className="block text-sm font-medium text-ink">{label}</span>
+                <span className="block text-xs text-ink-muted">{description}</span>
+              </span>
+              <ChevronRight size={16} aria-hidden="true" className="text-ink-faint group-hover:text-ink-muted" />
+            </Link>
+          ))}
         </div>
       </div>
 
