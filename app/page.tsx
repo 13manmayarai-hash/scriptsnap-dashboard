@@ -726,13 +726,24 @@ function Comparison() {
           {COMPARE_COLUMNS.map((col, i) => (
             <div
               key={col.name}
-              className={`p-8 ${i < 2 ? 'border-b border-[#E0DDD3] md:border-b-0 md:border-r' : ''} ${
+              className={`relative p-8 ${i < 2 ? 'border-b border-[#E0DDD3] md:border-b-0 md:border-r' : ''} ${
                 col.featured ? 'bg-[#EFF1E8]' : 'bg-white'
               }`}
             >
-              <h4 className="text-[16px] font-semibold">{col.name}</h4>
-              <span className="mt-1 block text-[12px] text-[#9C9686]">{col.tag}</span>
-              <ul className="mt-5 flex flex-col gap-3">
+              {col.featured && (
+                <div className="pointer-events-none absolute inset-0 z-0" aria-hidden="true">
+                  <div
+                    className="absolute inset-0"
+                    style={{
+                      background:
+                        'linear-gradient(225deg, rgba(59,130,246,0.32) 0%, rgba(59,130,246,0) 55%)',
+                    }}
+                  />
+                </div>
+              )}
+              <h4 className="relative z-10 text-[16px] font-semibold">{col.name}</h4>
+              <span className="relative z-10 mt-1 block text-[12px] text-[#9C9686]">{col.tag}</span>
+              <ul className="relative z-10 mt-5 flex flex-col gap-3">
                 {col.rows.map((row, j) => (
                   <li key={j} className="flex items-start gap-2.5 text-[14px] text-[#4A4842]">
                     {row.yes ? (
@@ -795,7 +806,7 @@ function PricingTeaser() {
                       className="absolute inset-0"
                       style={{
                         background:
-                          'linear-gradient(135deg, rgba(59,130,246,0.32) 0%, rgba(59,130,246,0) 55%)',
+                          'linear-gradient(225deg, rgba(59,130,246,0.32) 0%, rgba(59,130,246,0) 55%)',
                       }}
                     />
                   </div>
