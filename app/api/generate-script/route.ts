@@ -3,6 +3,7 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import Anthropic from '@anthropic-ai/sdk'
 import { TIER_SCRIPT_LIMITS, type SubscriptionTier } from '@/lib/tiers'
+import { getCreatorAnalyticsContext } from '@/lib/youtube/analytics'
 
 const client = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -94,6 +95,17 @@ export async function POST(request: NextRequest) {
     }
     userId = authUser.id
 
+    // Optional, never blocking — a YouTube API hiccup should never cost
+    // the user a script they already reserved quota for. Reads a 24h
+    // cache under the hood, so this is a cheap no-op for anyone who
+    // hasn't connected a channel.
+    let analyticsContext: { summary: string; channelTitle: string } | null = null
+    try {
+      analyticsContext = await getCreatorAnalyticsContext(supabase, authUser.id)
+    } catch (err) {
+      console.error('YouTube analytics context failed:', err)
+    }
+
     const { data: profile } = await supabase
       .from('users')
       .select('subscription_tier')
@@ -148,6 +160,7 @@ DURATION: ${durationSeconds} seconds
 ${languageKey !== 'english' ? `\nOUTPUT LANGUAGE: Write the script in ${languageName}, not English.\n` : ''}
 ${context ? `VIDEO CONTEXT:\n${context}\n` : ''}
 ${keywordsList}
+${analyticsContext ? `CREATOR PERFORMANCE CONTEXT (use this to inform hook style, pacing, and topic angle — this is the creator's own channel data):\n${analyticsContext.summary}\n` : ''}
 
 TONE GUIDELINES:
 ${toneStyleDescription ? `- ${tone}: ${toneStyleDescription}` : `- If Meditative: Use calming language, ask reflective questions, create mindfulness
@@ -161,6 +174,7 @@ REQUIREMENTS:
 4. Make it sound natural when read aloud
 5. Incorporate all the context and keywords provided
 6. End with a strong call-to-action
+${analyticsContext ? `7. On a final separate line, prefixed exactly "STRATEGY:", write 1-2 short plain-text sentences (no markdown) explaining how this creator's channel performance data specifically shaped the script above.` : ''}
 
 Generate the script now:`
 
@@ -184,7 +198,19 @@ Generate the script now:`
     if (!textBlock) {
       throw new Error('No text content in Claude response')
     }
-    const scriptContent = textBlock.text
+    let scriptContent = textBlock.text
+    let analyticsStrategyNote: string | null = null
+
+    if (analyticsContext) {
+      // Pull the trailing "STRATEGY: ..." line (if present — Claude
+      // instructed to add one only when analytics context was injected)
+      // back out so the saved/returned script text stays clean.
+      const strategyMatch = scriptContent.match(/\n?STRATEGY:\s*(.+)\s*$/i)
+      if (strategyMatch) {
+        analyticsStrategyNote = strategyMatch[1].trim()
+        scriptContent = scriptContent.slice(0, strategyMatch.index).trim()
+      }
+    }
 
     const guidelineCheck = await checkGuidelines(scriptContent)
 
@@ -275,6 +301,8 @@ Generate the script now:`
           is_series: false,
           guideline_passed: guidelineCheck.passed,
           guideline_flags: guidelineCheck.flags,
+          used_analytics_context: !!analyticsContext,
+          analytics_strategy_note: analyticsStrategyNote,
         })
         .select('id, created_at')
         .single()
@@ -303,6 +331,8 @@ Generate the script now:`
       created_at: new Date().toISOString(),
       is_series: false,
       guidelineCheck,
+      usedAnalyticsContext: !!analyticsContext,
+      analyticsStrategyNote,
     })
   } catch (error) {
     // A reserved quota slot that never produced a script shouldn't cost

@@ -39,6 +39,8 @@ interface Script {
   key_points: string[]
   guideline_passed: boolean
   guideline_flags: Array<{ severity: string; note: string }>
+  used_analytics_context: boolean
+  analytics_strategy_note: string | null
   created_at: string
 }
 
@@ -88,7 +90,7 @@ export default function ScriptWorkspacePage() {
       const { data } = await supabase
         .from('scripts')
         .select(
-          'id, topic, category, tone, language, duration, script, title, description, hashtags, pinned_comment, alternative_titles, key_points, guideline_passed, guideline_flags, created_at'
+          'id, topic, category, tone, language, duration, script, title, description, hashtags, pinned_comment, alternative_titles, key_points, guideline_passed, guideline_flags, used_analytics_context, analytics_strategy_note, created_at'
         )
         .eq('id', params.id)
         .eq('user_id', user.id)
@@ -529,6 +531,18 @@ export default function ScriptWorkspacePage() {
           )}
         </div>
       </div>
+
+      {script.used_analytics_context && (
+        <div className="card flex items-start gap-3 border-sage/40 bg-sage/5">
+          <Sparkles size={20} aria-hidden="true" className="mt-0.5 flex-shrink-0 text-sage" />
+          <div>
+            <p className="text-sm font-semibold text-ink">Tuned using your channel analytics</p>
+            {script.analytics_strategy_note && (
+              <p className="mt-0.5 text-sm text-ink-muted">{script.analytics_strategy_note}</p>
+            )}
+          </div>
+        </div>
+      )}
 
       {script.key_points?.length > 0 && (
         <div className="card">

@@ -25,7 +25,7 @@ export const TIER_BENEFITS: Record<SubscriptionTier, string[]> = {
   pro: [
     '200 scripts/month',
     'All Basic features',
-    'YouTube analytics (coming soon)',
+    'YouTube channel analytics',
     'Trending keywords',
     'Priority support',
     'API access',
