@@ -23,6 +23,8 @@ interface AppState {
   setTopbarAction: (action: TopbarAction | null) => void
   topbarSaveState: string | null
   setTopbarSaveState: (state: string | null) => void
+  hasUnsavedChanges: boolean
+  setHasUnsavedChanges: (value: boolean) => void
 }
 
 export const useAppStore = create<AppState>((set) => ({
@@ -34,4 +36,6 @@ export const useAppStore = create<AppState>((set) => ({
   setTopbarAction: (topbarAction) => set({ topbarAction }),
   topbarSaveState: null,
   setTopbarSaveState: (topbarSaveState) => set({ topbarSaveState }),
+  hasUnsavedChanges: false,
+  setHasUnsavedChanges: (hasUnsavedChanges) => set({ hasUnsavedChanges }),
 }))

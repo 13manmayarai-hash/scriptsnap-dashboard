@@ -58,7 +58,7 @@ const TONE_OPTIONS = ['Conversational', 'Energetic', 'Calm', 'Dramatic', 'Playfu
 export default function ScriptWorkspacePage() {
   const params = useParams<{ id: string }>()
   const router = useRouter()
-  const { setTopbarSaveState } = useAppStore()
+  const { setTopbarSaveState, setHasUnsavedChanges } = useAppStore()
 
   const [script, setScript] = useState<Script | null>(null)
   const [loading, setLoading] = useState(true)
@@ -107,14 +107,18 @@ export default function ScriptWorkspacePage() {
   }, [params.id])
 
   useEffect(() => {
-    return () => setTopbarSaveState(null)
-  }, [setTopbarSaveState])
+    return () => {
+      setTopbarSaveState(null)
+      setHasUnsavedChanges(false)
+    }
+  }, [setTopbarSaveState, setHasUnsavedChanges])
 
   // Autosave — debounced, so we're not writing on every keystroke.
   useEffect(() => {
     if (!script || scriptText === savedTextRef.current) return
 
     setTopbarSaveState('Unsaved changes')
+    setHasUnsavedChanges(true)
     const timeout = setTimeout(async () => {
       setTopbarSaveState('Saving…')
       const supabase = createClient()
@@ -128,12 +132,27 @@ export default function ScriptWorkspacePage() {
       } else {
         savedTextRef.current = scriptText
         setTopbarSaveState('Saved ✓')
+        setHasUnsavedChanges(false)
         setTimeout(() => setTopbarSaveState(null), 2000)
       }
     }, 1200)
 
     return () => clearTimeout(timeout)
-  }, [scriptText, script, setTopbarSaveState])
+  }, [scriptText, script, setTopbarSaveState, setHasUnsavedChanges])
+
+  // Browser-level navigation (refresh, close tab, back button) doesn't go
+  // through any of our own links, so it needs its own guard — a pending
+  // autosave write can otherwise be silently discarded.
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (scriptText !== savedTextRef.current) {
+        e.preventDefault()
+        e.returnValue = ''
+      }
+    }
+    window.addEventListener('beforeunload', handler)
+    return () => window.removeEventListener('beforeunload', handler)
+  }, [scriptText])
 
   const handleCopy = (text: string, id: string) => {
     navigator.clipboard.writeText(text)
@@ -273,7 +292,15 @@ export default function ScriptWorkspacePage() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-4">
-      <Link href="/dashboard/library" className="inline-flex items-center gap-1.5 text-sm text-ink-muted hover:text-ink">
+      <Link
+        href="/dashboard/library"
+        onClick={(e) => {
+          if (scriptText !== savedTextRef.current && !window.confirm('You have unsaved changes. Leave without saving?')) {
+            e.preventDefault()
+          }
+        }}
+        className="inline-flex items-center gap-1.5 text-sm text-ink-muted hover:text-ink"
+      >
         <ArrowLeft size={15} aria-hidden="true" />
         Back to Scripts
       </Link>

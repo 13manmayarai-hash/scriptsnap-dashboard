@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { Menu, ChevronDown, LogOut, Settings as SettingsIcon } from 'lucide-react'
+import { useAppStore } from '@/lib/store/app'
 
 interface TopbarAction {
   label: string
@@ -33,6 +34,15 @@ export default function Topbar({
 }) {
   const [profileOpen, setProfileOpen] = useState(false)
   const profileRef = useRef<HTMLDivElement>(null)
+  const { hasUnsavedChanges } = useAppStore()
+
+  // Navigating away from a pending script edit via the topbar action,
+  // settings link, or logout would otherwise silently discard it.
+  const guardNavigate = (e: React.MouseEvent) => {
+    if (hasUnsavedChanges && !window.confirm('You have unsaved changes. Leave without saving?')) {
+      e.preventDefault()
+    }
+  }
 
   useEffect(() => {
     if (!profileOpen) return
@@ -73,11 +83,17 @@ export default function Topbar({
       <div className="flex flex-shrink-0 items-center gap-2">
         {action &&
           (action.href ? (
-            <Link href={action.href} className="btn-primary px-2.5 py-2 text-xs sm:px-4 sm:text-sm">
+            <Link href={action.href} onClick={guardNavigate} className="btn-primary px-2.5 py-2 text-xs sm:px-4 sm:text-sm">
               {action.label}
             </Link>
           ) : (
-            <button onClick={action.onClick} className="btn-primary px-2.5 py-2 text-xs sm:px-4 sm:text-sm">
+            <button
+              onClick={() => {
+                if (hasUnsavedChanges && !window.confirm('You have unsaved changes. Leave without saving?')) return
+                action.onClick?.()
+              }}
+              className="btn-primary px-2.5 py-2 text-xs sm:px-4 sm:text-sm"
+            >
               {action.label}
             </button>
           ))}
@@ -109,7 +125,10 @@ export default function Topbar({
               <Link
                 href="/dashboard/settings"
                 role="menuitem"
-                onClick={() => setProfileOpen(false)}
+                onClick={(e) => {
+                  guardNavigate(e)
+                  if (!e.defaultPrevented) setProfileOpen(false)
+                }}
                 className="flex min-h-[40px] items-center gap-2 rounded px-3 text-sm text-ink hover:bg-warm-surface-alt"
               >
                 <SettingsIcon size={15} aria-hidden="true" /> Settings
@@ -117,6 +136,7 @@ export default function Topbar({
               <button
                 role="menuitem"
                 onClick={() => {
+                  if (hasUnsavedChanges && !window.confirm('You have unsaved changes. Leave without saving?')) return
                   setProfileOpen(false)
                   onLogout()
                 }}

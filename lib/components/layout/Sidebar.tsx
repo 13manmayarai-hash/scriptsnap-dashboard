@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { useAppStore } from '@/lib/store/app'
 import {
   Home,
   FileText,
@@ -47,6 +48,23 @@ export default function Sidebar({
   onNavigate?: () => void
   onLogout: () => void
 }) {
+  const { hasUnsavedChanges } = useAppStore()
+
+  // Leaving with a pending script edit (sidebar/account nav, or logout)
+  // would otherwise silently discard it — same risk as a raw page unload.
+  const guardNavigate = (e: React.MouseEvent) => {
+    if (hasUnsavedChanges && !window.confirm('You have unsaved changes. Leave without saving?')) {
+      e.preventDefault()
+      return
+    }
+    onNavigate?.()
+  }
+
+  const guardLogout = () => {
+    if (hasUnsavedChanges && !window.confirm('You have unsaved changes. Leave without saving?')) return
+    onLogout()
+  }
+
   return (
     <div className="flex h-full flex-col gap-6 overflow-y-auto overscroll-contain p-6">
       <div>
@@ -73,7 +91,7 @@ export default function Sidebar({
             <Link
               key={href}
               href={href}
-              onClick={onNavigate}
+              onClick={guardNavigate}
               aria-current={active ? 'page' : undefined}
               className={`relative flex min-h-[44px] items-center gap-3 rounded-lg px-4 py-2.5 text-sm transition ${
                 active ? 'bg-sage/10 font-medium text-sage' : 'text-ink hover:bg-warm-surface-alt'
@@ -98,7 +116,7 @@ export default function Sidebar({
               <Link
                 key={href}
                 href={href}
-                onClick={onNavigate}
+                onClick={guardNavigate}
                 aria-current={active ? 'page' : undefined}
                 className={`flex min-h-[44px] items-center gap-3 rounded-lg px-4 py-2.5 text-sm transition ${
                   active ? 'bg-sage/10 font-medium text-sage' : 'text-ink hover:bg-warm-surface-alt'
@@ -119,7 +137,7 @@ export default function Sidebar({
         </div>
 
         <button
-          onClick={onLogout}
+          onClick={guardLogout}
           className="flex min-h-[44px] w-full items-center gap-3 rounded-lg bg-error px-4 py-2.5 text-sm text-white transition hover:bg-error-hover"
         >
           <LogOut size={18} aria-hidden="true" />
