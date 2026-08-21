@@ -2,7 +2,7 @@ import { google } from 'googleapis'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { getYouTubeOAuthClient } from './oauth'
 
-const CACHE_FRESHNESS_MS = 24 * 60 * 60 * 1000 // 24h
+export const CACHE_FRESHNESS_MS = 24 * 60 * 60 * 1000 // 24h
 
 export interface AnalyticsContext {
   summary: string
