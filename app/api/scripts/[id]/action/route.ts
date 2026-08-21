@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@/lib/supabase/server'
+import { TIER_SCRIPT_LIMITS, type SubscriptionTier } from '@/lib/tiers'
 
 const client = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -20,12 +21,19 @@ export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  // Hoisted so the catch block can refund a reserved quota slot if the
+  // Anthropic call fails after the limit check passed.
+  let supabase: ReturnType<typeof createClient> | null = null
+  let userId: string | null = null
+  let quotaReserved = false
+
   try {
-    const supabase = createClient()
+    supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
     }
+    userId = user.id
 
     const { data: script } = await supabase
       .from('scripts')
@@ -43,6 +51,36 @@ export async function POST(
 
     if (!text || typeof text !== 'string') {
       return NextResponse.json({ error: 'Missing text' }, { status: 400 })
+    }
+
+    // Rewrite/shorten/expand/hook/tone all fully replace the script with
+    // a new AI-generated version — the same billable Anthropic cost as
+    // generating one from scratch, so it counts against the monthly quota
+    // the same way. Alternatives/analyze are non-destructive suggestions
+    // (they don't replace the script), so they stay unmetered.
+    if (action in TRANSFORM_INSTRUCTIONS) {
+      const { data: profile } = await supabase
+        .from('users')
+        .select('subscription_tier')
+        .eq('id', user.id)
+        .single()
+      const tier = (profile?.subscription_tier as SubscriptionTier) || 'free'
+      const limit = TIER_SCRIPT_LIMITS[tier] ?? TIER_SCRIPT_LIMITS.free
+
+      const { data: usage, error: usageError } = await supabase
+        .rpc('increment_script_usage', { p_user_id: user.id, p_limit: limit })
+        .single() as { data: { allowed: boolean; new_count: number } | null; error: unknown }
+
+      if (usageError || !usage) {
+        return NextResponse.json({ error: 'Failed to check usage limit' }, { status: 500 })
+      }
+      if (!usage.allowed) {
+        return NextResponse.json(
+          { error: `You've used all ${limit} scripts included in your ${tier} plan this month. Upgrade to generate more.` },
+          { status: 403 }
+        )
+      }
+      quotaReserved = true
     }
 
     if (action === 'alternatives') {
@@ -112,6 +150,9 @@ ${text}`,
       const textBlock = message.content.find((b): b is Anthropic.TextBlock => b.type === 'text')
       const result = textBlock?.text.trim()
       if (!result) {
+        if (quotaReserved && userId) {
+          try { await supabase.rpc('decrement_script_usage', { p_user_id: userId }) } catch {}
+        }
         return NextResponse.json({ error: 'AI action failed' }, { status: 502 })
       }
       return NextResponse.json({ result })
@@ -119,6 +160,11 @@ ${text}`,
 
     return NextResponse.json({ error: 'Unknown action' }, { status: 400 })
   } catch (error) {
+    // A reserved quota slot that never produced a rewritten script
+    // shouldn't cost the user a script from their monthly limit.
+    if (quotaReserved && supabase && userId) {
+      try { await supabase.rpc('decrement_script_usage', { p_user_id: userId }) } catch {}
+    }
     console.error('Script action failed:', error)
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'AI action failed' },
