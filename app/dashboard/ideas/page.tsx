@@ -2,15 +2,40 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { Lightbulb, Plus, Trash2, Check, ArrowRight, Pencil } from 'lucide-react'
+import { Lightbulb, Plus, Trash2, Check, ArrowRight, Pencil, TrendingUp, AlertTriangle } from 'lucide-react'
 import ErrorMessage from '@/lib/components/ui/ErrorMessage'
+import YouTubeIcon from '@/lib/components/ui/YouTubeIcon'
 
 interface Idea {
   id: string
   text: string
   status: 'new' | 'used'
   created_at: string
+}
+
+interface ChannelKeyword {
+  phrase: string
+  exampleTitle: string
+  viewCount?: number
+}
+
+interface TrendingVideo {
+  videoId: string
+  title: string
+  channelTitle: string
+  viewCount: number
+}
+
+interface TrendingState {
+  tierAllowed: boolean
+  connected?: boolean
+  needsReconnect?: boolean
+  channelKeywords?: ChannelKeyword[]
+  trendingCategoryLabel?: string | null
+  trendingVideos?: TrendingVideo[]
+  error?: string
 }
 
 export default function IdeasPage() {
@@ -22,6 +47,10 @@ export default function IdeasPage() {
   const [error, setError] = useState('')
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editingText, setEditingText] = useState('')
+
+  const [tier, setTier] = useState<string>('free')
+  const [trending, setTrending] = useState<TrendingState | null>(null)
+  const [trendingLoading, setTrendingLoading] = useState(false)
 
   const load = async () => {
     const supabase = createClient()
@@ -37,11 +66,41 @@ export default function IdeasPage() {
       .order('created_at', { ascending: false })
     setIdeas(data || [])
     setLoading(false)
+
+    const { data: profile } = await supabase
+      .from('users')
+      .select('subscription_tier')
+      .eq('id', user.id)
+      .single()
+    const userTier = profile?.subscription_tier || 'free'
+    setTier(userTier)
+
+    if (userTier === 'pro') {
+      setTrendingLoading(true)
+      try {
+        const res = await fetch('/api/youtube/trending', { credentials: 'same-origin' })
+        setTrending(await res.json())
+      } catch {
+        setTrending({ tierAllowed: true, connected: true, error: 'Could not load suggestions — try again in a moment.' })
+      } finally {
+        setTrendingLoading(false)
+      }
+    }
   }
 
   useEffect(() => {
     load()
   }, [])
+
+  const insertIdea = async (ideaText: string) => {
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) throw new Error('Not authenticated')
+    const { error: insertError } = await supabase
+      .from('ideas')
+      .insert({ user_id: user.id, text: ideaText })
+    if (insertError) throw insertError
+  }
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -49,15 +108,7 @@ export default function IdeasPage() {
     setError('')
     setSaving(true)
     try {
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error('Not authenticated')
-
-      const { error: insertError } = await supabase
-        .from('ideas')
-        .insert({ user_id: user.id, text: text.trim() })
-      if (insertError) throw insertError
-
+      await insertIdea(text.trim())
       setText('')
       await load()
     } catch (err) {
@@ -65,6 +116,28 @@ export default function IdeasPage() {
     } finally {
       setSaving(false)
     }
+  }
+
+  const handleAddSuggestion = async (suggestionText: string) => {
+    try {
+      await insertIdea(suggestionText)
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const { data } = await supabase
+          .from('ideas')
+          .select('id, text, status, created_at')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+        setIdeas(data || [])
+      }
+    } catch {
+      // Non-critical — the suggestion just stays visible to try again.
+    }
+  }
+
+  const handleUseSuggestion = (suggestionText: string) => {
+    router.push(`/dashboard/new?topic=${encodeURIComponent(suggestionText)}`)
   }
 
   const handleToggleUsed = async (idea: Idea) => {
@@ -136,6 +209,97 @@ export default function IdeasPage() {
         </div>
         {error && <ErrorMessage className="mt-3">{error}</ErrorMessage>}
       </form>
+
+      {tier !== 'pro' && (
+        <p className="mb-6 text-xs text-ink-muted">
+          Connect your YouTube channel (<Link href="/dashboard/billing" className="text-sage hover:underline">Pro</Link>) to see trending suggestions here.
+        </p>
+      )}
+
+      {tier === 'pro' && trendingLoading && !trending && (
+        <div className="card mb-6">
+          <p className="text-sm text-ink-muted">Loading suggestions…</p>
+        </div>
+      )}
+
+      {tier === 'pro' && trending && !trending.connected && (
+        <div className="card mb-6">
+          <div className="mb-3 flex items-center gap-2">
+            <TrendingUp size={18} aria-hidden="true" className="text-sage" />
+            <h2 className="text-sm font-semibold text-ink-muted">TRENDING SUGGESTIONS</h2>
+          </div>
+          <p className="mb-3 text-sm text-ink-muted">
+            Connect your YouTube channel to see topic suggestions from your own videos and what's trending in your category.
+          </p>
+          <a href="/api/youtube/connect" className="btn-primary inline-flex items-center gap-2 px-4 py-2 text-sm">
+            <YouTubeIcon size={16} />
+            Connect YouTube channel
+          </a>
+        </div>
+      )}
+
+      {tier === 'pro' && trending?.needsReconnect && (
+        <div className="card mb-6">
+          <div className="mb-3 flex items-start gap-2 rounded-lg border border-amber-400/50 bg-amber-50 p-3">
+            <AlertTriangle size={16} aria-hidden="true" className="mt-0.5 flex-shrink-0 text-amber-600" />
+            <p className="text-sm text-ink">Your YouTube access needs to be reconnected.</p>
+          </div>
+          <Link href="/dashboard/settings" className="btn-secondary inline-flex items-center px-4 py-2 text-sm">
+            Reconnect in Settings
+          </Link>
+        </div>
+      )}
+
+      {tier === 'pro' && trending?.connected && !trending.needsReconnect && (
+        <div className="mb-6 space-y-6">
+          {trending.error && <ErrorMessage>{trending.error}</ErrorMessage>}
+
+          <div>
+            <div className="mb-1 flex items-center gap-2">
+              <TrendingUp size={16} aria-hidden="true" className="text-sage" />
+              <h2 className="text-xs font-semibold uppercase tracking-wide text-ink-muted">From your channel</h2>
+            </div>
+            <p className="mb-2 text-xs text-ink-faint">Recurring topics from your own recent videos</p>
+            {trending.channelKeywords && trending.channelKeywords.length > 0 ? (
+              <div className="space-y-2">
+                {trending.channelKeywords.map((kw, i) => (
+                  <SuggestionCard
+                    key={i}
+                    title={kw.phrase}
+                    subtitle={kw.exampleTitle}
+                    meta={kw.viewCount !== undefined ? `${kw.viewCount.toLocaleString()} views` : undefined}
+                    onAdd={() => handleAddSuggestion(kw.phrase)}
+                    onUse={() => handleUseSuggestion(kw.phrase)}
+                  />
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-ink-muted">Not enough videos yet to detect trends.</p>
+            )}
+          </div>
+
+          {trending.trendingVideos && trending.trendingVideos.length > 0 && (
+            <div>
+              <h2 className="mb-1 text-xs font-semibold uppercase tracking-wide text-ink-muted">Trending now</h2>
+              <p className="mb-2 text-xs text-ink-faint">
+                {trending.trendingCategoryLabel ? `in ${trending.trendingCategoryLabel} · India` : 'on YouTube · India'}
+              </p>
+              <div className="space-y-2">
+                {trending.trendingVideos.map((v) => (
+                  <SuggestionCard
+                    key={v.videoId}
+                    title={v.title}
+                    subtitle={v.channelTitle}
+                    meta={`${v.viewCount.toLocaleString()} views`}
+                    onAdd={() => handleAddSuggestion(v.title)}
+                    onUse={() => handleUseSuggestion(v.title)}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {ideas.length === 0 ? (
         <div className="card py-12 text-center">
@@ -224,6 +388,44 @@ export default function IdeasPage() {
           )}
         </div>
       )}
+    </div>
+  )
+}
+
+function SuggestionCard({
+  title,
+  subtitle,
+  meta,
+  onAdd,
+  onUse,
+}: {
+  title: string
+  subtitle: string
+  meta?: string
+  onAdd: () => void
+  onUse: () => void
+}) {
+  return (
+    <div className="card flex items-center gap-2 py-3">
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-medium text-ink">{title}</p>
+        <p className="truncate text-xs text-ink-muted">{subtitle}{meta ? ` · ${meta}` : ''}</p>
+      </div>
+      <div className="flex flex-shrink-0 items-center gap-1">
+        <button
+          onClick={onUse}
+          className="flex min-h-[44px] items-center gap-1 rounded px-2 text-xs text-sage hover:bg-sage/10"
+        >
+          Use this <ArrowRight size={13} aria-hidden="true" />
+        </button>
+        <button
+          onClick={onAdd}
+          className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded hover:bg-warm-surface-alt"
+          aria-label={`Add "${title}" to ideas`}
+        >
+          <Plus size={15} aria-hidden="true" />
+        </button>
+      </div>
     </div>
   )
 }
