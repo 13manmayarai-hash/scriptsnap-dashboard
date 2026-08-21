@@ -7,6 +7,9 @@ import { createClient } from '@/lib/supabase/client'
 import { Lightbulb, Plus, Trash2, Check, ArrowRight, Pencil, TrendingUp, AlertTriangle } from 'lucide-react'
 import ErrorMessage from '@/lib/components/ui/ErrorMessage'
 import YouTubeIcon from '@/lib/components/ui/YouTubeIcon'
+import { CATEGORY_OPTIONS, REGION_OPTIONS } from '@/lib/youtube/categories'
+
+const CATEGORY_TABS = [{ id: 'inferred', label: 'For You' }, { id: 'all', label: 'All' }, ...CATEGORY_OPTIONS]
 
 interface Idea {
   id: string
@@ -51,6 +54,14 @@ export default function IdeasPage() {
   const [tier, setTier] = useState<string>('free')
   const [trending, setTrending] = useState<TrendingState | null>(null)
   const [trendingLoading, setTrendingLoading] = useState(false)
+
+  const [selectedCategory, setSelectedCategory] = useState('inferred')
+  const [selectedRegion, setSelectedRegion] = useState('IN')
+  const [usingFilter, setUsingFilter] = useState(false)
+  const [filterVideos, setFilterVideos] = useState<TrendingVideo[]>([])
+  const [filterCategoryLabel, setFilterCategoryLabel] = useState<string | null>(null)
+  const [filterLoading, setFilterLoading] = useState(false)
+  const [filterError, setFilterError] = useState('')
 
   const load = async () => {
     const supabase = createClient()
@@ -138,6 +149,39 @@ export default function IdeasPage() {
 
   const handleUseSuggestion = (suggestionText: string) => {
     router.push(`/dashboard/new?topic=${encodeURIComponent(suggestionText)}`)
+  }
+
+  const applyFilter = async (category: string, region: string) => {
+    setSelectedCategory(category)
+    setSelectedRegion(region)
+
+    // Back to the default combo — just show what was already fetched on
+    // page load rather than spending another API call to get it again.
+    if (category === 'inferred' && region === 'IN') {
+      setUsingFilter(false)
+      return
+    }
+
+    setUsingFilter(true)
+    setFilterLoading(true)
+    setFilterError('')
+    try {
+      const params = new URLSearchParams({ category, region })
+      const res = await fetch(`/api/youtube/trending?${params}`, { credentials: 'same-origin' })
+      const data = await res.json()
+      if (data.error) {
+        setFilterError(data.error)
+        setFilterVideos([])
+      } else {
+        setFilterVideos(data.trendingVideos || [])
+        setFilterCategoryLabel(data.trendingCategoryLabel ?? null)
+      }
+    } catch {
+      setFilterError('Could not load trending videos — try again in a moment.')
+      setFilterVideos([])
+    } finally {
+      setFilterLoading(false)
+    }
   }
 
   const handleToggleUsed = async (idea: Idea) => {
@@ -278,26 +322,67 @@ export default function IdeasPage() {
             )}
           </div>
 
-          {trending.trendingVideos && trending.trendingVideos.length > 0 && (
-            <div>
-              <h2 className="mb-1 text-xs font-semibold uppercase tracking-wide text-ink-muted">Trending now</h2>
-              <p className="mb-2 text-xs text-ink-faint">
-                {trending.trendingCategoryLabel ? `in ${trending.trendingCategoryLabel} · India` : 'on YouTube · India'}
-              </p>
-              <div className="space-y-2">
-                {trending.trendingVideos.map((v) => (
-                  <SuggestionCard
-                    key={v.videoId}
-                    title={v.title}
-                    subtitle={v.channelTitle}
-                    meta={`${v.viewCount.toLocaleString()} views`}
-                    onAdd={() => handleAddSuggestion(v.title)}
-                    onUse={() => handleUseSuggestion(v.title)}
-                  />
-                ))}
-              </div>
+          <div>
+            <h2 className="mb-1 text-xs font-semibold uppercase tracking-wide text-ink-muted">Trending now</h2>
+
+            <div className="mb-2 flex gap-1.5 overflow-x-auto pb-1">
+              {CATEGORY_TABS.map((cat) => (
+                <button
+                  key={cat.id}
+                  onClick={() => applyFilter(cat.id, selectedRegion)}
+                  className={`flex-shrink-0 whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
+                    selectedCategory === cat.id ? 'bg-sage text-white' : 'bg-warm-surface-alt text-ink-muted hover:bg-warm-border'
+                  }`}
+                >
+                  {cat.label}
+                </button>
+              ))}
             </div>
-          )}
+
+            <label htmlFor="trending-region" className="sr-only">Region</label>
+            <select
+              id="trending-region"
+              value={selectedRegion}
+              onChange={(e) => applyFilter(selectedCategory, e.target.value)}
+              className="input mb-2 h-9 w-auto py-1 text-xs"
+            >
+              {REGION_OPTIONS.map((r) => (
+                <option key={r.code} value={r.code}>{r.label}</option>
+              ))}
+            </select>
+
+            <p className="mb-2 text-xs text-ink-faint">
+              {(() => {
+                const label = usingFilter ? filterCategoryLabel : trending.trendingCategoryLabel
+                const regionLabel = REGION_OPTIONS.find((r) => r.code === selectedRegion)?.label || selectedRegion
+                return label ? `in ${label} · ${regionLabel}` : `on YouTube · ${regionLabel}`
+              })()}
+            </p>
+
+            {filterError && <ErrorMessage className="mb-2">{filterError}</ErrorMessage>}
+
+            {filterLoading ? (
+              <p className="text-sm text-ink-muted">Loading…</p>
+            ) : (() => {
+                const videos = usingFilter ? filterVideos : trending.trendingVideos || []
+                return videos.length > 0 ? (
+                  <div className="space-y-2">
+                    {videos.map((v) => (
+                      <SuggestionCard
+                        key={v.videoId}
+                        title={v.title}
+                        subtitle={v.channelTitle}
+                        meta={`${v.viewCount.toLocaleString()} views`}
+                        onAdd={() => handleAddSuggestion(v.title)}
+                        onUse={() => handleUseSuggestion(v.title)}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-ink-muted">No trending videos found for this category/region.</p>
+                )
+              })()}
+          </div>
         </div>
       )}
 

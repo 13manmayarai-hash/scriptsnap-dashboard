@@ -3,31 +3,11 @@ import Anthropic from '@anthropic-ai/sdk'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { getYouTubeOAuthClient } from './oauth'
 import { CACHE_FRESHNESS_MS } from './analytics'
+import { CATEGORY_LABELS } from './categories'
 
 const client = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 })
-
-// Standard YouTube video category IDs -> display label. Hardcoded rather
-// than an extra videoCategories.list call — these are stable, and a rare
-// Google rename needs a one-line fix here, not a migration.
-const CATEGORY_LABELS: Record<string, string> = {
-  '1': 'Film & Animation',
-  '2': 'Autos & Vehicles',
-  '10': 'Music',
-  '15': 'Pets & Animals',
-  '17': 'Sports',
-  '19': 'Travel & Events',
-  '20': 'Gaming',
-  '22': 'People & Blogs',
-  '23': 'Comedy',
-  '24': 'Entertainment',
-  '25': 'News & Politics',
-  '26': 'Howto & Style',
-  '27': 'Education',
-  '28': 'Science & Technology',
-  '29': 'Nonprofits & Activism',
-}
 
 export interface TrendingContext {
   channelKeywords: { phrase: string; exampleTitle: string; viewCount?: number }[]
@@ -117,6 +97,64 @@ function fallbackKeywordsFromTitles(
     .map((title) => ({ phrase: title, exampleTitle: title, viewCount: viewsByTitle[title] }))
 }
 
+async function fetchMostPopularVideos(
+  youtube: ReturnType<typeof google.youtube>,
+  options: { regionCode: string; videoCategoryId?: string }
+): Promise<TrendingContext['trendingVideos']> {
+  const trendingRes = await youtube.videos.list({
+    chart: 'mostPopular',
+    regionCode: options.regionCode,
+    videoCategoryId: options.videoCategoryId,
+    part: ['snippet', 'statistics'],
+    maxResults: 10,
+  })
+
+  return (trendingRes.data.items || [])
+    .filter((item) => item.id && item.snippet?.title)
+    .map((item) => ({
+      videoId: item.id!,
+      title: item.snippet!.title!,
+      channelTitle: item.snippet?.channelTitle || 'Unknown channel',
+      viewCount: Number(item.statistics?.viewCount) || 0,
+    }))
+}
+
+// On-demand fetch for the Ideas page's category-tab / region picker —
+// deliberately NOT cached like getTrendingContext below: it's a cheap
+// (1-unit) YouTube Data API call with no Claude cost, triggered by an
+// explicit user interaction rather than a page load, so a live fetch per
+// switch is simpler than inventing a per-category/region cache shape.
+export async function getTrendingVideosForFilter(
+  supabase: SupabaseClient,
+  userId: string,
+  options: { regionCode: string; videoCategoryId?: string }
+): Promise<TrendingContext['trendingVideos'] | null> {
+  const { data: connection } = await supabase
+    .from('youtube_connections')
+    .select('google_refresh_token, needs_reconnect')
+    .eq('user_id', userId)
+    .maybeSingle<{ google_refresh_token: string; needs_reconnect: boolean }>()
+
+  if (!connection || connection.needs_reconnect) return null
+
+  try {
+    const oauth2Client = getYouTubeOAuthClient()
+    oauth2Client.setCredentials({ refresh_token: connection.google_refresh_token })
+    await oauth2Client.getAccessToken()
+
+    const youtube = google.youtube({ version: 'v3', auth: oauth2Client })
+    return await fetchMostPopularVideos(youtube, options)
+  } catch (err: any) {
+    const isRevoked = err?.response?.data?.error === 'invalid_grant' || err?.message?.includes('invalid_grant')
+    if (isRevoked) {
+      await supabase.from('youtube_connections').update({ needs_reconnect: true }).eq('user_id', userId)
+    } else {
+      console.error('YouTube trending-filter fetch failed:', err)
+    }
+    return null
+  }
+}
+
 // Builds "From your channel" (recurring topics, Claude-extracted from your
 // own recent titles) and "Trending now" (real mostPopular videos in your
 // channel's inferred content category) for the Ideas page. Same
@@ -192,22 +230,7 @@ export async function getTrendingContext(
       inferredCategoryId = catId
     }
 
-    const trendingRes = await youtube.videos.list({
-      chart: 'mostPopular',
-      regionCode: 'IN',
-      videoCategoryId: inferredCategoryId,
-      part: ['snippet', 'statistics'],
-      maxResults: 10,
-    })
-
-    const trendingVideos: TrendingContext['trendingVideos'] = (trendingRes.data.items || [])
-      .filter((item) => item.id && item.snippet?.title)
-      .map((item) => ({
-        videoId: item.id!,
-        title: item.snippet!.title!,
-        channelTitle: item.snippet?.channelTitle || 'Unknown channel',
-        viewCount: Number(item.statistics?.viewCount) || 0,
-      }))
+    const trendingVideos = await fetchMostPopularVideos(youtube, { regionCode: 'IN', videoCategoryId: inferredCategoryId })
 
     const context: TrendingContext = { channelKeywords, trendingCategoryLabel: categoryLabel, trendingVideos }
 

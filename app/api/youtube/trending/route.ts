@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
-import { getTrendingContext } from '@/lib/youtube/trending'
+import { getTrendingContext, getTrendingVideosForFilter } from '@/lib/youtube/trending'
+import { CATEGORY_LABELS } from '@/lib/youtube/categories'
 
 export async function GET(request: NextRequest) {
   const cookieStore = cookies()
@@ -58,6 +59,30 @@ export async function GET(request: NextRequest) {
   }
 
   const { searchParams } = new URL(request.url)
+  const category = searchParams.get('category') // 'all' | a numeric videoCategoryId | absent = inferred/default
+  const region = searchParams.get('region')
+
+  // The category-tab / region picker on the Ideas page hits this branch —
+  // a lightweight, uncached, single live fetch, distinct from the
+  // full cached context (channel keywords + inferred-category trending)
+  // used on initial page load.
+  if (category !== null || region !== null) {
+    const videoCategoryId = category && category !== 'all' ? category : undefined
+    const trendingVideos = await getTrendingVideosForFilter(supabase, user.id, {
+      regionCode: region || 'IN',
+      videoCategoryId,
+    })
+    if (!trendingVideos) {
+      return NextResponse.json({ tierAllowed: true, connected: true, error: 'Could not load trending videos — try again in a moment.' })
+    }
+    return NextResponse.json({
+      tierAllowed: true,
+      connected: true,
+      trendingVideos,
+      trendingCategoryLabel: videoCategoryId ? CATEGORY_LABELS[videoCategoryId] || null : null,
+    })
+  }
+
   const context = await getTrendingContext(supabase, user.id, { forceRefresh: searchParams.get('refresh') === '1' })
 
   if (!context) {
