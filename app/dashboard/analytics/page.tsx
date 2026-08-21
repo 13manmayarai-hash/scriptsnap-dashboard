@@ -214,11 +214,11 @@ export default function AnalyticsPage() {
   }
 
   const cards = [
-    { icon: FileText, label: 'Scripts created', value: String(stats?.totalScripts ?? 0), color: 'bg-sage/15 text-sage' },
-    { icon: Type, label: 'Average script length', value: stats?.avgWordCount ? `${stats.avgWordCount} words` : '—', color: 'bg-blue-50 text-blue-600' },
-    { icon: Mic2, label: 'Most-used tone', value: stats?.topTone || '—', color: 'bg-purple-50 text-purple-600' },
-    { icon: Tags, label: 'Most-used category', value: stats?.topCategory || '—', color: 'bg-amber-50 text-amber-600' },
-    { icon: CalendarDays, label: 'Content planned', value: String(stats?.contentPlanned ?? 0), color: 'bg-rose-50 text-rose-600' },
+    { icon: FileText, label: 'Scripts created', value: String(stats?.totalScripts ?? 0), color: 'bg-sage' },
+    { icon: Type, label: 'Average script length', value: stats?.avgWordCount ? `${stats.avgWordCount} words` : '—', color: 'bg-blue-500' },
+    { icon: Mic2, label: 'Most-used tone', value: stats?.topTone || '—', color: 'bg-purple-500' },
+    { icon: Tags, label: 'Most-used category', value: stats?.topCategory || '—', color: 'bg-amber-500' },
+    { icon: CalendarDays, label: 'Content planned', value: String(stats?.contentPlanned ?? 0), color: 'bg-rose-500' },
   ]
 
   const perfData = perf?.data
@@ -239,12 +239,10 @@ export default function AnalyticsPage() {
       ) : (
         <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
           {cards.map(({ icon: Icon, label, value, color }) => (
-            <div key={label} className="card">
-              <div className={`mb-3 flex h-9 w-9 items-center justify-center rounded-lg ${color}`}>
-                <Icon size={16} aria-hidden="true" />
-              </div>
-              <p className="text-xs uppercase tracking-wide text-ink-muted">{label}</p>
-              <p className="mt-1 text-2xl font-bold heading-serif capitalize">{value}</p>
+            <div key={label} className={`rounded-xl p-4 ${color}`}>
+              <Icon size={18} aria-hidden="true" className="mb-3 text-white" />
+              <p className="text-xs uppercase tracking-wide text-white/80">{label}</p>
+              <p className="mt-1 text-2xl font-bold heading-serif capitalize text-white">{value}</p>
             </div>
           ))}
         </div>
@@ -314,24 +312,23 @@ export default function AnalyticsPage() {
 
               {/* Stat tiles */}
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                <StatTile icon={Eye} label="Views" value={perfData.totals.views.toLocaleString()} color="bg-blue-50 text-blue-600" />
-                <StatTile icon={Clock} label="Watch time" value={`${perfData.totals.watchTimeHours}h`} color="bg-purple-50 text-purple-600" />
+                <StatTile icon={Eye} label="Views" value={perfData.totals.views.toLocaleString()} color="bg-blue-500" />
+                <StatTile icon={Clock} label="Watch time" value={`${perfData.totals.watchTimeHours}h`} color="bg-purple-500" />
                 <StatTile
                   icon={Users}
                   label="Subscribers"
                   value={`${netSubs >= 0 ? '+' : ''}${netSubs.toLocaleString()}`}
-                  tone={netSubs >= 0 ? 'positive' : 'negative'}
-                  color="bg-sage/15 text-sage"
+                  color="bg-sage"
                 />
                 <StatTile
                   icon={MousePointerClick}
                   label="Thumbnail CTR"
                   value={perfData.channelCtr ? `${perfData.channelCtr.ctr.toFixed(1)}%` : 'Not enough data'}
-                  color="bg-amber-50 text-amber-600"
+                  color="bg-amber-500"
                 />
-                <StatTile icon={ThumbsUp} label="Likes" value={perfData.totals.likes.toLocaleString()} color="bg-rose-50 text-rose-600" />
-                <StatTile icon={MessageCircle} label="Comments" value={perfData.totals.comments.toLocaleString()} color="bg-teal-50 text-teal-600" />
-                <StatTile icon={Share2} label="Shares" value={perfData.totals.shares.toLocaleString()} color="bg-indigo-50 text-indigo-600" />
+                <StatTile icon={ThumbsUp} label="Likes" value={perfData.totals.likes.toLocaleString()} color="bg-rose-500" />
+                <StatTile icon={MessageCircle} label="Comments" value={perfData.totals.comments.toLocaleString()} color="bg-teal-500" />
+                <StatTile icon={Share2} label="Shares" value={perfData.totals.shares.toLocaleString()} color="bg-indigo-500" />
               </div>
 
               {/* Charts */}
@@ -465,24 +462,18 @@ function StatTile({
   icon: Icon,
   label,
   value,
-  tone,
-  color = 'bg-soft-accent text-sage',
+  color = 'bg-sage',
 }: {
   icon: LucideIcon
   label: string
   value: string
-  tone?: 'positive' | 'negative'
   color?: string
 }) {
   return (
-    <div className="card py-3">
-      <div className={`mb-2 flex h-7 w-7 items-center justify-center rounded-lg ${color}`}>
-        <Icon size={14} aria-hidden="true" />
-      </div>
-      <p className="text-[10px] uppercase tracking-wide text-ink-faint">{label}</p>
-      <p className={`mt-0.5 text-lg font-bold heading-serif ${tone === 'negative' ? 'text-error' : tone === 'positive' ? 'text-sage' : 'text-ink'}`}>
-        {value}
-      </p>
+    <div className={`rounded-xl p-3 ${color}`}>
+      <Icon size={16} aria-hidden="true" className="mb-2 text-white" />
+      <p className="text-[10px] uppercase tracking-wide text-white/80">{label}</p>
+      <p className="mt-0.5 text-lg font-bold heading-serif text-white">{value}</p>
     </div>
   )
 }
