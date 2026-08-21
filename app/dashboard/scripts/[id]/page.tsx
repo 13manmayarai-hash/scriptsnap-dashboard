@@ -8,6 +8,7 @@ import { LANGUAGES } from '@/lib/languages'
 import { useAppStore } from '@/lib/store/app'
 import ScriptRating from '@/lib/components/ScriptRating'
 import ErrorMessage from '@/lib/components/ui/ErrorMessage'
+import LoadingState from '@/lib/components/ui/LoadingState'
 import {
   ArrowLeft,
   Copy,
@@ -265,11 +266,7 @@ export default function ScriptWorkspacePage() {
   }
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <p className="text-ink-muted">Loading script…</p>
-      </div>
-    )
+    return <LoadingState message="Loading script…" />
   }
 
   if (notFound || !script) {

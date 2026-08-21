@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import { Menu, ChevronDown, LogOut, Settings as SettingsIcon } from 'lucide-react'
+import { Menu, ChevronDown, LogOut, Settings as SettingsIcon, Loader2 } from 'lucide-react'
 import { useAppStore } from '@/lib/store/app'
 
 interface TopbarAction {
@@ -71,7 +71,8 @@ export default function Topbar({
           <div className="flex min-w-0 items-center gap-2">
             <h2 className="truncate text-base font-semibold text-ink md:text-lg">{title}</h2>
             {saveState && (
-              <span className="flex-shrink-0 text-xs text-ink-muted" aria-live="polite">
+              <span className="flex flex-shrink-0 items-center gap-1 text-xs text-ink-muted" aria-live="polite">
+                {saveState === 'Saving…' && <Loader2 size={11} aria-hidden="true" className="animate-spin" />}
                 {saveState}
               </span>
             )}

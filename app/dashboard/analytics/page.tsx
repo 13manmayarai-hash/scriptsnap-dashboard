@@ -12,12 +12,14 @@ import {
   BarChart3, FileText, Type, Mic2, Tags, CalendarDays, AlertTriangle,
   CheckCircle2, XCircle, Lightbulb, Eye, Clock, Users, ThumbsUp,
   MessageCircle, Share2, MousePointerClick, PlayCircle, MoreHorizontal, Plus,
+  Loader2, RefreshCw,
   type LucideIcon,
 } from 'lucide-react'
 import ErrorMessage from '@/lib/components/ui/ErrorMessage'
 import YouTubeIcon from '@/lib/components/ui/YouTubeIcon'
 import VideoPlayerModal from '@/lib/components/ui/VideoPlayerModal'
 import VideoBreakdownPanel, { type DetailsState } from '@/lib/components/ui/VideoBreakdownPanel'
+import LoadingState from '@/lib/components/ui/LoadingState'
 
 const SAGE = '#7A8B72'
 const ERROR = '#B85C5C'
@@ -208,19 +210,15 @@ export default function AnalyticsPage() {
   }
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <p className="text-ink-muted">Loading analytics…</p>
-      </div>
-    )
+    return <LoadingState message="Loading analytics…" />
   }
 
   const cards = [
-    { icon: FileText, label: 'Scripts created', value: String(stats?.totalScripts ?? 0) },
-    { icon: Type, label: 'Average script length', value: stats?.avgWordCount ? `${stats.avgWordCount} words` : '—' },
-    { icon: Mic2, label: 'Most-used tone', value: stats?.topTone || '—' },
-    { icon: Tags, label: 'Most-used category', value: stats?.topCategory || '—' },
-    { icon: CalendarDays, label: 'Content planned', value: String(stats?.contentPlanned ?? 0) },
+    { icon: FileText, label: 'Scripts created', value: String(stats?.totalScripts ?? 0), color: 'bg-sage/15 text-sage' },
+    { icon: Type, label: 'Average script length', value: stats?.avgWordCount ? `${stats.avgWordCount} words` : '—', color: 'bg-blue-50 text-blue-600' },
+    { icon: Mic2, label: 'Most-used tone', value: stats?.topTone || '—', color: 'bg-purple-50 text-purple-600' },
+    { icon: Tags, label: 'Most-used category', value: stats?.topCategory || '—', color: 'bg-amber-50 text-amber-600' },
+    { icon: CalendarDays, label: 'Content planned', value: String(stats?.contentPlanned ?? 0), color: 'bg-rose-50 text-rose-600' },
   ]
 
   const perfData = perf?.data
@@ -240,9 +238,9 @@ export default function AnalyticsPage() {
         </div>
       ) : (
         <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
-          {cards.map(({ icon: Icon, label, value }) => (
+          {cards.map(({ icon: Icon, label, value, color }) => (
             <div key={label} className="card">
-              <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-soft-accent text-sage">
+              <div className={`mb-3 flex h-9 w-9 items-center justify-center rounded-lg ${color}`}>
                 <Icon size={16} aria-hidden="true" />
               </div>
               <p className="text-xs uppercase tracking-wide text-ink-muted">{label}</p>
@@ -266,7 +264,7 @@ export default function AnalyticsPage() {
 
       {tier === 'pro' && perfLoading && !perf && (
         <div className="card">
-          <p className="text-sm text-ink-muted">Loading performance data…</p>
+          <LoadingState message="Loading performance data…" compact />
         </div>
       )}
 
@@ -307,30 +305,33 @@ export default function AnalyticsPage() {
                 <button
                   onClick={() => { setSyncing(true); loadPerformance(true).finally(() => setSyncing(false)) }}
                   disabled={syncing}
-                  className="text-xs text-sage hover:underline disabled:opacity-50"
+                  className="flex items-center gap-1.5 text-xs text-sage hover:underline disabled:opacity-50"
                 >
+                  {syncing ? <Loader2 size={12} aria-hidden="true" className="animate-spin" /> : <RefreshCw size={12} aria-hidden="true" />}
                   {syncing ? 'Syncing…' : 'Sync now'}
                 </button>
               </div>
 
               {/* Stat tiles */}
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                <StatTile icon={Eye} label="Views" value={perfData.totals.views.toLocaleString()} />
-                <StatTile icon={Clock} label="Watch time" value={`${perfData.totals.watchTimeHours}h`} />
+                <StatTile icon={Eye} label="Views" value={perfData.totals.views.toLocaleString()} color="bg-blue-50 text-blue-600" />
+                <StatTile icon={Clock} label="Watch time" value={`${perfData.totals.watchTimeHours}h`} color="bg-purple-50 text-purple-600" />
                 <StatTile
                   icon={Users}
                   label="Subscribers"
                   value={`${netSubs >= 0 ? '+' : ''}${netSubs.toLocaleString()}`}
                   tone={netSubs >= 0 ? 'positive' : 'negative'}
+                  color="bg-sage/15 text-sage"
                 />
                 <StatTile
                   icon={MousePointerClick}
                   label="Thumbnail CTR"
                   value={perfData.channelCtr ? `${perfData.channelCtr.ctr.toFixed(1)}%` : 'Not enough data'}
+                  color="bg-amber-50 text-amber-600"
                 />
-                <StatTile icon={ThumbsUp} label="Likes" value={perfData.totals.likes.toLocaleString()} />
-                <StatTile icon={MessageCircle} label="Comments" value={perfData.totals.comments.toLocaleString()} />
-                <StatTile icon={Share2} label="Shares" value={perfData.totals.shares.toLocaleString()} />
+                <StatTile icon={ThumbsUp} label="Likes" value={perfData.totals.likes.toLocaleString()} color="bg-rose-50 text-rose-600" />
+                <StatTile icon={MessageCircle} label="Comments" value={perfData.totals.comments.toLocaleString()} color="bg-teal-50 text-teal-600" />
+                <StatTile icon={Share2} label="Shares" value={perfData.totals.shares.toLocaleString()} color="bg-indigo-50 text-indigo-600" />
               </div>
 
               {/* Charts */}
@@ -465,15 +466,17 @@ function StatTile({
   label,
   value,
   tone,
+  color = 'bg-soft-accent text-sage',
 }: {
   icon: LucideIcon
   label: string
   value: string
   tone?: 'positive' | 'negative'
+  color?: string
 }) {
   return (
     <div className="card py-3">
-      <div className="mb-2 flex h-7 w-7 items-center justify-center rounded-lg bg-soft-accent text-sage">
+      <div className={`mb-2 flex h-7 w-7 items-center justify-center rounded-lg ${color}`}>
         <Icon size={14} aria-hidden="true" />
       </div>
       <p className="text-[10px] uppercase tracking-wide text-ink-faint">{label}</p>

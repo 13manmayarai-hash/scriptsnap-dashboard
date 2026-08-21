@@ -3,8 +3,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Plus, Trash2, X } from 'lucide-react'
+import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Plus, Trash2, X, Loader2 } from 'lucide-react'
 import ErrorMessage from '@/lib/components/ui/ErrorMessage'
+import LoadingState from '@/lib/components/ui/LoadingState'
 
 interface CalendarEntry {
   id: string
@@ -140,11 +141,7 @@ export default function CalendarPage() {
   ]
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <p className="text-ink-muted">Loading calendar…</p>
-      </div>
-    )
+    return <LoadingState message="Loading calendar…" />
   }
 
   return (
@@ -205,7 +202,8 @@ export default function CalendarPage() {
             </div>
           </div>
           {error && <ErrorMessage>{error}</ErrorMessage>}
-          <button type="submit" disabled={saving} className="btn-primary px-6">
+          <button type="submit" disabled={saving} className="btn-primary flex items-center justify-center gap-2 px-6">
+            {saving && <Loader2 size={16} aria-hidden="true" className="animate-spin" />}
             {saving ? 'Adding…' : 'Add to calendar'}
           </button>
         </form>

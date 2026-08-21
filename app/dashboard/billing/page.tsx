@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { TIER_NAMES, TIER_SCRIPT_LIMITS, TIER_BENEFITS, type SubscriptionTier } from '@/lib/tiers'
 import { CreditCard, Check } from 'lucide-react'
+import LoadingState from '@/lib/components/ui/LoadingState'
 
 interface BillingInfo {
   subscription_tier: SubscriptionTier
@@ -34,11 +35,7 @@ export default function BillingPage() {
   }, [])
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <p className="text-ink-muted">Loading billing info…</p>
-      </div>
-    )
+    return <LoadingState message="Loading billing info…" />
   }
 
   const tier = info?.subscription_tier || 'free'

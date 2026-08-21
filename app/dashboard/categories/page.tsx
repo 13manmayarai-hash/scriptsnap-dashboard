@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Tags, Plus, Trash2 } from 'lucide-react'
+import { Tags, Plus, Trash2, Loader2 } from 'lucide-react'
 import ErrorMessage from '@/lib/components/ui/ErrorMessage'
+import LoadingState from '@/lib/components/ui/LoadingState'
 
 interface Category {
   id: string
@@ -68,11 +69,7 @@ export default function CategoriesPage() {
   }
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <p className="text-ink-muted">Loading categories…</p>
-      </div>
-    )
+    return <LoadingState message="Loading categories…" />
   }
 
   return (
@@ -99,7 +96,7 @@ export default function CategoriesPage() {
             aria-label="New category name"
           />
           <button type="submit" disabled={saving} className="btn-primary flex items-center justify-center gap-2 px-6 flex-shrink-0">
-            <Plus size={18} aria-hidden="true" />
+            {saving ? <Loader2 size={18} aria-hidden="true" className="animate-spin" /> : <Plus size={18} aria-hidden="true" />}
             {saving ? 'Adding…' : 'Add'}
           </button>
         </form>

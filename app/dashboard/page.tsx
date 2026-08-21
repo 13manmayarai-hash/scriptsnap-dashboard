@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useAppStore } from '@/lib/store/app'
 import { TIER_SCRIPT_LIMITS, TIER_NAMES, TIER_BENEFITS } from '@/lib/tiers'
 import { Sparkles, Check, X, ArrowRight, Lightbulb, CalendarDays } from 'lucide-react'
+import LoadingState from '@/lib/components/ui/LoadingState'
 
 interface RecentScript {
   id: string
@@ -157,7 +158,7 @@ function DashboardHome() {
         </div>
 
         {loading ? (
-          <div className="card py-8 text-center text-sm text-ink-muted">Loading…</div>
+          <div className="card py-8"><LoadingState message="Loading recent scripts…" compact /></div>
         ) : recentScripts.length === 0 ? (
           <div className="card py-8 text-center">
             <p className="text-sm text-ink-muted">No scripts yet — generate your first one above.</p>
@@ -192,7 +193,9 @@ function DashboardHome() {
             </div>
             <Link href="/dashboard/ideas" className="text-xs text-sage hover:underline">Open</Link>
           </div>
-          {ideas.length === 0 ? (
+          {loading ? (
+            <LoadingState compact />
+          ) : ideas.length === 0 ? (
             <p className="text-sm text-ink-muted">No ideas parked yet.</p>
           ) : (
             <ul className="space-y-1.5">
@@ -210,7 +213,9 @@ function DashboardHome() {
             </div>
             <Link href="/dashboard/calendar" className="text-xs text-sage hover:underline">Open</Link>
           </div>
-          {upcoming.length === 0 ? (
+          {loading ? (
+            <LoadingState compact />
+          ) : upcoming.length === 0 ? (
             <p className="text-sm text-ink-muted">Nothing planned yet.</p>
           ) : (
             <ul className="space-y-1.5">

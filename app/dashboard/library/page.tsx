@@ -4,7 +4,8 @@ import { Suspense, useEffect, useMemo, useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { Trash2, Copy, Search, ShieldAlert, ArrowUpDown } from 'lucide-react'
+import { Trash2, Copy, Search, ShieldAlert, ArrowUpDown, Loader2 } from 'lucide-react'
+import LoadingState from '@/lib/components/ui/LoadingState'
 
 interface Script {
   id: string
@@ -151,9 +152,7 @@ function LibraryContent() {
       </div>
 
       {loading ? (
-        <div className="flex items-center justify-center py-12">
-          <p className="text-ink-muted">Loading scripts…</p>
-        </div>
+        <LoadingState message="Loading scripts…" />
       ) : sortedScripts.length === 0 ? (
         <div className="card py-16 text-center">
           <div className="mb-4 text-5xl text-ink-muted/70">📭</div>
@@ -190,7 +189,11 @@ function LibraryContent() {
                   className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded transition-colors hover:bg-warm-surface-alt disabled:opacity-50"
                   aria-label={`Duplicate ${script.title}`}
                 >
-                  <Copy size={16} aria-hidden="true" />
+                  {busyId === script.id ? (
+                    <Loader2 size={16} aria-hidden="true" className="animate-spin" />
+                  ) : (
+                    <Copy size={16} aria-hidden="true" />
+                  )}
                 </button>
                 <button
                   onClick={() => handleDelete(script.id)}

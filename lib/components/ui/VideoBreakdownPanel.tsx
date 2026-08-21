@@ -2,6 +2,7 @@
 
 import { Sparkles } from 'lucide-react'
 import ErrorMessage from './ErrorMessage'
+import LoadingState from './LoadingState'
 
 export interface VideoDetails {
   videoId: string
@@ -68,7 +69,7 @@ export default function VideoBreakdownPanel({
   if (state.status === 'loading') {
     return (
       <div className="mt-2 rounded-lg border border-warm-border bg-warm-surface-alt p-3">
-        <p className="text-sm text-ink-muted">Loading breakdown…</p>
+        <LoadingState message="Loading breakdown…" compact />
       </div>
     )
   }

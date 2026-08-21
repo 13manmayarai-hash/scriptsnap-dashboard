@@ -8,6 +8,7 @@ import { SettingsIcon, Check, Mic2, Tags, CreditCard, ChevronRight, RefreshCw, A
 import ErrorMessage from '@/lib/components/ui/ErrorMessage'
 import ConfirmDeleteAccountModal from '@/lib/components/ui/ConfirmDeleteAccountModal'
 import YouTubeIcon from '@/lib/components/ui/YouTubeIcon'
+import LoadingState from '@/lib/components/ui/LoadingState'
 
 interface YouTubeConnection {
   youtube_channel_title: string | null
@@ -23,9 +24,9 @@ const YOUTUBE_ERROR_MESSAGES: Record<string, string> = {
 }
 
 const QUICK_LINKS = [
-  { href: '/dashboard/tone-presets', label: 'Tone & Voice presets', description: 'How the generator writes for you', icon: Mic2 },
-  { href: '/dashboard/categories', label: 'Categories', description: 'Your custom content categories', icon: Tags },
-  { href: '/dashboard/billing', label: 'Usage & Billing', description: 'Current plan and monthly usage', icon: CreditCard },
+  { href: '/dashboard/tone-presets', label: 'Tone & Voice presets', description: 'How the generator writes for you', icon: Mic2, color: 'bg-purple-50 text-purple-600' },
+  { href: '/dashboard/categories', label: 'Categories', description: 'Your custom content categories', icon: Tags, color: 'bg-amber-50 text-amber-600' },
+  { href: '/dashboard/billing', label: 'Usage & Billing', description: 'Current plan and monthly usage', icon: CreditCard, color: 'bg-blue-50 text-blue-600' },
 ]
 
 export default function SettingsPage() {
@@ -177,11 +178,7 @@ export default function SettingsPage() {
   }
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <p className="text-ink-muted">Loading settings…</p>
-      </div>
-    )
+    return <LoadingState message="Loading settings…" />
   }
 
   return (
@@ -203,13 +200,13 @@ export default function SettingsPage() {
       <div className="card mb-6">
         <h2 className="text-sm font-semibold text-ink-muted mb-3">PERSONALIZATION</h2>
         <div className="divide-y divide-warm-border">
-          {QUICK_LINKS.map(({ href, label, description, icon: Icon }) => (
+          {QUICK_LINKS.map(({ href, label, description, icon: Icon, color }) => (
             <Link
               key={href}
               href={href}
               className="flex min-h-[44px] items-center gap-3 py-3 first:pt-0 last:pb-0 group"
             >
-              <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-soft-accent text-sage">
+              <span className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg ${color}`}>
                 <Icon size={16} aria-hidden="true" />
               </span>
               <span className="flex-1">
@@ -237,7 +234,7 @@ export default function SettingsPage() {
         )}
 
         {youtubeLoading ? (
-          <p className="text-sm text-ink-muted">Loading…</p>
+          <LoadingState compact />
         ) : tier !== 'pro' ? (
           <div>
             <p className="mb-3 text-sm text-ink-muted">
@@ -301,8 +298,9 @@ export default function SettingsPage() {
               <button
                 onClick={handleDisconnect}
                 disabled={disconnecting}
-                className="btn-secondary px-3 py-2 text-xs text-error hover:text-error-hover"
+                className="btn-secondary flex items-center gap-1.5 px-3 py-2 text-xs text-error hover:text-error-hover"
               >
+                {disconnecting && <Loader2 size={14} aria-hidden="true" className="animate-spin" />}
                 {disconnecting ? 'Disconnecting…' : 'Disconnect'}
               </button>
             </div>
@@ -358,7 +356,8 @@ export default function SettingsPage() {
             </div>
           )}
 
-          <button type="submit" disabled={saving} className="btn-primary px-6">
+          <button type="submit" disabled={saving} className="btn-primary flex items-center justify-center gap-2 px-6">
+            {saving && <Loader2 size={16} aria-hidden="true" className="animate-spin" />}
             {saving ? 'Saving…' : 'Update Password'}
           </button>
         </form>

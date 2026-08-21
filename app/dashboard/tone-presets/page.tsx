@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Mic2, Plus, Trash2 } from 'lucide-react'
+import { Mic2, Plus, Trash2, Loader2 } from 'lucide-react'
 import ErrorMessage from '@/lib/components/ui/ErrorMessage'
+import LoadingState from '@/lib/components/ui/LoadingState'
 
 interface TonePreset {
   id: string
@@ -71,11 +72,7 @@ export default function TonePresetsPage() {
   }
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <p className="text-ink-muted">Loading tone presets…</p>
-      </div>
-    )
+    return <LoadingState message="Loading tone presets…" />
   }
 
   return (
@@ -120,7 +117,7 @@ export default function TonePresetsPage() {
             <ErrorMessage>{error}</ErrorMessage>
           )}
           <button type="submit" disabled={saving} className="btn-primary flex items-center justify-center gap-2 w-full sm:w-auto px-6">
-            <Plus size={18} aria-hidden="true" />
+            {saving ? <Loader2 size={18} aria-hidden="true" className="animate-spin" /> : <Plus size={18} aria-hidden="true" />}
             {saving ? 'Adding…' : 'Add Preset'}
           </button>
         </form>

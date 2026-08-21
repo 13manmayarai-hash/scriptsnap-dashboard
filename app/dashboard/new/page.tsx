@@ -7,7 +7,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useAppStore } from '@/lib/store/app'
 import { TIER_SCRIPT_LIMITS } from '@/lib/tiers'
 import { LANGUAGES } from '@/lib/languages'
-import { Sparkles, ChevronDown } from 'lucide-react'
+import { Sparkles, ChevronDown, Loader2 } from 'lucide-react'
 import ErrorMessage from '@/lib/components/ui/ErrorMessage'
 
 interface TonePreset {
@@ -293,7 +293,11 @@ function NewScriptForm() {
           disabled={loading || !topic}
           className="btn-primary flex w-full items-center justify-center gap-2 py-3"
         >
-          <Sparkles size={18} aria-hidden="true" />
+          {loading ? (
+            <Loader2 size={18} aria-hidden="true" className="animate-spin" />
+          ) : (
+            <Sparkles size={18} aria-hidden="true" />
+          )}
           {loading ? 'Generating…' : 'Generate Script'}
         </button>
 

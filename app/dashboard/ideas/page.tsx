@@ -4,11 +4,12 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { Lightbulb, Plus, Trash2, Check, ArrowRight, Pencil, TrendingUp, AlertTriangle, PlayCircle, MoreHorizontal } from 'lucide-react'
+import { Lightbulb, Plus, Trash2, Check, ArrowRight, Pencil, TrendingUp, AlertTriangle, PlayCircle, MoreHorizontal, Loader2 } from 'lucide-react'
 import ErrorMessage from '@/lib/components/ui/ErrorMessage'
 import YouTubeIcon from '@/lib/components/ui/YouTubeIcon'
 import VideoPlayerModal from '@/lib/components/ui/VideoPlayerModal'
 import VideoBreakdownPanel, { type DetailsState } from '@/lib/components/ui/VideoBreakdownPanel'
+import LoadingState from '@/lib/components/ui/LoadingState'
 import { CATEGORY_OPTIONS, REGION_OPTIONS } from '@/lib/youtube/categories'
 
 const CATEGORY_TABS = [{ id: 'inferred', label: 'For You' }, { id: 'all', label: 'All' }, ...CATEGORY_OPTIONS]
@@ -256,11 +257,7 @@ export default function IdeasPage() {
   }
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <p className="text-ink-muted">Loading ideas…</p>
-      </div>
-    )
+    return <LoadingState message="Loading ideas…" />
   }
 
   const newIdeas = ideas.filter((i) => i.status === 'new')
@@ -287,7 +284,7 @@ export default function IdeasPage() {
             disabled={saving}
           />
           <button type="submit" disabled={saving || !text.trim()} className="btn-primary flex items-center gap-1.5 px-4">
-            <Plus size={16} aria-hidden="true" />
+            {saving ? <Loader2 size={16} aria-hidden="true" className="animate-spin" /> : <Plus size={16} aria-hidden="true" />}
             Add
           </button>
         </div>
@@ -302,7 +299,7 @@ export default function IdeasPage() {
 
       {tier === 'pro' && trendingLoading && !trending && (
         <div className="card mb-6">
-          <p className="text-sm text-ink-muted">Loading suggestions…</p>
+          <LoadingState message="Loading suggestions…" compact />
         </div>
       )}
 
@@ -409,7 +406,7 @@ export default function IdeasPage() {
             {filterError && <ErrorMessage className="mb-2">{filterError}</ErrorMessage>}
 
             {filterLoading ? (
-              <p className="text-sm text-ink-muted">Loading…</p>
+              <LoadingState compact />
             ) : (() => {
                 const videos = usingFilter ? filterVideos : trending.trendingVideos || []
                 return videos.length > 0 ? (
