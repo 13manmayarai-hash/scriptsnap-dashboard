@@ -63,7 +63,12 @@ async function extractKeywords(
   try {
     const message = await client.messages.create({
       model: 'claude-sonnet-5',
-      max_tokens: 400,
+      // Titles get copied back verbatim (many YouTube Shorts titles run
+      // 20-30+ tokens, especially hashtag-stuffed ones) — up to 8 of them
+      // plus JSON structure previously overflowed a 400-token budget,
+      // truncating the response mid-array so the closing `]` never
+      // appeared and the regex below silently matched nothing.
+      max_tokens: 1024,
       thinking: { type: 'disabled' },
       output_config: { effort: 'low' },
       messages: [
@@ -78,20 +83,38 @@ ${titles.map((t) => `- ${t}`).join('\n')}`,
     })
     const textBlock = message.content.find((b): b is Anthropic.TextBlock => b.type === 'text')
     const match = textBlock?.text.match(/\[[\s\S]*\]/)
-    const parsed = match ? JSON.parse(match[0]) : []
-    if (!Array.isArray(parsed)) return []
+    if (!match) {
+      console.error('Keyword extraction: no JSON array in response', textBlock?.text?.slice(0, 200))
+      return fallbackKeywordsFromTitles(titles, viewsByTitle)
+    }
+    const parsed = JSON.parse(match[0])
+    if (!Array.isArray(parsed) || parsed.length === 0) return fallbackKeywordsFromTitles(titles, viewsByTitle)
 
-    return parsed
+    const extracted = parsed
       .filter((item) => item && typeof item.phrase === 'string' && typeof item.exampleTitle === 'string')
       .map((item) => ({
         phrase: item.phrase,
         exampleTitle: item.exampleTitle,
         viewCount: viewsByTitle[item.exampleTitle],
       }))
+    return extracted.length > 0 ? extracted : fallbackKeywordsFromTitles(titles, viewsByTitle)
   } catch (err) {
     console.error('Keyword extraction failed:', err)
-    return []
+    return fallbackKeywordsFromTitles(titles, viewsByTitle)
   }
+}
+
+// If extraction fails or the model returns nothing usable, fall back to
+// the creator's own top-viewed recent titles directly rather than showing
+// an empty/misleading "not enough videos" state when videos clearly exist.
+function fallbackKeywordsFromTitles(
+  titles: string[],
+  viewsByTitle: Record<string, number>
+): { phrase: string; exampleTitle: string; viewCount?: number }[] {
+  return [...titles]
+    .sort((a, b) => (viewsByTitle[b] || 0) - (viewsByTitle[a] || 0))
+    .slice(0, 5)
+    .map((title) => ({ phrase: title, exampleTitle: title, viewCount: viewsByTitle[title] }))
 }
 
 // Builds "From your channel" (recurring topics, Claude-extracted from your
