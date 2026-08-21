@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/client'
 import { Lightbulb, Plus, Trash2, Check, ArrowRight, Pencil, TrendingUp, AlertTriangle, PlayCircle } from 'lucide-react'
 import ErrorMessage from '@/lib/components/ui/ErrorMessage'
 import YouTubeIcon from '@/lib/components/ui/YouTubeIcon'
+import VideoPlayerModal from '@/lib/components/ui/VideoPlayerModal'
 import { CATEGORY_OPTIONS, REGION_OPTIONS } from '@/lib/youtube/categories'
 
 const CATEGORY_TABS = [{ id: 'inferred', label: 'For You' }, { id: 'all', label: 'All' }, ...CATEGORY_OPTIONS]
@@ -65,6 +66,7 @@ export default function IdeasPage() {
   const [filterCategoryLabel, setFilterCategoryLabel] = useState<string | null>(null)
   const [filterLoading, setFilterLoading] = useState(false)
   const [filterError, setFilterError] = useState('')
+  const [watchingVideo, setWatchingVideo] = useState<{ videoId: string; title: string } | null>(null)
 
   const load = async () => {
     const supabase = createClient()
@@ -319,6 +321,7 @@ export default function IdeasPage() {
                     videoId={kw.videoId}
                     onAdd={() => handleAddSuggestion(kw.phrase)}
                     onUse={() => handleUseSuggestion(kw.phrase)}
+                    onWatch={() => kw.videoId && setWatchingVideo({ videoId: kw.videoId, title: kw.exampleTitle })}
                   />
                 ))}
               </div>
@@ -382,6 +385,7 @@ export default function IdeasPage() {
                         videoId={v.videoId}
                         onAdd={() => handleAddSuggestion(v.title)}
                         onUse={() => handleUseSuggestion(v.title)}
+                        onWatch={() => setWatchingVideo({ videoId: v.videoId, title: v.title })}
                       />
                     ))}
                   </div>
@@ -480,6 +484,14 @@ export default function IdeasPage() {
           )}
         </div>
       )}
+
+      {watchingVideo && (
+        <VideoPlayerModal
+          videoId={watchingVideo.videoId}
+          title={watchingVideo.title}
+          onClose={() => setWatchingVideo(null)}
+        />
+      )}
     </div>
   )
 }
@@ -492,6 +504,7 @@ function SuggestionCard({
   videoId,
   onAdd,
   onUse,
+  onWatch,
 }: {
   title: string
   subtitle: string
@@ -500,6 +513,7 @@ function SuggestionCard({
   videoId?: string
   onAdd: () => void
   onUse: () => void
+  onWatch: () => void
 }) {
   return (
     <div className="card flex items-center gap-3 py-3">
@@ -517,15 +531,13 @@ function SuggestionCard({
       </div>
       <div className="flex flex-shrink-0 items-center gap-1">
         {videoId && (
-          <a
-            href={`https://youtube.com/watch?v=${videoId}`}
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
+            onClick={onWatch}
             className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded text-ink-muted hover:bg-warm-surface-alt"
-            aria-label={`Watch "${title}" on YouTube`}
+            aria-label={`Watch "${title}"`}
           >
             <PlayCircle size={16} aria-hidden="true" />
-          </a>
+          </button>
         )}
         <button
           onClick={onUse}
