@@ -4,9 +4,10 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { SettingsIcon, Check, Mic2, Tags, CreditCard, ChevronRight, Youtube, RefreshCw, AlertTriangle, Loader2, Download } from 'lucide-react'
+import { SettingsIcon, Check, Mic2, Tags, CreditCard, ChevronRight, RefreshCw, AlertTriangle, Loader2, Download } from 'lucide-react'
 import ErrorMessage from '@/lib/components/ui/ErrorMessage'
 import ConfirmDeleteAccountModal from '@/lib/components/ui/ConfirmDeleteAccountModal'
+import YouTubeIcon from '@/lib/components/ui/YouTubeIcon'
 
 interface YouTubeConnection {
   youtube_channel_title: string | null
@@ -243,7 +244,7 @@ export default function SettingsPage() {
               Connect your YouTube channel so scripts are tuned using your own performance data — a Pro feature.
             </p>
             <Link href="/pricing" className="btn-secondary inline-flex items-center gap-2 px-4 py-2 text-sm">
-              <Youtube size={16} aria-hidden="true" />
+              <YouTubeIcon size={16} />
               Upgrade to Pro
             </Link>
           </div>
@@ -253,7 +254,7 @@ export default function SettingsPage() {
               Connect your YouTube channel so scripts are tuned toward what has actually performed well on your videos.
             </p>
             <a href="/api/youtube/connect" className="btn-primary inline-flex items-center gap-2 px-4 py-2 text-sm">
-              <Youtube size={16} aria-hidden="true" />
+              <YouTubeIcon size={16} />
               Connect YouTube channel
             </a>
           </div>
@@ -266,7 +267,7 @@ export default function SettingsPage() {
               </p>
             </div>
             <a href="/api/youtube/connect" className="btn-primary inline-flex items-center gap-2 px-4 py-2 text-sm">
-              <Youtube size={16} aria-hidden="true" />
+              <YouTubeIcon size={16} />
               Reconnect YouTube channel
             </a>
           </div>
@@ -274,7 +275,7 @@ export default function SettingsPage() {
           <div>
             <div className="mb-3 flex items-center gap-3">
               <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-soft-accent text-sage">
-                <Youtube size={16} aria-hidden="true" />
+                <YouTubeIcon size={16} />
               </span>
               <div>
                 <p className="text-sm font-medium text-ink">{youtubeConnection.youtube_channel_title || 'Connected channel'}</p>
