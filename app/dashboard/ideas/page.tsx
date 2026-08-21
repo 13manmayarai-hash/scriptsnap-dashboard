@@ -4,10 +4,11 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { Lightbulb, Plus, Trash2, Check, ArrowRight, Pencil, TrendingUp, AlertTriangle, PlayCircle } from 'lucide-react'
+import { Lightbulb, Plus, Trash2, Check, ArrowRight, Pencil, TrendingUp, AlertTriangle, PlayCircle, MoreHorizontal } from 'lucide-react'
 import ErrorMessage from '@/lib/components/ui/ErrorMessage'
 import YouTubeIcon from '@/lib/components/ui/YouTubeIcon'
 import VideoPlayerModal from '@/lib/components/ui/VideoPlayerModal'
+import VideoBreakdownPanel, { type DetailsState } from '@/lib/components/ui/VideoBreakdownPanel'
 import { CATEGORY_OPTIONS, REGION_OPTIONS } from '@/lib/youtube/categories'
 
 const CATEGORY_TABS = [{ id: 'inferred', label: 'For You' }, { id: 'all', label: 'All' }, ...CATEGORY_OPTIONS]
@@ -68,6 +69,8 @@ export default function IdeasPage() {
   const [filterLoading, setFilterLoading] = useState(false)
   const [filterError, setFilterError] = useState('')
   const [watchingVideo, setWatchingVideo] = useState<{ videoId: string; title: string } | null>(null)
+  const [expandedVideoId, setExpandedVideoId] = useState<string | null>(null)
+  const [detailsById, setDetailsById] = useState<Record<string, DetailsState>>({})
 
   const load = async () => {
     const supabase = createClient()
@@ -155,6 +158,32 @@ export default function IdeasPage() {
 
   const handleUseSuggestion = (suggestionText: string) => {
     router.push(`/dashboard/new?topic=${encodeURIComponent(suggestionText)}`)
+  }
+
+  const toggleExpand = async (videoId: string, source: 'own' | 'trending') => {
+    if (expandedVideoId === videoId) {
+      setExpandedVideoId(null)
+      return
+    }
+    setExpandedVideoId(videoId)
+    if (detailsById[videoId]) return // already fetched (or in flight) this session
+
+    setDetailsById((prev) => ({ ...prev, [videoId]: { status: 'loading' } }))
+    try {
+      const params = new URLSearchParams({ videoId, source })
+      const res = await fetch(`/api/youtube/video-details?${params}`, { credentials: 'same-origin' })
+      const data = await res.json()
+      if (data.error) {
+        setDetailsById((prev) => ({ ...prev, [videoId]: { status: 'error', message: data.error } }))
+      } else {
+        setDetailsById((prev) => ({ ...prev, [videoId]: { status: 'loaded', data } }))
+      }
+    } catch {
+      setDetailsById((prev) => ({
+        ...prev,
+        [videoId]: { status: 'error', message: 'Could not load this video\'s breakdown — try again in a moment.' },
+      }))
+    }
   }
 
   const applyFilter = async (category: string, region: string) => {
@@ -325,9 +354,13 @@ export default function IdeasPage() {
                     meta={kw.viewCount !== undefined ? `${kw.viewCount.toLocaleString()} views` : undefined}
                     thumbnailUrl={kw.thumbnailUrl}
                     videoId={kw.videoId}
+                    source="own"
+                    expanded={!!kw.videoId && expandedVideoId === kw.videoId}
+                    detailsState={kw.videoId ? detailsById[kw.videoId] : undefined}
                     onAdd={() => handleAddSuggestion(kw.phrase)}
-                    onUse={() => handleUseSuggestion(kw.phrase)}
                     onWatch={() => kw.videoId && setWatchingVideo({ videoId: kw.videoId, title: kw.exampleTitle })}
+                    onToggleExpand={() => kw.videoId && toggleExpand(kw.videoId, 'own')}
+                    onGenerateScript={handleUseSuggestion}
                   />
                 ))}
               </div>
@@ -389,9 +422,13 @@ export default function IdeasPage() {
                         meta={`${v.viewCount.toLocaleString()} views`}
                         thumbnailUrl={v.thumbnailUrl}
                         videoId={v.videoId}
+                        source="trending"
+                        expanded={expandedVideoId === v.videoId}
+                        detailsState={detailsById[v.videoId]}
                         onAdd={() => handleAddSuggestion(v.title)}
-                        onUse={() => handleUseSuggestion(v.title)}
                         onWatch={() => setWatchingVideo({ videoId: v.videoId, title: v.title })}
+                        onToggleExpand={() => toggleExpand(v.videoId, 'trending')}
+                        onGenerateScript={handleUseSuggestion}
                       />
                     ))}
                   </div>
@@ -508,57 +545,74 @@ function SuggestionCard({
   meta,
   thumbnailUrl,
   videoId,
+  source,
+  expanded,
+  detailsState,
   onAdd,
-  onUse,
   onWatch,
+  onToggleExpand,
+  onGenerateScript,
 }: {
   title: string
   subtitle: string
   meta?: string
   thumbnailUrl?: string
   videoId?: string
+  source: 'own' | 'trending'
+  expanded: boolean
+  detailsState?: DetailsState
   onAdd: () => void
-  onUse: () => void
   onWatch: () => void
+  onToggleExpand: () => void
+  onGenerateScript: (title: string) => void
 }) {
   return (
-    <div className="card flex items-center gap-3 py-3">
-      {thumbnailUrl && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={thumbnailUrl}
-          alt=""
-          className="h-10 w-[71px] flex-shrink-0 rounded object-cover"
-        />
-      )}
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium text-ink">{title}</p>
-        <p className="truncate text-xs text-ink-muted">{subtitle}{meta ? ` · ${meta}` : ''}</p>
-      </div>
-      <div className="flex flex-shrink-0 items-center gap-1">
-        {videoId && (
-          <button
-            onClick={onWatch}
-            className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded text-ink-muted hover:bg-warm-surface-alt"
-            aria-label={`Watch "${title}"`}
-          >
-            <PlayCircle size={16} aria-hidden="true" />
-          </button>
+    <div className="card py-3">
+      <div className="flex items-center gap-3">
+        {thumbnailUrl && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={thumbnailUrl}
+            alt=""
+            className="h-10 w-[71px] flex-shrink-0 rounded object-cover"
+          />
         )}
-        <button
-          onClick={onUse}
-          className="flex min-h-[44px] items-center gap-1 rounded px-2 text-xs text-sage hover:bg-sage/10"
-        >
-          Use this <ArrowRight size={13} aria-hidden="true" />
-        </button>
-        <button
-          onClick={onAdd}
-          className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded hover:bg-warm-surface-alt"
-          aria-label={`Add "${title}" to ideas`}
-        >
-          <Plus size={15} aria-hidden="true" />
-        </button>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-medium text-ink">{title}</p>
+          <p className="truncate text-xs text-ink-muted">{subtitle}{meta ? ` · ${meta}` : ''}</p>
+        </div>
+        <div className="flex flex-shrink-0 items-center gap-1">
+          {videoId && (
+            <button
+              onClick={onWatch}
+              className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded text-ink-muted hover:bg-warm-surface-alt"
+              aria-label={`Watch "${title}"`}
+            >
+              <PlayCircle size={16} aria-hidden="true" />
+            </button>
+          )}
+          {videoId && (
+            <button
+              onClick={onToggleExpand}
+              className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded text-ink-muted hover:bg-warm-surface-alt"
+              aria-expanded={expanded}
+              aria-label={expanded ? `Hide breakdown for "${title}"` : `Show breakdown for "${title}"`}
+            >
+              <MoreHorizontal size={16} aria-hidden="true" />
+            </button>
+          )}
+          <button
+            onClick={onAdd}
+            className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded hover:bg-warm-surface-alt"
+            aria-label={`Add "${title}" to ideas`}
+          >
+            <Plus size={15} aria-hidden="true" />
+          </button>
+        </div>
       </div>
+      {expanded && detailsState && (
+        <VideoBreakdownPanel state={detailsState} source={source} onGenerateScript={onGenerateScript} />
+      )}
     </div>
   )
 }
