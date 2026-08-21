@@ -979,8 +979,8 @@ function LandingPage() {
             <p className="mt-2 text-[12px] text-[#AAA79F]">Built solo by a YouTube Shorts creator.</p>
           </div>
           <div className="flex gap-7 text-[12px] text-[#AAA79F]">
-            <a href="#" className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sage rounded">Privacy</a>
-            <a href="#" className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sage rounded">Terms</a>
+            <a href="/privacy" className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sage rounded">Privacy</a>
+            <a href="/terms" className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sage rounded">Terms</a>
             <a href="#" className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sage rounded">Contact</a>
           </div>
         </div>
