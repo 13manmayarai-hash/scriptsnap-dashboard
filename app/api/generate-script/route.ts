@@ -168,13 +168,14 @@ ${toneStyleDescription ? `- ${tone}: ${toneStyleDescription}` : `- If Meditative
 - If Energetic: Use exclamation marks, build excitement, create urgency`}
 
 REQUIREMENTS:
-1. Script should be approximately ${Math.floor(durationSeconds * 2.5)} words (about 2-2.5 words per second)
+1. Script should be approximately ${Math.floor(durationSeconds * 2.5)} words (about 2-2.5 words per second) — keep to this word count closely, since the script needs to actually fit in ${durationSeconds} seconds when read aloud
 2. Start with an attention-grabbing hook
 3. Include multiple clear sections with timestamps
 4. Make it sound natural when read aloud
 5. Incorporate all the context and keywords provided
 6. End with a strong call-to-action
-${analyticsContext ? `7. On a final separate line, prefixed exactly "STRATEGY:", write 1-2 short plain-text sentences (no markdown) explaining how this creator's channel performance data specifically shaped the script above.` : ''}
+${analyticsContext ? `7. Immediately after the script, on its own line prefixed exactly "STRATEGY:", write 1-2 short plain-text sentences (no markdown) explaining how this creator's channel performance data specifically shaped the script above.\n` : ''}8. After the script${analyticsContext ? ' and the STRATEGY line' : ''}, add ONE final line prefixed exactly "METADATA:" followed by ONLY a single-line, valid JSON object (no markdown, no code fences, no trailing commentary) with this exact shape:
+{"title": "short punchy YouTube Shorts title under 60 characters — never a restatement of the full topic text", "description": "a 2-3 sentence YouTube description under 300 characters", "hashtags": ["#tag1", "#tag2", "#tag3", "#tag4"], "alternativeTitles": [{"style": "Curious", "title": "..."}, {"style": "Energetic", "title": "..."}, {"style": "Educational", "title": "..."}, {"style": "Mysterious", "title": "..."}, {"style": "Question", "title": "..."}], "keyPoints": ["short key point 1", "short key point 2", "short key point 3"], "pinnedComment": "a short engaging pinned comment, optionally with one emoji"}
 
 Generate the script now:`
 
@@ -201,6 +202,31 @@ Generate the script now:`
     let scriptContent = textBlock.text
     let analyticsStrategyNote: string | null = null
 
+    // Pull the trailing "METADATA: {...}" block (title/description/
+    // hashtags/etc, written by Claude alongside the script) back out so
+    // the saved/returned script text stays clean. Falls back to the
+    // template-based generation below on any parse failure — a malformed
+    // JSON block should never block a script the creator already paid
+    // quota for.
+    interface AiMetadata {
+      title?: string
+      description?: string
+      hashtags?: string[]
+      alternativeTitles?: { style: string; title: string }[]
+      keyPoints?: string[]
+      pinnedComment?: string
+    }
+    let aiMetadata: AiMetadata | null = null
+    const metadataMatch = scriptContent.match(/\n?METADATA:\s*(\{[\s\S]*\})\s*$/i)
+    if (metadataMatch) {
+      try {
+        aiMetadata = JSON.parse(metadataMatch[1])
+      } catch (err) {
+        console.error('Metadata parse failed:', err)
+      }
+      scriptContent = scriptContent.slice(0, metadataMatch.index).trim()
+    }
+
     if (analyticsContext) {
       // Pull the trailing "STRATEGY: ..." line (if present — Claude
       // instructed to add one only when analytics context was injected)
@@ -214,8 +240,19 @@ Generate the script now:`
 
     const guidelineCheck = await checkGuidelines(scriptContent)
 
-    // Generate description
-    let description = `📍 Watch this ${durationSeconds}-second deep dive into ${topic}\n`
+    // A short, safe stand-in for the topic wherever a template needs to
+    // interpolate it — users often type a full descriptive sentence (or
+    // several) as their "topic" rather than a two-word subject, and that
+    // used to flow straight into "Discover ${topic}"-style templates,
+    // producing titles/descriptions hundreds of characters long. Only
+    // used as a fallback now (see aiMetadata below), but kept safe too.
+    const shortTopic = topic.length > 60 ? `${topic.slice(0, 57).trim()}…` : topic
+
+    // Claude writes real title/description/hashtags/etc alongside the
+    // script now (see the METADATA: requirement in the prompt above) —
+    // these template versions are only a fallback for when that JSON
+    // block is missing or fails to parse, so generation never breaks.
+    let description = `📍 Watch this ${durationSeconds}-second deep dive into ${shortTopic}\n`
     if (context) {
       description += `📝 Focus: ${context.split('\n')[0]}\n`
     }
@@ -223,9 +260,8 @@ Generate the script now:`
       description += `🔑 Keywords: ${keywords.slice(0, 3).join(', ')}\n`
     }
     description += `🎯 Category: ${category}\n🎭 Tone: ${tone}\n✨ Perfect for YouTube Shorts\n\n`
-    description += `Learn the fascinating details about ${topic}.`
+    description += `Learn the fascinating details about ${shortTopic}.`
 
-    // Generate hashtags
     const hashtagMap: Record<string, string[]> = {
       'Cultural & Historical': ['#Culture', '#History', '#Educational', '#Learning'],
       'Art & Design': ['#Art', '#Design', '#Creative', '#Inspiration'],
@@ -235,42 +271,46 @@ Generate the script now:`
       'Tech & Engineering': ['#Tech', '#Innovation', '#Engineering', '#Future'],
     }
 
-    const hashtags = hashtagMap[category] || ['#Shorts', '#YouTube', '#Learning']
-
-    // Generate alternative titles
     const alternativeTitles = [
-      { style: 'Curious', title: `The Surprising Truth About ${topic}` },
-      { style: 'Energetic', title: `${topic}?! THIS IS INSANE!` },
-      { style: 'Educational', title: `Complete Guide to ${topic}` },
-      { style: 'Mysterious', title: `What You DON'T Know About ${topic}` },
-      { style: 'Mindful', title: `Understanding ${topic}` },
-      { style: 'List', title: `5 Mind-Blowing Facts About ${topic}` },
-      { style: 'Comparison', title: `${topic}: Then vs Now` },
-      { style: 'Question', title: `Why Everyone Is Talking About ${topic}` },
-      { style: 'Story', title: `How ${topic} Changed Everything` },
-      { style: 'Quick Tip', title: `The ONE Thing You Need to Know About ${topic}` },
+      { style: 'Curious', title: `The Surprising Truth About ${shortTopic}` },
+      { style: 'Energetic', title: `${shortTopic}?! THIS IS INSANE!` },
+      { style: 'Educational', title: `Complete Guide to ${shortTopic}` },
+      { style: 'Mysterious', title: `What You DON'T Know About ${shortTopic}` },
+      { style: 'Mindful', title: `Understanding ${shortTopic}` },
     ]
 
-    // Generate key points
     const keyPoints = [
-      `${topic} is more fascinating than most people realize`,
+      `${shortTopic} is more fascinating than most people realize`,
       context ? `Key focus: ${context.split('\n')[0]}` : `Understanding brings new perspective`,
       keywords && keywords.length > 0 ? `Core elements: ${keywords.slice(0, 2).join(', ')}` : `Multiple applications exist`,
-      `Many beliefs about ${topic} are misconceptions`,
-      `This is increasingly relevant today`,
     ]
 
-    // Pinned comment
     const pinnedComments = [
       `Which fact surprised you most? 👇`,
-      `Share your thoughts about ${topic}! 💬`,
+      `Share your thoughts below! 💬`,
       `What should we explore next? 🔔`,
       `LIKE and SUBSCRIBE for more! ✨`,
       `Tag someone who needs this! 👇`,
     ]
-    const pinnedComment = pinnedComments[Math.floor(Math.random() * pinnedComments.length)]
+
     const wordCount = scriptContent.split(' ').length
-    const title = `Discover ${topic}`
+
+    // Prefer Claude's own metadata, field by field — a partial/malformed
+    // block (e.g. hashtags missing but title present) still gets to use
+    // whatever parsed correctly rather than discarding all of it.
+    const title = (aiMetadata?.title?.trim() || `Discover ${shortTopic}`).slice(0, 100)
+    const finalDescription = aiMetadata?.description?.trim() || description
+    const hashtags = Array.isArray(aiMetadata?.hashtags) && aiMetadata.hashtags.length > 0
+      ? aiMetadata.hashtags.filter((h) => typeof h === 'string')
+      : hashtagMap[category] || ['#Shorts', '#YouTube', '#Learning']
+    const finalAlternativeTitles = Array.isArray(aiMetadata?.alternativeTitles) && aiMetadata.alternativeTitles.length > 0
+      ? aiMetadata.alternativeTitles.filter((t) => t && typeof t.title === 'string' && typeof t.style === 'string')
+      : alternativeTitles
+    const finalKeyPoints = Array.isArray(aiMetadata?.keyPoints) && aiMetadata.keyPoints.length > 0
+      ? aiMetadata.keyPoints.filter((p) => typeof p === 'string')
+      : keyPoints
+    const pinnedComment = aiMetadata?.pinnedComment?.trim()
+      || pinnedComments[Math.floor(Math.random() * pinnedComments.length)]
 
     // Persist the generation — previously this only ever lived in the
     // browser's localStorage, so it vanished on a new device and couldn't
@@ -292,12 +332,12 @@ Generate the script now:`
           language: languageKey,
           script: scriptContent,
           title,
-          description,
+          description: finalDescription,
           hashtags,
           pinned_comment: pinnedComment,
-          alternative_titles: alternativeTitles,
+          alternative_titles: finalAlternativeTitles,
           word_count: wordCount,
-          key_points: keyPoints,
+          key_points: finalKeyPoints,
           is_series: false,
           guideline_passed: guidelineCheck.passed,
           guideline_flags: guidelineCheck.flags,
@@ -322,12 +362,12 @@ Generate the script now:`
       keywords: keywords || [],
       title,
       script: scriptContent,
-      description,
+      description: finalDescription,
       hashtags,
       pinned_comment: pinnedComment,
-      alternativeTitles,
+      alternativeTitles: finalAlternativeTitles,
       word_count: wordCount,
-      keyPoints,
+      keyPoints: finalKeyPoints,
       created_at: new Date().toISOString(),
       is_series: false,
       guidelineCheck,
