@@ -41,6 +41,7 @@ interface TrendingState {
   needsReconnect?: boolean
   channelKeywords?: ChannelKeyword[]
   trendingCategoryLabel?: string | null
+  trendingCategoryId?: string | null
   trendingVideos?: TrendingVideo[]
   error?: string
 }
@@ -171,7 +172,12 @@ export default function IdeasPage() {
     setFilterLoading(true)
     setFilterError('')
     try {
-      const params = new URLSearchParams({ category, region })
+      // "For You" isn't a real YouTube category — it stands in for the
+      // category already inferred from the channel's own uploads (known
+      // from the initial page load). Substitute the real id so it isn't
+      // sent to the YouTube API as a literal, invalid videoCategoryId.
+      const effectiveCategory = category === 'inferred' ? trending?.trendingCategoryId || 'all' : category
+      const params = new URLSearchParams({ category: effectiveCategory, region })
       const res = await fetch(`/api/youtube/trending?${params}`, { credentials: 'same-origin' })
       const data = await res.json()
       if (data.error) {

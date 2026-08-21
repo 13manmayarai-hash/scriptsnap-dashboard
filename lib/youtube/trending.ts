@@ -12,6 +12,7 @@ const client = new Anthropic({
 export interface TrendingContext {
   channelKeywords: { phrase: string; exampleTitle: string; viewCount?: number; videoId?: string; thumbnailUrl?: string }[]
   trendingCategoryLabel: string | null
+  trendingCategoryId: string | null
   trendingVideos: { videoId: string; title: string; channelTitle: string; viewCount: number; thumbnailUrl?: string }[]
 }
 
@@ -251,7 +252,12 @@ export async function getTrendingContext(
 
     const trendingVideos = await fetchMostPopularVideos(youtube, { regionCode: 'IN', videoCategoryId: inferredCategoryId })
 
-    const context: TrendingContext = { channelKeywords, trendingCategoryLabel: categoryLabel, trendingVideos }
+    const context: TrendingContext = {
+      channelKeywords,
+      trendingCategoryLabel: categoryLabel,
+      trendingCategoryId: inferredCategoryId ?? null,
+      trendingVideos,
+    }
 
     await supabase
       .from('youtube_connections')
