@@ -1,10 +1,12 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { SettingsIcon, Check, Mic2, Tags, CreditCard, ChevronRight, Youtube, RefreshCw, AlertTriangle, Loader2 } from 'lucide-react'
+import { SettingsIcon, Check, Mic2, Tags, CreditCard, ChevronRight, Youtube, RefreshCw, AlertTriangle, Loader2, Download } from 'lucide-react'
 import ErrorMessage from '@/lib/components/ui/ErrorMessage'
+import ConfirmDeleteAccountModal from '@/lib/components/ui/ConfirmDeleteAccountModal'
 
 interface YouTubeConnection {
   youtube_channel_title: string | null
@@ -26,6 +28,7 @@ const QUICK_LINKS = [
 ]
 
 export default function SettingsPage() {
+  const router = useRouter()
   const [email, setEmail] = useState('')
   const [tier, setTier] = useState<string>('free')
   const [loading, setLoading] = useState(true)
@@ -42,6 +45,22 @@ export default function SettingsPage() {
   const [syncing, setSyncing] = useState(false)
   const [syncSummary, setSyncSummary] = useState('')
   const [disconnecting, setDisconnecting] = useState(false)
+
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+
+  const handleDeleteAccount = async (): Promise<string | null> => {
+    try {
+      const res = await fetch('/api/account/delete', { method: 'POST', credentials: 'same-origin' })
+      if (!res.ok) {
+        const data = await res.json().catch(() => null)
+        return data?.error || 'Failed to delete account. Please try again.'
+      }
+      router.push('/')
+      return null
+    } catch {
+      return 'Failed to delete account. Please try again.'
+    }
+  }
 
   const loadYoutubeConnection = async (userId: string) => {
     const supabase = createClient()
@@ -296,7 +315,7 @@ export default function SettingsPage() {
         )}
       </div>
 
-      <div className="card">
+      <div className="card mb-6">
         <h2 className="text-sm font-semibold text-ink-muted mb-3">CHANGE PASSWORD</h2>
         <form onSubmit={handleChangePassword} className="space-y-3">
           <div>
@@ -343,6 +362,42 @@ export default function SettingsPage() {
           </button>
         </form>
       </div>
+
+      <div className="card">
+        <h2 className="text-sm font-semibold text-ink-muted mb-3">DATA &amp; PRIVACY</h2>
+
+        <div className="mb-5">
+          <p className="mb-2 text-sm font-medium text-ink">Export your data</p>
+          <p className="mb-3 text-sm text-ink-muted">
+            Download everything tied to your account — scripts, ideas, calendar entries, tone presets, and
+            categories — as a JSON file.
+          </p>
+          <a href="/api/account/export" className="btn-secondary inline-flex items-center gap-2 px-4 py-2 text-sm">
+            <Download size={16} aria-hidden="true" />
+            Export my data
+          </a>
+        </div>
+
+        <div className="border-t border-warm-border pt-5">
+          <p className="mb-2 text-sm font-medium text-error">Delete account</p>
+          <p className="mb-3 text-sm text-ink-muted">
+            Permanently delete your account and everything tied to it. This cannot be undone.
+          </p>
+          <button
+            onClick={() => setShowDeleteModal(true)}
+            className="btn-secondary px-4 py-2 text-sm text-error hover:text-error-hover"
+          >
+            Delete my account
+          </button>
+        </div>
+      </div>
+
+      {showDeleteModal && (
+        <ConfirmDeleteAccountModal
+          onClose={() => setShowDeleteModal(false)}
+          onConfirm={handleDeleteAccount}
+        />
+      )}
     </div>
   )
 }
