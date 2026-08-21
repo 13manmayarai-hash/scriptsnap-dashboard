@@ -10,9 +10,9 @@ const client = new Anthropic({
 })
 
 export interface TrendingContext {
-  channelKeywords: { phrase: string; exampleTitle: string; viewCount?: number }[]
+  channelKeywords: { phrase: string; exampleTitle: string; viewCount?: number; videoId?: string; thumbnailUrl?: string }[]
   trendingCategoryLabel: string | null
-  trendingVideos: { videoId: string; title: string; channelTitle: string; viewCount: number }[]
+  trendingVideos: { videoId: string; title: string; channelTitle: string; viewCount: number; thumbnailUrl?: string }[]
 }
 
 interface ConnectionRow {
@@ -34,10 +34,16 @@ function majorityCategoryId(categoryIds: (string | null | undefined)[]): string 
   return entries[0][0]
 }
 
+interface VideoInfo {
+  videoId: string
+  thumbnailUrl?: string
+  viewCount: number
+}
+
 async function extractKeywords(
   titles: string[],
-  viewsByTitle: Record<string, number>
-): Promise<{ phrase: string; exampleTitle: string; viewCount?: number }[]> {
+  infoByTitle: Record<string, VideoInfo>
+): Promise<{ phrase: string; exampleTitle: string; viewCount?: number; videoId?: string; thumbnailUrl?: string }[]> {
   if (titles.length === 0) return []
 
   try {
@@ -65,22 +71,24 @@ ${titles.map((t) => `- ${t}`).join('\n')}`,
     const match = textBlock?.text.match(/\[[\s\S]*\]/)
     if (!match) {
       console.error('Keyword extraction: no JSON array in response', textBlock?.text?.slice(0, 200))
-      return fallbackKeywordsFromTitles(titles, viewsByTitle)
+      return fallbackKeywordsFromTitles(titles, infoByTitle)
     }
     const parsed = JSON.parse(match[0])
-    if (!Array.isArray(parsed) || parsed.length === 0) return fallbackKeywordsFromTitles(titles, viewsByTitle)
+    if (!Array.isArray(parsed) || parsed.length === 0) return fallbackKeywordsFromTitles(titles, infoByTitle)
 
     const extracted = parsed
       .filter((item) => item && typeof item.phrase === 'string' && typeof item.exampleTitle === 'string')
       .map((item) => ({
         phrase: item.phrase,
         exampleTitle: item.exampleTitle,
-        viewCount: viewsByTitle[item.exampleTitle],
+        viewCount: infoByTitle[item.exampleTitle]?.viewCount,
+        videoId: infoByTitle[item.exampleTitle]?.videoId,
+        thumbnailUrl: infoByTitle[item.exampleTitle]?.thumbnailUrl,
       }))
-    return extracted.length > 0 ? extracted : fallbackKeywordsFromTitles(titles, viewsByTitle)
+    return extracted.length > 0 ? extracted : fallbackKeywordsFromTitles(titles, infoByTitle)
   } catch (err) {
     console.error('Keyword extraction failed:', err)
-    return fallbackKeywordsFromTitles(titles, viewsByTitle)
+    return fallbackKeywordsFromTitles(titles, infoByTitle)
   }
 }
 
@@ -89,12 +97,18 @@ ${titles.map((t) => `- ${t}`).join('\n')}`,
 // an empty/misleading "not enough videos" state when videos clearly exist.
 function fallbackKeywordsFromTitles(
   titles: string[],
-  viewsByTitle: Record<string, number>
-): { phrase: string; exampleTitle: string; viewCount?: number }[] {
+  infoByTitle: Record<string, VideoInfo>
+): { phrase: string; exampleTitle: string; viewCount?: number; videoId?: string; thumbnailUrl?: string }[] {
   return [...titles]
-    .sort((a, b) => (viewsByTitle[b] || 0) - (viewsByTitle[a] || 0))
+    .sort((a, b) => (infoByTitle[b]?.viewCount || 0) - (infoByTitle[a]?.viewCount || 0))
     .slice(0, 5)
-    .map((title) => ({ phrase: title, exampleTitle: title, viewCount: viewsByTitle[title] }))
+    .map((title) => ({
+      phrase: title,
+      exampleTitle: title,
+      viewCount: infoByTitle[title]?.viewCount,
+      videoId: infoByTitle[title]?.videoId,
+      thumbnailUrl: infoByTitle[title]?.thumbnailUrl,
+    }))
 }
 
 async function fetchMostPopularVideos(
@@ -116,6 +130,7 @@ async function fetchMostPopularVideos(
       title: item.snippet!.title!,
       channelTitle: item.snippet?.channelTitle || 'Unknown channel',
       viewCount: Number(item.statistics?.viewCount) || 0,
+      thumbnailUrl: item.snippet?.thumbnails?.medium?.url || item.snippet?.thumbnails?.default?.url || undefined,
     }))
 }
 
@@ -216,14 +231,18 @@ export async function getTrendingContext(
       const items = videosRes.data.items || []
 
       const titles = items.map((item) => item.snippet?.title).filter((t): t is string => !!t)
-      const viewsByTitle: Record<string, number> = {}
+      const infoByTitle: Record<string, VideoInfo> = {}
       items.forEach((item) => {
-        if (item.snippet?.title) {
-          viewsByTitle[item.snippet.title] = Number(item.statistics?.viewCount) || 0
+        if (item.snippet?.title && item.id) {
+          infoByTitle[item.snippet.title] = {
+            videoId: item.id,
+            thumbnailUrl: item.snippet.thumbnails?.medium?.url || item.snippet.thumbnails?.default?.url || undefined,
+            viewCount: Number(item.statistics?.viewCount) || 0,
+          }
         }
       })
 
-      channelKeywords = await extractKeywords(titles, viewsByTitle)
+      channelKeywords = await extractKeywords(titles, infoByTitle)
 
       const catId = majorityCategoryId(items.map((item) => item.snippet?.categoryId))
       categoryLabel = catId ? CATEGORY_LABELS[catId] || null : null

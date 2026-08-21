@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { Lightbulb, Plus, Trash2, Check, ArrowRight, Pencil, TrendingUp, AlertTriangle } from 'lucide-react'
+import { Lightbulb, Plus, Trash2, Check, ArrowRight, Pencil, TrendingUp, AlertTriangle, PlayCircle } from 'lucide-react'
 import ErrorMessage from '@/lib/components/ui/ErrorMessage'
 import YouTubeIcon from '@/lib/components/ui/YouTubeIcon'
 import { CATEGORY_OPTIONS, REGION_OPTIONS } from '@/lib/youtube/categories'
@@ -22,6 +22,8 @@ interface ChannelKeyword {
   phrase: string
   exampleTitle: string
   viewCount?: number
+  videoId?: string
+  thumbnailUrl?: string
 }
 
 interface TrendingVideo {
@@ -29,6 +31,7 @@ interface TrendingVideo {
   title: string
   channelTitle: string
   viewCount: number
+  thumbnailUrl?: string
 }
 
 interface TrendingState {
@@ -312,6 +315,8 @@ export default function IdeasPage() {
                     title={kw.phrase}
                     subtitle={kw.exampleTitle}
                     meta={kw.viewCount !== undefined ? `${kw.viewCount.toLocaleString()} views` : undefined}
+                    thumbnailUrl={kw.thumbnailUrl}
+                    videoId={kw.videoId}
                     onAdd={() => handleAddSuggestion(kw.phrase)}
                     onUse={() => handleUseSuggestion(kw.phrase)}
                   />
@@ -373,6 +378,8 @@ export default function IdeasPage() {
                         title={v.title}
                         subtitle={v.channelTitle}
                         meta={`${v.viewCount.toLocaleString()} views`}
+                        thumbnailUrl={v.thumbnailUrl}
+                        videoId={v.videoId}
                         onAdd={() => handleAddSuggestion(v.title)}
                         onUse={() => handleUseSuggestion(v.title)}
                       />
@@ -481,22 +488,45 @@ function SuggestionCard({
   title,
   subtitle,
   meta,
+  thumbnailUrl,
+  videoId,
   onAdd,
   onUse,
 }: {
   title: string
   subtitle: string
   meta?: string
+  thumbnailUrl?: string
+  videoId?: string
   onAdd: () => void
   onUse: () => void
 }) {
   return (
-    <div className="card flex items-center gap-2 py-3">
+    <div className="card flex items-center gap-3 py-3">
+      {thumbnailUrl && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={thumbnailUrl}
+          alt=""
+          className="h-10 w-[71px] flex-shrink-0 rounded object-cover"
+        />
+      )}
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-medium text-ink">{title}</p>
         <p className="truncate text-xs text-ink-muted">{subtitle}{meta ? ` · ${meta}` : ''}</p>
       </div>
       <div className="flex flex-shrink-0 items-center gap-1">
+        {videoId && (
+          <a
+            href={`https://youtube.com/watch?v=${videoId}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded text-ink-muted hover:bg-warm-surface-alt"
+            aria-label={`Watch "${title}" on YouTube`}
+          >
+            <PlayCircle size={16} aria-hidden="true" />
+          </a>
+        )}
         <button
           onClick={onUse}
           className="flex min-h-[44px] items-center gap-1 rounded px-2 text-xs text-sage hover:bg-sage/10"
