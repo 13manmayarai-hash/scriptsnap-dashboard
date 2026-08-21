@@ -25,6 +25,17 @@ module.exports = {
         'soft-accent': '#EFF1E8',
         error: '#B85C5C',
         'error-hover': '#9C4444',
+        // Muted, warm accent set for dashboard stat tiles — same
+        // desaturated, editorial tone as sage/error rather than generic
+        // saturated web colors (Tailwind's default blue-500/purple-500/
+        // etc.), which read as off-the-shelf and clashed with the rest
+        // of the app.
+        'accent-clay': '#BF7A4A',
+        'accent-ochre': '#B58A35',
+        'accent-slate': '#5F7D99',
+        'accent-plum': '#83678A',
+        'accent-teal': '#547E74',
+        'accent-umber': '#7D6248',
       },
       fontFamily: {
         sans: ['system-ui', 'sans-serif'],

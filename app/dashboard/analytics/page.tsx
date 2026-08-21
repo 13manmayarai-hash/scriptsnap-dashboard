@@ -215,10 +215,10 @@ export default function AnalyticsPage() {
 
   const cards = [
     { icon: FileText, label: 'Scripts created', value: String(stats?.totalScripts ?? 0), color: 'bg-sage' },
-    { icon: Type, label: 'Average script length', value: stats?.avgWordCount ? `${stats.avgWordCount} words` : '—', color: 'bg-blue-500' },
-    { icon: Mic2, label: 'Most-used tone', value: stats?.topTone || '—', color: 'bg-purple-500' },
-    { icon: Tags, label: 'Most-used category', value: stats?.topCategory || '—', color: 'bg-amber-500' },
-    { icon: CalendarDays, label: 'Content planned', value: String(stats?.contentPlanned ?? 0), color: 'bg-rose-500' },
+    { icon: Type, label: 'Average script length', value: stats?.avgWordCount ? `${stats.avgWordCount} words` : '—', color: 'bg-accent-slate' },
+    { icon: Mic2, label: 'Most-used tone', value: stats?.topTone || '—', color: 'bg-accent-plum' },
+    { icon: Tags, label: 'Most-used category', value: stats?.topCategory || '—', color: 'bg-accent-ochre' },
+    { icon: CalendarDays, label: 'Content planned', value: String(stats?.contentPlanned ?? 0), color: 'bg-accent-clay' },
   ]
 
   const perfData = perf?.data
@@ -312,8 +312,8 @@ export default function AnalyticsPage() {
 
               {/* Stat tiles */}
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                <StatTile icon={Eye} label="Views" value={perfData.totals.views.toLocaleString()} color="bg-blue-500" />
-                <StatTile icon={Clock} label="Watch time" value={`${perfData.totals.watchTimeHours}h`} color="bg-purple-500" />
+                <StatTile icon={Eye} label="Views" value={perfData.totals.views.toLocaleString()} color="bg-accent-slate" />
+                <StatTile icon={Clock} label="Watch time" value={`${perfData.totals.watchTimeHours}h`} color="bg-accent-plum" />
                 <StatTile
                   icon={Users}
                   label="Subscribers"
@@ -324,11 +324,11 @@ export default function AnalyticsPage() {
                   icon={MousePointerClick}
                   label="Thumbnail CTR"
                   value={perfData.channelCtr ? `${perfData.channelCtr.ctr.toFixed(1)}%` : 'Not enough data'}
-                  color="bg-amber-500"
+                  color="bg-accent-ochre"
                 />
-                <StatTile icon={ThumbsUp} label="Likes" value={perfData.totals.likes.toLocaleString()} color="bg-rose-500" />
-                <StatTile icon={MessageCircle} label="Comments" value={perfData.totals.comments.toLocaleString()} color="bg-teal-500" />
-                <StatTile icon={Share2} label="Shares" value={perfData.totals.shares.toLocaleString()} color="bg-indigo-500" />
+                <StatTile icon={ThumbsUp} label="Likes" value={perfData.totals.likes.toLocaleString()} color="bg-accent-clay" />
+                <StatTile icon={MessageCircle} label="Comments" value={perfData.totals.comments.toLocaleString()} color="bg-accent-teal" />
+                <StatTile icon={Share2} label="Shares" value={perfData.totals.shares.toLocaleString()} color="bg-accent-umber" />
               </div>
 
               {/* Charts */}
