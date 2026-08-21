@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
   }
 
   const state = randomUUID()
-  const oauth2Client = getYouTubeOAuthClient()
+  const oauth2Client = getYouTubeOAuthClient(requestUrl.origin)
   const consentUrl = oauth2Client.generateAuthUrl({
     access_type: 'offline', // required to receive a refresh_token
     prompt: 'consent', // required so a reconnect after revocation still yields one

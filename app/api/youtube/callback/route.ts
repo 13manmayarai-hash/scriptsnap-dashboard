@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const oauth2Client = getYouTubeOAuthClient()
+    const oauth2Client = getYouTubeOAuthClient(requestUrl.origin)
     const { tokens } = await oauth2Client.getToken(code)
     oauth2Client.setCredentials(tokens)
 
