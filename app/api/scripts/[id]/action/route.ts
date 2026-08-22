@@ -26,6 +26,7 @@ export async function POST(
   let supabase: ReturnType<typeof createClient> | null = null
   let userId: string | null = null
   let quotaReserved = false
+  let quotaAmount = 0
 
   try {
     supabase = createClient()
@@ -55,10 +56,13 @@ export async function POST(
 
     // Rewrite/shorten/expand/hook/tone all fully replace the script with
     // a new AI-generated version — the same billable Anthropic cost as
-    // generating one from scratch, so it counts against the monthly quota
-    // the same way. Alternatives/analyze are non-destructive suggestions
-    // (they don't replace the script), so they stay unmetered.
-    if (action in TRANSFORM_INSTRUCTIONS) {
+    // generating one from scratch, so a full quota unit. Alternatives
+    // returns 3 hook options without replacing the script — a real but
+    // smaller Anthropic call, so it costs half a unit instead. Analyze
+    // stays unmetered.
+    quotaAmount = action in TRANSFORM_INSTRUCTIONS ? 1 : action === 'alternatives' ? 0.5 : 0
+
+    if (quotaAmount > 0) {
       const { data: profile } = await supabase
         .from('users')
         .select('subscription_tier')
@@ -68,7 +72,7 @@ export async function POST(
       const limit = TIER_SCRIPT_LIMITS[tier] ?? TIER_SCRIPT_LIMITS.free
 
       const { data: usage, error: usageError } = await supabase
-        .rpc('increment_script_usage', { p_user_id: user.id, p_limit: limit })
+        .rpc('increment_script_usage', { p_user_id: user.id, p_limit: limit, p_amount: quotaAmount })
         .single() as { data: { allowed: boolean; new_count: number } | null; error: unknown }
 
       if (usageError || !usage) {
@@ -151,7 +155,7 @@ ${text}`,
       const result = textBlock?.text.trim()
       if (!result) {
         if (quotaReserved && userId) {
-          try { await supabase.rpc('decrement_script_usage', { p_user_id: userId }) } catch {}
+          try { await supabase.rpc('decrement_script_usage', { p_user_id: userId, p_amount: quotaAmount }) } catch {}
         }
         return NextResponse.json({ error: 'AI action failed' }, { status: 502 })
       }
@@ -163,7 +167,7 @@ ${text}`,
     // A reserved quota slot that never produced a rewritten script
     // shouldn't cost the user a script from their monthly limit.
     if (quotaReserved && supabase && userId) {
-      try { await supabase.rpc('decrement_script_usage', { p_user_id: userId }) } catch {}
+      try { await supabase.rpc('decrement_script_usage', { p_user_id: userId, p_amount: quotaAmount }) } catch {}
     }
     console.error('Script action failed:', error)
     return NextResponse.json(
