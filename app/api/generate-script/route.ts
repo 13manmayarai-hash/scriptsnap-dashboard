@@ -4,6 +4,7 @@ import { cookies } from 'next/headers'
 import Anthropic from '@anthropic-ai/sdk'
 import { TIER_SCRIPT_LIMITS, type SubscriptionTier } from '@/lib/tiers'
 import { getCreatorAnalyticsContext } from '@/lib/youtube/analytics'
+import { getRatingFeedback, formatRatingFeedback } from '@/lib/scripts/ratingFeedback'
 
 const client = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -106,6 +107,16 @@ export async function POST(request: NextRequest) {
       console.error('YouTube analytics context failed:', err)
     }
 
+    // Same never-blocking treatment for the creator's own thumbs up/down
+    // history on past scripts — a plain DB read, cheap even on failure.
+    let ratingFeedback: string | null = null
+    try {
+      const feedback = await getRatingFeedback(supabase, authUser.id)
+      if (feedback) ratingFeedback = formatRatingFeedback(feedback)
+    } catch (err) {
+      console.error('Rating feedback context failed:', err)
+    }
+
     const { data: profile } = await supabase
       .from('users')
       .select('subscription_tier')
@@ -161,6 +172,7 @@ ${languageKey !== 'english' ? `\nOUTPUT LANGUAGE: Write the script in ${language
 ${context ? `VIDEO CONTEXT:\n${context}\n` : ''}
 ${keywordsList}
 ${analyticsContext ? `CREATOR PERFORMANCE CONTEXT (use this to inform hook style, pacing, and topic angle — this is the creator's own channel data):\n${analyticsContext.summary}\n` : ''}
+${ratingFeedback ? `${ratingFeedback}\n` : ''}
 
 TONE GUIDELINES:
 ${toneStyleDescription ? `- ${tone}: ${toneStyleDescription}` : `- If Meditative: Use calming language, ask reflective questions, create mindfulness
