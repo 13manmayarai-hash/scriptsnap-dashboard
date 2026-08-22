@@ -19,7 +19,7 @@ telling him something is fixed.
 
 ## What ScriptSnap is
 A YouTube Shorts script generator SaaS for the @technosaze channel. Free/Basic
-(₹10/mo)/Pro (₹25/mo) tiers. Free tier and script generation via Anthropic API
+(₹199/mo)/Pro (₹499/mo) tiers. Free tier and script generation via Anthropic API
 are working. **The Razorpay payment flow is the only broken piece.**
 
 ## THE ACTUAL BUG — reproduce this first
@@ -58,7 +58,11 @@ don't repeat the blind-guessing pattern.
   `/api/razorpay/checkout`, loads the Razorpay checkout.js script, opens the
   modal, then calls `/api/razorpay/verify` on payment success.
 - `app/api/razorpay/checkout/route.ts` — creates a Razorpay order server-side.
-  Requires `NEXT_PUBLIC_RAZORPAY_KEY_ID` and `RAZORPAY_KEY_SECRET` env vars.
+  Requires `RAZORPAY_KEY_ID` and `RAZORPAY_KEY_SECRET` env vars (renamed
+  from `NEXT_PUBLIC_RAZORPAY_KEY_ID` — that prefix made Next.js bake the
+  value into the build at compile time instead of reading it fresh per
+  request, which is the likely reason it kept appearing "unset" even after
+  being added to Vercel).
   Gets the user via `createServerClient` + `next/headers cookies()`. Returns
   401 if `supabase.auth.getUser()` finds no user.
 - `app/api/razorpay/verify/route.ts` — verifies the Razorpay signature via
@@ -84,7 +88,10 @@ Confirmed present as of last check (user added them to Production + Preview + De
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
-- `NEXT_PUBLIC_RAZORPAY_KEY_ID` — user confirmed added
+- `RAZORPAY_KEY_ID` (formerly `NEXT_PUBLIC_RAZORPAY_KEY_ID` — user confirmed
+  the old name was added, but the `NEXT_PUBLIC_` build-time-inlining trap
+  likely meant it never actually took effect; needs to be re-added under
+  the new name)
 - `RAZORPAY_KEY_SECRET` — user confirmed added
 - `ANTHROPIC_API_KEY`
 
@@ -127,7 +134,7 @@ confirmed by inspecting Vercel directly (only by the user's screenshot of the
 
 ## What "done" looks like
 1. Logged-in user on `/pricing` clicks "Upgrade to Basic" → Razorpay modal
-   opens with ₹10 INR order.
+   opens with ₹199 INR order.
 2. Test card `4111 1111 1111 1111`, any future expiry, CVV `123` → payment
    succeeds.
 3. Redirects to `/dashboard?payment=success`.

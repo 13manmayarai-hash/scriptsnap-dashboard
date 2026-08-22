@@ -13,9 +13,13 @@ html {
 }
 
 body {
-  background-color: #000000;
-  color: #ffffff;
+  background-color: #F7F5F0;
+  color: #20201E;
   font-family: system-ui, -apple-system, sans-serif;
+  /* Safety net: a single element overflowing its container (e.g. an
+     absolutely-positioned badge wider than its card on a narrow screen)
+     shouldn't be able to drag the whole page into horizontal scroll. */
+  overflow-x: hidden;
 }
 
 /* Custom scrollbar */
@@ -25,50 +29,122 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #111;
+  background: #F0EEE5;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #FFD700;
+  background: #7A8B72;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #ffd700cc;
+  background: #697B62;
 }
 
-/* Button styles */
+/* Button styles — every variant keeps a 44px minimum touch target and an
+   explicit disabled state, per the accessibility requirements in the UI
+   refactor brief. Only the primary variant carries the sage brand color;
+   secondary is a neutral outline so it doesn't compete with primary CTAs. */
 .btn-primary {
-  @apply bg-brand-yellow text-brand-black font-semibold py-2 px-6 rounded-lg hover:bg-yellow-600 transition-colors;
+  @apply inline-flex min-h-[44px] items-center justify-center gap-2 bg-sage text-white font-semibold py-2 px-6 rounded-lg hover:bg-sage-hover transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sage focus-visible:ring-offset-2 focus-visible:ring-offset-warm-bg disabled:opacity-50 disabled:cursor-not-allowed;
 }
 
 .btn-secondary {
-  @apply bg-transparent border border-brand-yellow text-brand-yellow py-2 px-6 rounded-lg hover:bg-brand-yellow hover:text-brand-black transition-colors;
+  @apply inline-flex min-h-[44px] items-center justify-center gap-2 bg-transparent border border-warm-border text-ink py-2 px-6 rounded-lg hover:bg-warm-surface-alt transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sage focus-visible:ring-offset-2 focus-visible:ring-offset-warm-bg disabled:opacity-50 disabled:cursor-not-allowed;
 }
 
 .btn-ghost {
-  @apply text-brand-white hover:bg-white/10 py-2 px-4 rounded transition-colors;
+  @apply inline-flex min-h-[44px] items-center justify-center gap-2 text-ink-muted hover:bg-warm-surface-alt py-2 px-4 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sage disabled:opacity-50 disabled:cursor-not-allowed;
 }
 
 /* Card styles */
 .card {
-  @apply bg-white/5 border border-white/10 rounded-lg p-6 hover:border-white/20 transition-colors;
+  @apply bg-warm-surface border border-warm-border rounded-lg p-6 hover:border-sage/40 transition-colors;
 }
 
 .card-hover {
-  @apply card hover:bg-white/10 cursor-pointer;
+  @apply card hover:bg-warm-surface-alt cursor-pointer;
+}
+
+/* Range sliders default to the browser's blue accent, which clashes with
+   the sage palette everywhere else. */
+input[type='range'] {
+  accent-color: #7A8B72;
 }
 
 /* Input styles */
 .input {
-  @apply w-full bg-white/5 border border-white/20 rounded-lg px-4 py-2 text-brand-white placeholder-white/40 focus:outline-none focus:border-brand-yellow focus:ring-1 focus:ring-brand-yellow;
+  @apply w-full min-h-[44px] bg-warm-surface border border-warm-border rounded-lg px-4 py-2 text-ink placeholder-ink-faint focus-visible:outline-none focus-visible:border-sage focus-visible:ring-1 focus-visible:ring-sage;
 }
 
 /* Text utilities */
-.text-gradient {
-  @apply bg-gradient-to-r from-brand-yellow to-yellow-500 bg-clip-text text-transparent;
+.heading-serif {
+  @apply font-serif text-ink;
 }
 
 .text-sm-secondary {
-  @apply text-sm text-white/60;
+  @apply text-sm text-ink-muted;
+}
+
+/* Landing page entrance animation (replaces a framer-motion dependency
+   for a single fade-up-on-load effect). */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-up {
+    animation: none;
+  }
+}
+
+/* Scroll-triggered reveal, toggled by an IntersectionObserver (see the
+   Reveal component in app/page.tsx) rather than CSS alone. */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.7s cubic-bezier(0.2, 0.7, 0.3, 1), transform 0.7s cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+
+.reveal.in-view {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* A gentle vertical drift for small decorative icons — flat, bordered,
+   no glow/blur, per the locked warm/sage design direction. */
+@keyframes floaty {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.animate-float {
+  animation: floaty 6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .animate-float {
+    animation: none;
+  }
 }

@@ -73,14 +73,22 @@ launch requirement.
 FREE
 ₹0/month — 5 scripts/month, basic personalization, all 3 tones
 
-BASIC — ₹10/month
+BASIC — ₹199/month
 50 scripts/month, full AI personalization, context & keyword support,
 export to PDF, script history, email support
 
-PRO — ₹25/month
+PRO — ₹499/month
 200 scripts/month, all Basic features, YouTube analytics (future),
 trending keywords (future), priority support, API access
 ```
+
+> Repriced from the original ₹10/₹25 flat tiers on Aug 15, 2026, after a
+> unit-economics review: at ₹10/₹25, Basic and Pro were losing money on
+> Anthropic API cost alone, before Razorpay fees or hosting were even
+> counted. ₹199/₹499 covers real cost at ~85-90% gross margin on the AI line
+> while staying well under comparable creator tools (VidIQ/TubeBuddy run
+> ₹600-3,250/month). Treat these as a starting hypothesis to validate with
+> real willingness-to-pay, not a final answer.
 
 Flat monthly tiers were chosen over pay-as-you-go because flat pricing is
 easier to understand and gives predictable revenue; usage-based billing was
@@ -196,7 +204,11 @@ this handoff in the first place.
 
 ### Month 1
 - 20 paying users, ≥50% sourced from @technosaze channel
-- ₹2,000+ MRR (10 users × ₹10, roughly — scale with actual tier mix)
+- ₹2,000+ MRR (10 users × ₹199, roughly — scale with actual tier mix). Note:
+  at the repriced ₹199/₹499 tiers this target is now cleared by ~10 Basic
+  conversions instead of ~200 — worth revisiting whether ₹2,000 is still the
+  right Month 1 bar now that unit price is ~20x higher, rather than treating
+  it as untouched.
 - <2% error rate on script generation
 - <1 minute generation time
 

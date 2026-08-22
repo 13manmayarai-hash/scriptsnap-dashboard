@@ -12,8 +12,12 @@ export async function POST(request: NextRequest) {
     const body = await request.text()
     const signature = request.headers.get('x-razorpay-signature')!
 
-    // Verify webhook signature
-    const shasum = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET!)
+    // Verify webhook signature. Razorpay signs webhook deliveries with a
+    // dedicated Webhook Secret (configured separately in the Razorpay
+    // Dashboard's Webhooks section) — this is NOT the same as the API
+    // key_secret used to authenticate REST calls, so it needs its own
+    // env var or every real webhook will fail verification.
+    const shasum = crypto.createHmac('sha256', process.env.RAZORPAY_WEBHOOK_SECRET!)
     shasum.update(body)
     const digest = shasum.digest('hex')
 
