@@ -7,7 +7,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useAppStore } from '@/lib/store/app'
 import { TIER_SCRIPT_LIMITS } from '@/lib/tiers'
 import { LANGUAGES } from '@/lib/languages'
-import { Sparkles, ChevronDown, Loader2 } from 'lucide-react'
+import { Sparkles, ChevronDown, Loader2, Wand2, X } from 'lucide-react'
 import ErrorMessage from '@/lib/components/ui/ErrorMessage'
 
 interface TonePreset {
@@ -63,6 +63,13 @@ function NewScriptForm() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
+  const [hasCustomTonePresets, setHasCustomTonePresets] = useState(false)
+  const [onboardingDismissed, setOnboardingDismissed] = useState(false)
+  const [onboardingText, setOnboardingText] = useState('')
+  const [onboardingLoading, setOnboardingLoading] = useState(false)
+  const [onboardingError, setOnboardingError] = useState('')
+  const [onboardingSuccessName, setOnboardingSuccessName] = useState('')
+
   useEffect(() => {
     const loadPersonalization = async () => {
       const supabase = createClient()
@@ -85,6 +92,7 @@ function NewScriptForm() {
       if (presets && presets.length > 0) {
         setTonePresets(presets)
         setToneId(presets[0].id)
+        setHasCustomTonePresets(true)
       }
       if (cats && cats.length > 0) {
         setCategories(cats)
@@ -94,6 +102,34 @@ function NewScriptForm() {
 
     loadPersonalization()
   }, [])
+
+  const isFirstRun = !hasCustomTonePresets && (user?.scripts_generated_month ?? 0) === 0
+  const showOnboarding = isFirstRun && !onboardingDismissed && !onboardingSuccessName
+
+  const handleAnalyzeVoice = async () => {
+    if (!onboardingText.trim()) return
+    setOnboardingLoading(true)
+    setOnboardingError('')
+    try {
+      const res = await fetch('/api/tone-presets/derive', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({ sampleText: onboardingText.trim() }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data?.error || 'Could not analyze your voice')
+
+      setTonePresets([data.preset])
+      setToneId(data.preset.id)
+      setHasCustomTonePresets(true)
+      setOnboardingSuccessName(data.preset.name)
+    } catch (err) {
+      setOnboardingError(err instanceof Error ? err.message : 'Could not analyze your voice')
+    } finally {
+      setOnboardingLoading(false)
+    }
+  }
 
   const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -149,6 +185,70 @@ function NewScriptForm() {
       <p className="mb-6 text-sm text-ink-muted">
         Describe the topic and ScriptSnap writes a full script, title options, description, hashtags, and a pinned comment.
       </p>
+
+      {showOnboarding && (
+        <div className="card mb-6 border-sage/40 bg-sage/5">
+          <div className="mb-2 flex items-start justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <Wand2 size={17} aria-hidden="true" className="text-sage" />
+              <h2 className="text-sm font-semibold text-ink">Sound like you from the first script</h2>
+            </div>
+            <button
+              onClick={() => setOnboardingDismissed(true)}
+              className="flex min-h-[32px] min-w-[32px] flex-shrink-0 items-center justify-center rounded text-ink-muted hover:bg-ink/5"
+              aria-label="Skip this"
+            >
+              <X size={15} aria-hidden="true" />
+            </button>
+          </div>
+          <p className="mb-3 text-sm text-ink-muted">
+            Paste 2-3 of your past scripts, some captions, or just describe how you talk — we'll turn it into a tone preset instead of picking a generic default.
+          </p>
+          <label htmlFor="voice-sample" className="sr-only">Sample of your writing</label>
+          <textarea
+            id="voice-sample"
+            value={onboardingText}
+            onChange={(e) => setOnboardingText(e.target.value)}
+            placeholder="e.g. paste a past script here…"
+            className="input mb-3 h-24 resize-none"
+            disabled={onboardingLoading}
+          />
+          {onboardingError && <ErrorMessage className="mb-3">{onboardingError}</ErrorMessage>}
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={handleAnalyzeVoice}
+              disabled={onboardingLoading || !onboardingText.trim()}
+              className="btn-primary flex items-center justify-center gap-2 px-4 py-2 text-sm"
+            >
+              {onboardingLoading && <Loader2 size={15} aria-hidden="true" className="animate-spin" />}
+              {onboardingLoading ? 'Analyzing…' : 'Analyze my voice'}
+            </button>
+            <button
+              type="button"
+              onClick={() => setOnboardingDismissed(true)}
+              className="text-sm text-ink-muted hover:underline"
+            >
+              Skip for now
+            </button>
+          </div>
+        </div>
+      )}
+
+      {onboardingSuccessName && (
+        <div className="card mb-6 flex items-center justify-between gap-3 border-sage/40 bg-sage/5">
+          <p className="text-sm text-ink">
+            ✓ Added <span className="font-semibold">"{onboardingSuccessName}"</span> as your tone — selected below.
+          </p>
+          <button
+            onClick={() => setOnboardingSuccessName('')}
+            className="flex min-h-[32px] min-w-[32px] flex-shrink-0 items-center justify-center rounded text-ink-muted hover:bg-ink/5"
+            aria-label="Dismiss"
+          >
+            <X size={15} aria-hidden="true" />
+          </button>
+        </div>
+      )}
 
       <form onSubmit={handleGenerate} className="card space-y-5">
         <div>
