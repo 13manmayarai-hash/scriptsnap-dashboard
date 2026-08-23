@@ -19,6 +19,25 @@ interface Script {
 
 type SortKey = 'newest' | 'oldest' | 'longest'
 
+const CATEGORY_COLORS = [
+  'bg-sage/15 text-sage',
+  'bg-accent-slate/15 text-accent-slate',
+  'bg-accent-plum/15 text-accent-plum',
+  'bg-accent-ochre/15 text-accent-ochre',
+  'bg-accent-clay/15 text-accent-clay',
+  'bg-accent-teal/15 text-accent-teal',
+  'bg-accent-umber/15 text-accent-umber',
+]
+
+// Deterministic, not random — the same category always lands on the same
+// color across renders/sessions, so it reads as a real visual language
+// rather than flickering between colors.
+function categoryColor(category: string): string {
+  let hash = 0
+  for (let i = 0; i < category.length; i++) hash = (hash * 31 + category.charCodeAt(i)) | 0
+  return CATEGORY_COLORS[Math.abs(hash) % CATEGORY_COLORS.length]
+}
+
 const SORTS: { key: SortKey; label: string }[] = [
   { key: 'newest', label: 'Newest first' },
   { key: 'oldest', label: 'Oldest first' },
@@ -177,7 +196,13 @@ function LibraryContent() {
                     <ShieldAlert size={14} aria-hidden="true" className="flex-shrink-0 text-amber-600" />
                   )}
                 </div>
-                <p className="truncate text-xs text-ink-muted">{script.topic} • {script.category} • {script.tone}</p>
+                <div className="flex min-w-0 items-center gap-1.5 text-xs text-ink-muted">
+                  <span className="truncate">{script.topic}</span>
+                  <span className={`flex-shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-medium ${categoryColor(script.category)}`}>
+                    {script.category}
+                  </span>
+                  <span className="flex-shrink-0">{script.tone}</span>
+                </div>
                 <p className="mt-0.5 text-xs text-ink-faint">
                   {new Date(script.created_at).toLocaleDateString()} • {script.word_count} words
                 </p>

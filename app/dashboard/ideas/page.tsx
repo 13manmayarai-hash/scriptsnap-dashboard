@@ -367,7 +367,10 @@ export default function IdeasPage() {
           </div>
 
           <div>
-            <h2 className="mb-1 text-xs font-semibold uppercase tracking-wide text-ink-muted">Trending now</h2>
+            <div className="mb-1 flex items-center gap-2">
+              <TrendingUp size={16} aria-hidden="true" className="text-accent-slate" />
+              <h2 className="text-xs font-semibold uppercase tracking-wide text-ink-muted">Trending now</h2>
+            </div>
 
             <div className="mb-2 flex gap-1.5 overflow-x-auto pb-1">
               {CATEGORY_TABS.map((cat) => (
