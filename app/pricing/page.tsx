@@ -41,7 +41,7 @@ export default function PricingPage() {
         'Script history',
         'Email support',
       ],
-      cta: 'Start Free Trial',
+      cta: 'Upgrade to Basic',
       highlighted: true,
     },
     {
@@ -53,12 +53,11 @@ export default function PricingPage() {
       features: [
         '200 scripts/month',
         'All Basic features',
-        'YouTube analytics (coming soon)',
+        'YouTube channel analytics',
         'Trending keywords',
         'Priority support',
-        'API access',
       ],
-      cta: 'Start Free Trial',
+      cta: 'Upgrade to Pro',
       highlighted: false,
     },
   ]
@@ -196,7 +195,7 @@ export default function PricingPage() {
                 What if I don't use all my scripts?
               </h3>
               <p className="text-ink-muted">
-                Unused scripts carry over to next month. You won't lose them.
+                Your script count resets to your plan's monthly allowance on your billing date — unused scripts don't carry over.
               </p>
             </div>
 

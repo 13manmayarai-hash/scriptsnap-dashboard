@@ -28,6 +28,5 @@ export const TIER_BENEFITS: Record<SubscriptionTier, string[]> = {
     'YouTube channel analytics',
     'Trending keywords',
     'Priority support',
-    'API access',
   ],
 }

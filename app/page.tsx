@@ -383,6 +383,9 @@ function ProductPreview() {
       className="mt-20 overflow-hidden rounded-[14px] border border-[#DCD9CF] bg-[#FBFAF6] shadow-[0_20px_60px_rgba(40,39,33,0.07)] animate-fade-up"
       style={{ animationDelay: '150ms' }}
     >
+      <div className="border-b border-[#E1DED4] bg-[#FBFAF6] px-6 py-2.5 text-[11px] font-medium uppercase tracking-wide text-[#9C998F]">
+        Example workspace — illustrative, not your data
+      </div>
       {/* This is a fixed-proportions screenshot of the real dashboard, not
           a responsive layout — on narrow screens it scrolls horizontally
           within its own frame instead of squeezing illegible or being
