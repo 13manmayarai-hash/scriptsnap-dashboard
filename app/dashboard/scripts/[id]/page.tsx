@@ -9,6 +9,8 @@ import { useAppStore } from '@/lib/store/app'
 import ScriptRating from '@/lib/components/ScriptRating'
 import ErrorMessage from '@/lib/components/ui/ErrorMessage'
 import LoadingState from '@/lib/components/ui/LoadingState'
+import VideoBreakdownPanel, { type DetailsState } from '@/lib/components/ui/VideoBreakdownPanel'
+import VideoPlayerModal from '@/lib/components/ui/VideoPlayerModal'
 import {
   ArrowLeft,
   Copy,
@@ -22,6 +24,9 @@ import {
   Sparkles,
   Undo2,
   Loader2,
+  Link2,
+  Unlink,
+  TrendingUp,
 } from 'lucide-react'
 
 interface Script {
@@ -42,6 +47,7 @@ interface Script {
   guideline_flags: Array<{ severity: string; note: string }>
   used_analytics_context: boolean
   analytics_strategy_note: string | null
+  published_video_id: string | null
   created_at: string
 }
 
@@ -61,12 +67,18 @@ const TONE_OPTIONS = ['Conversational', 'Energetic', 'Calm', 'Dramatic', 'Playfu
 export default function ScriptWorkspacePage() {
   const params = useParams<{ id: string }>()
   const router = useRouter()
-  const { setTopbarSaveState, setHasUnsavedChanges } = useAppStore()
+  const { user, setTopbarSaveState, setHasUnsavedChanges } = useAppStore()
 
   const [script, setScript] = useState<Script | null>(null)
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
   const [copied, setCopied] = useState<string | null>(null)
+
+  const [videoIdInput, setVideoIdInput] = useState('')
+  const [linkingVideo, setLinkingVideo] = useState(false)
+  const [linkError, setLinkError] = useState('')
+  const [videoDetailsState, setVideoDetailsState] = useState<DetailsState | null>(null)
+  const [watchingVideo, setWatchingVideo] = useState(false)
 
   const [scriptText, setScriptText] = useState('')
   const savedTextRef = useRef('')
@@ -91,7 +103,7 @@ export default function ScriptWorkspacePage() {
       const { data } = await supabase
         .from('scripts')
         .select(
-          'id, topic, category, tone, language, duration, script, title, description, hashtags, pinned_comment, alternative_titles, key_points, guideline_passed, guideline_flags, used_analytics_context, analytics_strategy_note, created_at'
+          'id, topic, category, tone, language, duration, script, title, description, hashtags, pinned_comment, alternative_titles, key_points, guideline_passed, guideline_flags, used_analytics_context, analytics_strategy_note, published_video_id, created_at'
         )
         .eq('id', params.id)
         .eq('user_id', user.id)
@@ -161,6 +173,80 @@ export default function ScriptWorkspacePage() {
     navigator.clipboard.writeText(text)
     setCopied(id)
     setTimeout(() => setCopied(null), 2000)
+  }
+
+  const fetchVideoDetails = useCallback(async (videoId: string) => {
+    setVideoDetailsState({ status: 'loading' })
+    try {
+      const params = new URLSearchParams({ videoId, source: 'own' })
+      const res = await fetch(`/api/youtube/video-details?${params}`, { credentials: 'same-origin' })
+      const data = await res.json()
+      if (data.error) {
+        setVideoDetailsState({ status: 'error', message: data.error })
+      } else if (data.needsReconnect) {
+        setVideoDetailsState({ status: 'error', message: 'Your YouTube access needs to be reconnected — see Settings.' })
+      } else if (data.connected === false) {
+        setVideoDetailsState({ status: 'error', message: 'Connect your YouTube channel in Settings to see real performance here.' })
+      } else {
+        setVideoDetailsState({ status: 'loaded', data })
+      }
+    } catch {
+      setVideoDetailsState({ status: 'error', message: "Could not load this video's performance — try again in a moment." })
+    }
+  }, [])
+
+  useEffect(() => {
+    if (script?.published_video_id && user?.subscription_tier === 'pro') {
+      fetchVideoDetails(script.published_video_id)
+    }
+    // Only re-run when the linked video itself changes, not on every
+    // script/user object identity change from unrelated state updates.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [script?.published_video_id, user?.subscription_tier])
+
+  // Accepts a bare 11-char video ID or a full watch/shorts/share URL.
+  const parseYouTubeVideoId = (input: string): string | null => {
+    const trimmed = input.trim()
+    if (/^[\w-]{11}$/.test(trimmed)) return trimmed
+    try {
+      const url = new URL(trimmed)
+      if (url.hostname.includes('youtu.be')) return url.pathname.slice(1) || null
+      const shortsMatch = url.pathname.match(/\/shorts\/([\w-]{11})/)
+      if (shortsMatch) return shortsMatch[1]
+      const v = url.searchParams.get('v')
+      if (v && /^[\w-]{11}$/.test(v)) return v
+      return null
+    } catch {
+      return null
+    }
+  }
+
+  const handleLinkVideo = async () => {
+    if (!script) return
+    const videoId = parseYouTubeVideoId(videoIdInput)
+    if (!videoId) {
+      setLinkError("Couldn't find a video ID in that — paste the full YouTube link or just the video ID.")
+      return
+    }
+    setLinkError('')
+    const supabase = createClient()
+    const { error } = await supabase.from('scripts').update({ published_video_id: videoId }).eq('id', script.id)
+    if (error) {
+      setLinkError('Failed to link video — try again.')
+      return
+    }
+    setScript({ ...script, published_video_id: videoId })
+    setVideoIdInput('')
+    setLinkingVideo(false)
+    fetchVideoDetails(videoId)
+  }
+
+  const handleUnlinkVideo = async () => {
+    if (!script) return
+    const supabase = createClient()
+    await supabase.from('scripts').update({ published_video_id: null }).eq('id', script.id)
+    setScript({ ...script, published_video_id: null })
+    setVideoDetailsState(null)
   }
 
   const runAiAction = useCallback(
@@ -541,6 +627,78 @@ export default function ScriptWorkspacePage() {
         </div>
       )}
 
+      {user?.subscription_tier === 'pro' && (
+        <div className="card">
+          <div className="mb-3 flex items-center gap-2">
+            <TrendingUp size={18} aria-hidden="true" className="text-sage" />
+            <h2 className="text-sm font-semibold text-ink-muted">PUBLISHED VIDEO PERFORMANCE</h2>
+          </div>
+
+          {!script.published_video_id ? (
+            linkingVideo ? (
+              <div className="space-y-2">
+                <label htmlFor="video-link-input" className="sr-only">YouTube video URL or ID</label>
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <input
+                    id="video-link-input"
+                    type="text"
+                    value={videoIdInput}
+                    onChange={(e) => setVideoIdInput(e.target.value)}
+                    placeholder="Paste the YouTube link or video ID"
+                    className="input flex-1"
+                  />
+                  <div className="flex flex-shrink-0 gap-2">
+                    <button onClick={handleLinkVideo} className="btn-primary px-4 text-sm">Link</button>
+                    <button
+                      onClick={() => { setLinkingVideo(false); setLinkError(''); setVideoIdInput('') }}
+                      className="btn-secondary px-4 text-sm"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+                {linkError && <ErrorMessage>{linkError}</ErrorMessage>}
+              </div>
+            ) : (
+              <div>
+                <p className="mb-3 text-sm text-ink-muted">
+                  Once this script is live on YouTube, link the video to see its real views, retention, and CTR here.
+                </p>
+                <button
+                  onClick={() => setLinkingVideo(true)}
+                  className="btn-secondary inline-flex items-center gap-2 px-4 py-2 text-sm"
+                >
+                  <Link2 size={15} aria-hidden="true" />
+                  Link published video
+                </button>
+              </div>
+            )
+          ) : (
+            <div>
+              <div className="mb-1 flex items-center justify-between">
+                <button onClick={() => setWatchingVideo(true)} className="text-xs text-sage hover:underline">
+                  Watch video
+                </button>
+                <button
+                  onClick={handleUnlinkVideo}
+                  className="flex items-center gap-1 text-xs text-ink-muted hover:text-error"
+                >
+                  <Unlink size={12} aria-hidden="true" />
+                  Unlink
+                </button>
+              </div>
+              {videoDetailsState && (
+                <VideoBreakdownPanel
+                  state={videoDetailsState}
+                  source="own"
+                  onGenerateScript={(topic) => router.push(`/dashboard/new?topic=${encodeURIComponent(topic)}`)}
+                />
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
       {script.key_points?.length > 0 && (
         <div className="card">
           <h2 className="mb-3 text-sm font-semibold text-ink-muted">KEY POINTS</h2>
@@ -622,6 +780,14 @@ export default function ScriptWorkspacePage() {
         <Trash2 size={18} aria-hidden="true" />
         Delete Script
       </button>
+
+      {watchingVideo && script.published_video_id && (
+        <VideoPlayerModal
+          videoId={script.published_video_id}
+          title={script.title}
+          onClose={() => setWatchingVideo(false)}
+        />
+      )}
     </div>
   )
 }
