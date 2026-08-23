@@ -193,7 +193,7 @@ function LibraryContent() {
                 <div className="flex items-center gap-2">
                   <p className="truncate text-sm font-semibold text-ink">{script.title}</p>
                   {!script.guideline_passed && (
-                    <ShieldAlert size={14} aria-hidden="true" className="flex-shrink-0 text-amber-600" />
+                    <ShieldAlert size={14} aria-hidden="true" className="flex-shrink-0 text-accent-ochre" />
                   )}
                 </div>
                 <div className="flex min-w-0 items-center gap-1.5 text-xs text-ink-muted">

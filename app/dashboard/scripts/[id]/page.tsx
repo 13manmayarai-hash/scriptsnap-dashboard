@@ -593,13 +593,13 @@ export default function ScriptWorkspacePage() {
 
       <div
         className={`card flex items-start gap-3 ${
-          script.guideline_passed ? 'border-sage/40 bg-sage/5' : 'border-amber-400/50 bg-amber-50'
+          script.guideline_passed ? 'border-sage/40 bg-sage/5' : 'border-accent-ochre/40 bg-accent-ochre/10'
         }`}
       >
         {script.guideline_passed ? (
           <ShieldCheck size={20} aria-hidden="true" className="mt-0.5 flex-shrink-0 text-sage" />
         ) : (
-          <ShieldAlert size={20} aria-hidden="true" className="mt-0.5 flex-shrink-0 text-amber-600" />
+          <ShieldAlert size={20} aria-hidden="true" className="mt-0.5 flex-shrink-0 text-accent-ochre" />
         )}
         <div>
           <p className="text-sm font-semibold text-ink">

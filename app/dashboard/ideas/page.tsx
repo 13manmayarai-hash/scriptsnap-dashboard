@@ -321,8 +321,8 @@ export default function IdeasPage() {
 
       {tier === 'pro' && trending?.needsReconnect && (
         <div className="card mb-6">
-          <div className="mb-3 flex items-start gap-2 rounded-lg border border-amber-400/50 bg-amber-50 p-3">
-            <AlertTriangle size={16} aria-hidden="true" className="mt-0.5 flex-shrink-0 text-amber-600" />
+          <div className="mb-3 flex items-start gap-2 rounded-lg border border-accent-ochre/40 bg-accent-ochre/10 p-3">
+            <AlertTriangle size={16} aria-hidden="true" className="mt-0.5 flex-shrink-0 text-accent-ochre" />
             <p className="text-sm text-ink">Your YouTube access needs to be reconnected.</p>
           </div>
           <Link href="/dashboard/settings" className="btn-secondary inline-flex items-center px-4 py-2 text-sm">

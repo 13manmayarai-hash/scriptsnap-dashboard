@@ -268,8 +268,8 @@ export default function AnalyticsPage() {
 
       {tier === 'pro' && perf?.needsReconnect && (
         <div className="card">
-          <div className="mb-3 flex items-start gap-2 rounded-lg border border-amber-400/50 bg-amber-50 p-3">
-            <AlertTriangle size={16} aria-hidden="true" className="mt-0.5 flex-shrink-0 text-amber-600" />
+          <div className="mb-3 flex items-start gap-2 rounded-lg border border-accent-ochre/40 bg-accent-ochre/10 p-3">
+            <AlertTriangle size={16} aria-hidden="true" className="mt-0.5 flex-shrink-0 text-accent-ochre" />
             <p className="text-sm text-ink">Your YouTube access needs to be reconnected.</p>
           </div>
           <Link href="/dashboard/settings" className="btn-secondary inline-flex items-center px-4 py-2 text-sm">
@@ -326,7 +326,7 @@ export default function AnalyticsPage() {
               <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                 <SummaryCard icon={CheckCircle2} iconClass="text-sage" title="What's working" items={perfData.aiSummary.whatsWorking} />
                 <SummaryCard icon={XCircle} iconClass="text-error" title="What's not" items={perfData.aiSummary.whatsNot} />
-                <SummaryCard icon={Lightbulb} iconClass="text-amber-600" title="Suggestions" items={perfData.aiSummary.suggestions} />
+                <SummaryCard icon={Lightbulb} iconClass="text-accent-ochre" title="Suggestions" items={perfData.aiSummary.suggestions} />
               </div>
               <p className="-mt-3 text-[10px] italic text-ink-faint">AI-written from your real channel numbers above — a starting point for your own judgment, not a guarantee.</p>
 

@@ -24,9 +24,9 @@ const YOUTUBE_ERROR_MESSAGES: Record<string, string> = {
 }
 
 const QUICK_LINKS = [
-  { href: '/dashboard/tone-presets', label: 'Tone & Voice presets', description: 'How the generator writes for you', icon: Mic2, color: 'bg-purple-50 text-purple-600' },
-  { href: '/dashboard/categories', label: 'Categories', description: 'Your custom content categories', icon: Tags, color: 'bg-amber-50 text-amber-600' },
-  { href: '/dashboard/billing', label: 'Usage & Billing', description: 'Current plan and monthly usage', icon: CreditCard, color: 'bg-blue-50 text-blue-600' },
+  { href: '/dashboard/tone-presets', label: 'Tone & Voice presets', description: 'How the generator writes for you', icon: Mic2, color: 'bg-accent-plum/15 text-accent-plum' },
+  { href: '/dashboard/categories', label: 'Categories', description: 'Your custom content categories', icon: Tags, color: 'bg-accent-clay/15 text-accent-clay' },
+  { href: '/dashboard/billing', label: 'Usage & Billing', description: 'Current plan and monthly usage', icon: CreditCard, color: 'bg-accent-slate/15 text-accent-slate' },
 ]
 
 export default function SettingsPage() {
@@ -257,8 +257,8 @@ export default function SettingsPage() {
           </div>
         ) : youtubeConnection.needs_reconnect ? (
           <div>
-            <div className="mb-3 flex items-start gap-2 rounded-lg border border-amber-400/50 bg-amber-50 p-3">
-              <AlertTriangle size={16} aria-hidden="true" className="mt-0.5 flex-shrink-0 text-amber-600" />
+            <div className="mb-3 flex items-start gap-2 rounded-lg border border-accent-ochre/40 bg-accent-ochre/10 p-3">
+              <AlertTriangle size={16} aria-hidden="true" className="mt-0.5 flex-shrink-0 text-accent-ochre" />
               <p className="text-sm text-ink">
                 Your YouTube access needs to be reconnected — access may have been revoked from your Google account.
               </p>
