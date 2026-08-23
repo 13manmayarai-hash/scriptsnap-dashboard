@@ -678,17 +678,6 @@ function KitShowcase() {
 
 const COMPARE_COLUMNS = [
   {
-    name: 'ScriptSnap',
-    tag: 'Built for solo Shorts creators',
-    featured: true,
-    rows: [
-      { yes: true, text: 'Trained on your own videos, learns further every session' },
-      { yes: true, text: 'Built-in YouTube guideline risk check' },
-      { yes: true, text: 'Regional language support — Hindi, Tamil, Telugu & more' },
-      { yes: true, text: 'INR pricing, Razorpay billing, built for solo creators' },
-    ],
-  },
-  {
     name: 'Generic AI writers',
     tag: "ChatGPT, Claude, vidIQ's free generator",
     featured: false,
@@ -697,6 +686,17 @@ const COMPARE_COLUMNS = [
       { yes: false, text: 'No YouTube policy risk-checking built in' },
       { yes: true, text: 'Free or cheap to try' },
       { yes: false, text: 'Not YouTube-Shorts-structured by default' },
+    ],
+  },
+  {
+    name: 'ScriptSnap',
+    tag: 'Built for solo Shorts creators',
+    featured: true,
+    rows: [
+      { yes: true, text: 'Trained on your own videos, learns further every session' },
+      { yes: true, text: 'Built-in YouTube guideline risk check' },
+      { yes: true, text: 'Regional language support — Hindi, Tamil, Telugu & more' },
+      { yes: true, text: 'INR pricing, Razorpay billing, built for solo creators' },
     ],
   },
   {
