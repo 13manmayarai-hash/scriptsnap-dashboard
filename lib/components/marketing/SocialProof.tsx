@@ -1,12 +1,25 @@
+'use client'
+
+import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import { ShieldCheck } from 'lucide-react'
 import { Reveal } from './Shared'
 
-// No fabricated review quote or user-count stat here — ScriptSnap's real
-// track record right now is its own founder using it daily, so that's
-// what's shown, framed honestly rather than dressed up as a customer base
-// it doesn't have yet.
+// The founder-usage story is the one thing here that's true today
+// regardless of signup count, so it stays as the main content. The
+// creator count beside it is real and fetched live — not a fabricated
+// number — so it honestly starts small and grows as people actually sign
+// up, instead of claiming a user base ScriptSnap doesn't have yet.
 export default function SocialProof() {
+  const [count, setCount] = useState<number | null>(null)
+
+  useEffect(() => {
+    fetch('/api/public/creator-count')
+      .then((r) => r.json())
+      .then((d) => setCount(typeof d.count === 'number' ? d.count : null))
+      .catch(() => setCount(null))
+  }, [])
+
   return (
     <section className="relative overflow-hidden border-t border-[#E2DFD6] bg-[#F1EFE8] py-20 sm:py-28">
       <div className="pointer-events-none absolute -left-16 -top-16 h-[280px] w-[280px] opacity-40" aria-hidden="true">
@@ -25,10 +38,17 @@ export default function SocialProof() {
               Rajiv runs <span className="font-medium text-[#3A3934]">@technosaze</span> on YouTube and generates every one of his own Shorts scripts through ScriptSnap &mdash; before it was ever a product other creators could sign up for.
             </p>
           </div>
-          <div className="flex flex-shrink-0 items-center gap-2 rounded-[12px] border border-[#E0DDD3] bg-[#FBFAF6] px-5 py-4">
-            <ShieldCheck size={18} className="text-[#5C7A52]" aria-hidden="true" />
-            <span className="text-[13px] font-medium text-[#3A3934]">Real channel, real daily use</span>
-          </div>
+          {count !== null && count > 0 ? (
+            <div className="flex flex-shrink-0 flex-col items-center rounded-[12px] border border-[#E0DDD3] bg-[#FBFAF6] px-7 py-4 text-center">
+              <span className="font-serif text-[32px] font-bold text-[#3A3934]">{count.toLocaleString('en-IN')}+</span>
+              <span className="text-[12px] text-[#9C9686]">{count === 1 ? 'Creator' : 'Creators'}</span>
+            </div>
+          ) : (
+            <div className="flex flex-shrink-0 items-center gap-2 rounded-[12px] border border-[#E0DDD3] bg-[#FBFAF6] px-5 py-4">
+              <ShieldCheck size={18} className="text-[#5C7A52]" aria-hidden="true" />
+              <span className="text-[13px] font-medium text-[#3A3934]">Real channel, real daily use</span>
+            </div>
+          )}
         </Reveal>
       </div>
     </section>
