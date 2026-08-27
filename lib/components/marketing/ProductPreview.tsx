@@ -1,36 +1,21 @@
 import {
-  ArrowLeft, Share2, MoreHorizontal, Home as HomeIcon, FileText, Lightbulb,
-  CalendarDays, LayoutTemplate, BarChart3, Link2, Image as ImageIcon,
+  Share2, HelpCircle, Link2, Image as ImageIcon,
 } from 'lucide-react'
-import { Logo } from './Shared'
 
-const sidebarItems: Array<[typeof HomeIcon, string]> = [
-  [HomeIcon, 'Dashboard'],
-  [FileText, 'Scripts'],
-  [Lightbulb, 'Ideas'],
-  [CalendarDays, 'Calendar'],
-  [LayoutTemplate, 'Templates'],
-  [BarChart3, 'Analytics'],
-]
-
-function Sidebar() {
+function WindowChrome() {
   return (
-    <aside className="w-[200px] shrink-0 border-r border-[#E1DED4] bg-[#FBFAF6] p-4">
-      <Logo />
-      <nav className="mt-9 space-y-1">
-        {sidebarItems.map(([Icon, label], index) => (
-          <span
-            key={label}
-            className={`flex min-h-[42px] w-full items-center gap-3 rounded-[7px] px-3 text-left text-[14px] ${
-              index === 1 ? 'bg-[#F0EEE5] text-[#596950]' : 'text-[#595750]'
-            }`}
-          >
-            <Icon size={17} strokeWidth={1.7} aria-hidden="true" />
-            {label}
-          </span>
-        ))}
-      </nav>
-    </aside>
+    <div className="relative flex items-center justify-center border-b border-[#E1DED4] bg-[#FBFAF6] px-4 py-3">
+      <div className="absolute left-4 flex items-center gap-1.5" aria-hidden="true">
+        <span className="h-2.5 w-2.5 rounded-full bg-[#F0645B]" />
+        <span className="h-2.5 w-2.5 rounded-full bg-[#F0B94B]" />
+        <span className="h-2.5 w-2.5 rounded-full bg-[#5FB86A]" />
+      </div>
+      <div className="flex items-center gap-1.5 text-[13px] font-semibold text-[#3A3934]">
+        <span className="flex h-5 w-5 items-center justify-center rounded-[5px] bg-[#7A8B72] text-[10px] font-bold text-white">S</span>
+        ScriptSnap
+      </div>
+      <HelpCircle size={16} className="absolute right-4 text-[#97938A]" aria-hidden="true" />
+    </div>
   )
 }
 
@@ -53,9 +38,10 @@ function ScriptEditor() {
     <div className="overflow-hidden rounded-[9px] border border-[#E0DDD3] bg-white">
       <div className="flex items-center justify-between border-b border-[#E5E1D8] px-5 py-3">
         <h4 className="text-[15px] font-semibold">Script Editor</h4>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <span className="rounded-full bg-[#EFF1E8] px-2.5 py-1 text-[11px] font-semibold text-[#5C7A52]">Score 82</span>
           <span className="text-[11px] text-[#9C9686]">Saved ✓</span>
+          <Share2 size={15} className="text-[#77756F]" aria-hidden="true" />
         </div>
       </div>
       <EditorToolbar />
@@ -123,37 +109,12 @@ export default function ProductPreview() {
     <div
       className="mt-20 overflow-hidden rounded-[14px] border border-[#DCD9CF] bg-[#FBFAF6] shadow-[0_20px_60px_rgba(40,39,33,0.07)] animate-fade-up"
       style={{ animationDelay: '150ms' }}
+      aria-hidden="true"
     >
-      <div className="border-b border-[#E1DED4] bg-[#FBFAF6] px-6 py-2.5 text-[11px] font-medium uppercase tracking-wide text-[#9C998F]">
-        Example workspace — illustrative, not your data
-      </div>
-      {/* This is a fixed-proportions screenshot of the real dashboard, not
-          a responsive layout — on narrow screens it scrolls horizontally
-          within its own frame instead of squeezing illegible or being
-          silently clipped by the page's overflow-x safety net. */}
-      <div className="overflow-x-auto">
-        <div className="flex min-h-[560px] min-w-[900px]" aria-hidden="true">
-          <Sidebar />
-          <main className="min-w-0 flex-1 bg-[#F8F7F2]">
-            <header className="flex h-[56px] items-center justify-between border-b border-[#E1DED4] px-6">
-              <div className="flex items-center gap-4">
-                <ArrowLeft size={16} className="text-[#77756F]" />
-                <span className="text-[13px] text-[#77756F]">Back</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <span className="flex items-center gap-1.5 rounded-[6px] bg-[#7A8B72] px-3 py-1.5 text-[11px] text-white">
-                  <Share2 size={12} />
-                  Share
-                </span>
-                <MoreHorizontal size={16} className="text-[#77756F]" />
-              </div>
-            </header>
-            <div className="grid gap-4 p-5 lg:grid-cols-[1.4fr_.9fr]">
-              <ScriptEditor />
-              <InsightsPanel />
-            </div>
-          </main>
-        </div>
+      <WindowChrome />
+      <div className="grid gap-4 bg-[#F8F7F2] p-5 sm:grid-cols-[1.4fr_.9fr]">
+        <ScriptEditor />
+        <InsightsPanel />
       </div>
     </div>
   )
