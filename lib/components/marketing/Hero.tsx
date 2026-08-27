@@ -5,16 +5,16 @@ import { Button, Stat } from './Shared'
 function HeroArt() {
   return (
     <div className="relative">
-      {/* Soft decorative watercolor behind the character — deliberately
-          subtle and positioned off-center so it never competes with the
-          headline in the column beside it. */}
-      <div className="pointer-events-none absolute -right-10 -top-10 h-[380px] w-[380px] opacity-70 sm:h-[440px] sm:w-[440px]" aria-hidden="true">
-        <Image src="/hero-bg-decoration.png" alt="" fill className="object-contain" priority />
-      </div>
-
-      <div className="relative mx-auto w-full max-w-[300px] sm:max-w-[340px]">
+      {/* Soft decorative watercolor behind the character — sized relative
+          to the character's own column (not a fixed box) so it stays a
+          subtle accent instead of ballooning past the column width on
+          narrow screens. */}
+      <div className="relative mx-auto w-full max-w-[300px] sm:max-w-[340px] lg:max-w-none lg:w-[420px]">
+        <div className="pointer-events-none absolute -right-6 -top-6 h-[200px] w-[200px] opacity-70 sm:-right-8 sm:-top-8 sm:h-[240px] sm:w-[240px] lg:-right-10 lg:-top-10 lg:h-[380px] lg:w-[380px]" aria-hidden="true">
+          <Image src="/hero-bg-decoration-v2.png" alt="" fill className="object-contain" priority />
+        </div>
         <Image
-          src="/hero-character.png"
+          src="/hero-character-v2.png"
           alt="Illustration of a smiling creator in a backwards cap and hoodie, arms crossed"
           width={525}
           height={672}

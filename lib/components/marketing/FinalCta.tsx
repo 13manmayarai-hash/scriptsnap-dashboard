@@ -9,7 +9,7 @@ export default function FinalCta() {
         <Reveal className="grid items-center gap-8 rounded-[24px] border border-[#E0DDD3] bg-[#FBFAF6] px-6 py-12 sm:px-10 sm:py-14 md:grid-cols-[.85fr_1.15fr] md:text-left">
           <div className="mx-auto w-full max-w-[280px] md:mx-0">
             <Image
-              src="/final-cta-illustration.png"
+              src="/final-cta-illustration-v2.png"
               alt="Sketch illustration of a person typing on a laptop with a notebook and coffee mug beside them"
               width={773}
               height={665}
