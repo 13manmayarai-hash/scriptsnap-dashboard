@@ -23,7 +23,7 @@ export default function Navbar() {
             <Logo />
           </Link>
 
-          <nav className="hidden items-center gap-9 md:flex">
+          <nav className="hidden items-center gap-9 lg:flex">
             {NAV_LINKS.map((link) => (
               <a
                 key={link.href}
@@ -35,7 +35,7 @@ export default function Navbar() {
             ))}
           </nav>
 
-          <div className="hidden items-center gap-5 md:flex">
+          <div className="hidden items-center gap-5 lg:flex">
             <Link href="/auth/login" className="text-[14px] font-medium">Log in</Link>
             <Button href="/auth/signup" className="min-h-[42px] px-5">Start creating →</Button>
           </div>
@@ -43,7 +43,7 @@ export default function Navbar() {
           <button
             type="button"
             onClick={() => setOpen((v) => !v)}
-            className="flex h-10 w-10 items-center justify-center rounded-full text-[#484742] md:hidden"
+            className="flex h-10 w-10 items-center justify-center rounded-full text-[#484742] lg:hidden"
             aria-label={open ? 'Close menu' : 'Open menu'}
             aria-expanded={open}
           >
@@ -52,7 +52,7 @@ export default function Navbar() {
         </div>
 
         {open && (
-          <div className="flex flex-col gap-1 border-t border-[#E3E0D7] px-4 py-3 md:hidden">
+          <div className="flex flex-col gap-1 border-t border-[#E3E0D7] px-4 py-3 lg:hidden">
             {NAV_LINKS.map((link) => (
               <a
                 key={link.href}
