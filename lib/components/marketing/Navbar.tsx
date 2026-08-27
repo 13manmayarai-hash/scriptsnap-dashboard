@@ -6,9 +6,10 @@ import { Menu, X } from 'lucide-react'
 import { Logo, Button } from './Shared'
 
 const NAV_LINKS = [
-  { href: '#how-it-works', label: 'How it works' },
-  { href: '#kit', label: 'Content kit' },
+  { href: '#hero', label: 'Product' },
+  { href: '/dashboard/templates', label: 'Templates' },
   { href: '#pricing', label: 'Pricing' },
+  { href: '#how-it-works', label: 'Resources' },
 ]
 
 export default function Navbar() {

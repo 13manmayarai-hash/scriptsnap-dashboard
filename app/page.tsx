@@ -8,15 +8,18 @@ import Hero from '@/lib/components/marketing/Hero'
 import ProductPreview from '@/lib/components/marketing/ProductPreview'
 import Benefits from '@/lib/components/marketing/Benefits'
 import HowItWorks from '@/lib/components/marketing/HowItWorks'
-import Moat from '@/lib/components/marketing/Moat'
-import TrustFeatures from '@/lib/components/marketing/TrustFeatures'
-import KitShowcase from '@/lib/components/marketing/KitShowcase'
 import VoiceComparison from '@/lib/components/marketing/VoiceComparison'
-import Comparison from '@/lib/components/marketing/Comparison'
 import SocialProof from '@/lib/components/marketing/SocialProof'
 import PricingTeaser from '@/lib/components/marketing/PricingTeaser'
 import FinalCta from '@/lib/components/marketing/FinalCta'
 import Footer from '@/lib/components/marketing/Footer'
+
+// Moat, TrustFeatures, KitShowcase, and Comparison used to render here too
+// (founder story, trust/guideline-check section, content-kit grid, and a
+// vs-competitors table) — real, accurate content, just not part of the
+// Frontend_0.1 reference layout this page now matches exactly. The
+// components are untouched in lib/components/marketing/ if that content
+// should come back in.
 
 // Logged-in visitors don't belong on the marketing page — send them
 // straight to the app. Anonymous visitors see the landing page below
@@ -60,11 +63,7 @@ function LandingPage() {
         </div>
         <Benefits />
         <HowItWorks />
-        <Moat />
-        <TrustFeatures />
-        <KitShowcase />
         <VoiceComparison />
-        <Comparison />
         <SocialProof />
         <PricingTeaser />
         <FinalCta />

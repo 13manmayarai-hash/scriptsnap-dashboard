@@ -1,28 +1,28 @@
 import {
-  ArrowLeft, ArrowRight, Share2, MoreHorizontal, Home as HomeIcon, FileText, Lightbulb,
-  Mic2, Settings as SettingsIcon, Star, Sparkles, Scissors, ListPlus, Link2,
-  Image as ImageIcon, PenLine, ShieldCheck, Wand2,
+  ArrowLeft, Share2, MoreHorizontal, Home as HomeIcon, FileText, Lightbulb,
+  CalendarDays, LayoutTemplate, BarChart3, Link2, Image as ImageIcon,
 } from 'lucide-react'
 import { Logo } from './Shared'
 
 const sidebarItems: Array<[typeof HomeIcon, string]> = [
   [HomeIcon, 'Dashboard'],
-  [Wand2, 'Generate'],
   [FileText, 'Scripts'],
-  [Mic2, 'Tone & Voice'],
-  [SettingsIcon, 'Settings'],
+  [Lightbulb, 'Ideas'],
+  [CalendarDays, 'Calendar'],
+  [LayoutTemplate, 'Templates'],
+  [BarChart3, 'Analytics'],
 ]
 
 function Sidebar() {
   return (
-    <aside className="w-[220px] shrink-0 border-r border-[#E1DED4] bg-[#FBFAF6] p-4">
+    <aside className="w-[200px] shrink-0 border-r border-[#E1DED4] bg-[#FBFAF6] p-4">
       <Logo />
       <nav className="mt-9 space-y-1">
         {sidebarItems.map(([Icon, label], index) => (
           <span
             key={label}
             className={`flex min-h-[42px] w-full items-center gap-3 rounded-[7px] px-3 text-left text-[14px] ${
-              index === 0 ? 'bg-[#F0EEE5] text-[#596950]' : 'text-[#595750]'
+              index === 1 ? 'bg-[#F0EEE5] text-[#596950]' : 'text-[#595750]'
             }`}
           >
             <Icon size={17} strokeWidth={1.7} aria-hidden="true" />
@@ -30,14 +30,6 @@ function Sidebar() {
           </span>
         ))}
       </nav>
-      <div className="mt-28 rounded-[9px] border border-[#E0DDD3] bg-white p-4">
-        <div className="flex items-center gap-2">
-          <Star size={16} className="text-[#7A8B72]" aria-hidden="true" />
-          <span className="text-[13px] font-semibold">Upgrade to Basic</span>
-        </div>
-        <p className="mt-1 text-[11px] text-[#85827A]">50 scripts/mo, all 5 languages</p>
-        <ArrowRight size={15} className="mt-4 text-[#66645D]" aria-hidden="true" />
-      </div>
     </aside>
   )
 }
@@ -45,10 +37,10 @@ function Sidebar() {
 function EditorToolbar() {
   return (
     <div className="flex items-center gap-4 border-b border-[#E6E2D9] px-4 py-3 text-[#57554F]" aria-hidden="true">
-      <span className="font-serif text-sm">H1</span>
-      <span className="font-serif text-sm">H2</span>
       <span className="font-bold">B</span>
       <span className="font-serif italic">I</span>
+      <span className="font-serif text-sm">H1</span>
+      <span className="font-serif text-sm">H2</span>
       <span className="h-5 w-px bg-[#E2DED4]" />
       <Link2 size={16} />
       <ImageIcon size={16} />
@@ -59,131 +51,68 @@ function EditorToolbar() {
 function ScriptEditor() {
   return (
     <div className="overflow-hidden rounded-[9px] border border-[#E0DDD3] bg-white">
+      <div className="flex items-center justify-between border-b border-[#E5E1D8] px-5 py-3">
+        <h4 className="text-[15px] font-semibold">Script Editor</h4>
+        <div className="flex items-center gap-2">
+          <span className="rounded-full bg-[#EFF1E8] px-2.5 py-1 text-[11px] font-semibold text-[#5C7A52]">Score 82</span>
+          <span className="text-[11px] text-[#9C9686]">Saved ✓</span>
+        </div>
+      </div>
       <EditorToolbar />
       <div className="px-7 py-6">
-        <div className="space-y-5 text-[14px] leading-[1.75] text-[#34332F]">
+        <h5 className="text-[16px] font-semibold text-[#292824]">Why this bamboo grows so fast</h5>
+        <div className="mt-4 space-y-4 text-[14px] leading-[1.75] text-[#34332F]">
           <div>
             <span className="font-medium text-[#77756F]">[HOOK]</span>
             <p className="mt-2">
-              Okay, so USB-C was supposed to fix this. One cable, every
-              device, done. That&rsquo;s what they told us.
+              Most people think bamboo grows overnight. But here&rsquo;s what&rsquo;s actually happening&hellip;
             </p>
           </div>
-          <p>
-            But your phone charges in two hours and your friend&rsquo;s phone
-            charges in twenty minutes. Same cable. So what&rsquo;s going on?
-          </p>
           <div>
-            <span className="font-medium text-[#77756F]">[POINT 1]</span>
+            <span className="font-medium text-[#77756F]">[BODY]</span>
             <p className="mt-2">
-              It&rsquo;s not the cable &mdash; it&rsquo;s the charging protocol behind it.
-              Here&rsquo;s the one spec number to actually check before you buy.
+              Bamboo isn&rsquo;t just a plant &mdash; it&rsquo;s a growth machine. Some species can shoot up 60 cm in a single day&hellip;
             </p>
           </div>
         </div>
-        <div className="mt-10 text-[11px] text-[#97938A]">168 words &middot; 34 sec read</div>
+        <div className="mt-8 text-[11px] text-[#97938A]">1,246 words &middot; 3 min read</div>
       </div>
     </div>
   )
 }
 
-function ToneMatch() {
+function InsightsPanel() {
+  const meters = [
+    { label: 'Hook strength', pct: 88 },
+    { label: 'Readability', pct: 82 },
+    { label: 'Retention', pct: 76 },
+  ]
   return (
-    <div className="border-b border-[#E5E1D8] p-5">
-      <div className="flex items-center justify-between">
-        <div className="text-[13px] font-semibold">Tone match</div>
-        <span className="rounded-full bg-[#EFF1E8] px-2.5 py-1 text-[11px] font-semibold text-[#5C7A52]">Score 82</span>
+    <div className="rounded-[9px] border border-[#E0DDD3] bg-white p-5">
+      <h4 className="text-[15px] font-semibold">Insights</h4>
+      <div className="mt-4 flex items-center justify-between">
+        <span className="text-[12px] text-[#85827A]">Script Score</span>
+        <span className="font-serif text-[22px] font-bold text-[#3A3934]">82</span>
       </div>
-      <div className="mt-4 flex items-center gap-4">
-        <div className="relative flex h-[70px] w-[70px] items-center justify-center rounded-full border-[6px] border-[#DDE3D7]">
-          <div className="absolute inset-[-6px] rounded-full border-[6px] border-[#7A8B72] border-b-transparent border-l-transparent rotate-[-25deg]" aria-hidden="true" />
-          <span className="text-[19px] font-semibold">79%</span>
-        </div>
-        <p className="text-[12px] leading-5 text-[#706E68]">
-          Getting closer to your voice.
-          <br />
-          Keeps improving as you edit or
-          <br />
-          regenerate more scripts.
-        </p>
-      </div>
-    </div>
-  )
-}
-
-function GuidelinePanel() {
-  return (
-    <div className="overflow-hidden rounded-[9px] border border-[#E0DDD3] bg-white">
-      <div className="flex border-b border-[#E5E1D8]" aria-hidden="true">
-        {['Overview', 'Kit', 'Languages'].map((item, index) => (
-          <span
-            key={item}
-            className={`relative px-5 py-4 text-[12px] ${
-              index === 0 ? 'font-semibold text-[#262520]' : 'text-[#85827A]'
-            }`}
-          >
-            {item}
-            {index === 0 && <span className="absolute bottom-0 left-4 right-4 h-[2px] bg-[#7A8B72]" />}
-          </span>
-        ))}
-      </div>
-      <ToneMatch />
-      <div className="border-b border-[#E5E1D8] p-5">
-        <div className="text-[13px] font-semibold">Community Guidelines check</div>
-        <div className="mt-3 flex flex-wrap gap-2">
-          <span className="rounded-full bg-[#EFF1E8] px-3 py-1.5 text-[11px] text-[#596650]">&#10003; No copyright flags</span>
-          <span className="rounded-full bg-[#EFF1E8] px-3 py-1.5 text-[11px] text-[#596650]">&#10003; Advertiser-friendly</span>
-        </div>
-      </div>
-      <div className="p-5">
-        <div className="flex items-center justify-between">
-          <span className="text-[13px] font-semibold">Tone preset</span>
-          <PenLine size={14} className="text-[#88857D]" aria-hidden="true" />
-        </div>
-        <p className="mt-3 text-[12px] leading-5 text-[#68665F]">
-          &ldquo;Punchy Explainer&rdquo;
-          <br />
-          Trained on 20 of your own Shorts
-        </p>
-      </div>
-    </div>
-  )
-}
-
-const tools = [
-  { icon: Sparkles, title: 'AI Rewrite', subtitle: 'Improve this line' },
-  { icon: Scissors, title: 'Shorten', subtitle: 'Trim to fit your duration' },
-  { icon: ListPlus, title: 'Expand', subtitle: 'Add more detail' },
-  { icon: Lightbulb, title: 'Regenerate titles', subtitle: 'Get 10 more variations' },
-]
-
-function ToolsPanel() {
-  return (
-    <div className="rounded-[9px] border border-[#E0DDD3] bg-white p-4" aria-hidden="true">
-      <div className="mb-4 text-[13px] font-semibold">Script tools</div>
-      <div className="space-y-2">
-        {tools.map(({ icon: Icon, title, subtitle }) => (
-          <div
-            key={title}
-            className="flex min-h-[58px] w-full items-center gap-3 rounded-[7px] border border-[#E6E2D9] px-3 text-left"
-          >
-            <Icon size={17} className="text-[#6F8067]" />
-            <div className="flex-1">
-              <div className="text-[12px] font-medium text-[#30302B]">{title}</div>
-              <div className="mt-0.5 text-[10px] text-[#918D84]">{subtitle}</div>
+      <div className="mt-3 flex flex-col gap-2.5">
+        {meters.map((m) => (
+          <div key={m.label} className="flex items-center gap-3 text-[11.5px] text-[#706E68]">
+            <span className="w-[92px] flex-shrink-0">{m.label}</span>
+            <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-[#EAE7DD]">
+              <span className="block h-full rounded-full bg-[#7A8B72]" style={{ width: `${m.pct}%` }} />
             </div>
-            <ArrowRight size={14} className="text-[#AAA69D]" />
           </div>
         ))}
       </div>
-      <div className="mt-3 rounded-[7px] bg-[#F0F1E8] p-3.5">
-        <div className="flex items-center gap-2 text-[12px] font-medium">
-          <Lightbulb size={15} className="text-[#718065]" />
-          Tip
+      <div className="mt-5 space-y-3 border-t border-[#E5E1D8] pt-4">
+        <div className="flex items-center justify-between">
+          <span className="text-[12px] text-[#85827A]">Tone</span>
+          <span className="rounded-full bg-[#F0EEE5] px-2.5 py-1 text-[11px] font-medium text-[#484742]">Conversational</span>
         </div>
-        <p className="mt-2 text-[10px] leading-4 text-[#6C7064]">
-          Scripts you keep without editing train your tone preset the most.
-        </p>
+        <div>
+          <span className="text-[12px] text-[#85827A]">Audience</span>
+          <p className="mt-0.5 text-[13px] font-medium text-[#3A3934]">Young Creators (16&ndash;34)</p>
+        </div>
       </div>
     </div>
   )
@@ -203,32 +132,25 @@ export default function ProductPreview() {
           within its own frame instead of squeezing illegible or being
           silently clipped by the page's overflow-x safety net. */}
       <div className="overflow-x-auto">
-        <div className="flex min-h-[650px] min-w-[960px]" aria-hidden="true">
+        <div className="flex min-h-[560px] min-w-[900px]" aria-hidden="true">
           <Sidebar />
           <main className="min-w-0 flex-1 bg-[#F8F7F2]">
-            <header className="flex h-[62px] items-center justify-between border-b border-[#E1DED4] px-6">
-              <div className="flex items-center gap-5">
-                <ArrowLeft size={17} className="text-[#77756F]" />
-                <span className="text-[14px] text-[#77756F]">Back</span>
-                <span className="h-5 w-px bg-[#DEDAD0]" />
-                <span className="text-[14px] font-semibold">Why Phone Chargers Still Don&rsquo;t Fit</span>
-              </div>
+            <header className="flex h-[56px] items-center justify-between border-b border-[#E1DED4] px-6">
               <div className="flex items-center gap-4">
-                <span className="hidden items-center gap-1.5 text-[11px] text-[#7B8175] sm:flex">
-                  <ShieldCheck size={13} />
-                  Guideline check passed
-                </span>
-                <span className="flex items-center gap-2 rounded-[6px] bg-[#7A8B72] px-3 py-2 text-[11px] text-white">
-                  <Share2 size={13} />
+                <ArrowLeft size={16} className="text-[#77756F]" />
+                <span className="text-[13px] text-[#77756F]">Back</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="flex items-center gap-1.5 rounded-[6px] bg-[#7A8B72] px-3 py-1.5 text-[11px] text-white">
+                  <Share2 size={12} />
                   Share
                 </span>
-                <MoreHorizontal size={17} className="text-[#77756F]" />
+                <MoreHorizontal size={16} className="text-[#77756F]" />
               </div>
             </header>
-            <div className="grid gap-4 p-5 lg:grid-cols-[1.25fr_.72fr_.48fr]">
+            <div className="grid gap-4 p-5 lg:grid-cols-[1.4fr_.9fr]">
               <ScriptEditor />
-              <GuidelinePanel />
-              <ToolsPanel />
+              <InsightsPanel />
             </div>
           </main>
         </div>

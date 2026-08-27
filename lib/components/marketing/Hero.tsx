@@ -45,7 +45,7 @@ function HeroArt() {
 
 export default function Hero() {
   return (
-    <section className="mx-auto max-w-[1380px] px-6 pb-8 pt-16 lg:px-10 lg:pt-20">
+    <section id="hero" className="mx-auto max-w-[1380px] px-6 pb-8 pt-16 lg:px-10 lg:pt-20">
       {/* Floating decorative icons live in the gutter between the two hero
           columns — genuinely empty space at any width, so they can't
           collide with the headline or get clipped behind the artwork. */}
@@ -72,26 +72,23 @@ export default function Hero() {
           <ShieldCheck size={20} />
         </div>
         <div className="animate-fade-up">
-          <div className="mb-6 inline-block">
-            <span className="font-serif text-[17px] italic text-[#30302B]">for one creator, trained on his voice</span>
-            <div className="ml-1 mt-[-1px] h-[2px] w-[220px] rotate-[-2deg] bg-[#30302B]" aria-hidden="true" />
-          </div>
-          <h1 className="max-w-[680px] text-[50px] font-semibold leading-[1.02] tracking-[-0.045em] sm:text-[60px] lg:text-[64px] text-balance">
-            Turn a topic into a script that sounds like <span className="text-[#708067]">you.</span>
+          <h1 className="max-w-[680px] text-[46px] font-semibold leading-[1.05] tracking-[-0.03em] sm:text-[56px] lg:text-[60px] text-balance">
+            Turn ideas into scripts people <span className="relative inline-block italic text-[#708067]">want to watch.
+              <span className="absolute -bottom-1.5 left-0 h-[2px] w-[92%] rotate-[-1deg] bg-[#B8863A]" aria-hidden="true" />
+            </span>
           </h1>
-          <p className="mt-7 max-w-[580px] text-[18px] leading-7 text-[#706E68]">
-            ScriptSnap writes your next YouTube Shorts script &mdash; title, ten
-            title variations, description, hashtags and pinned comment,
-            all in one generation &mdash; trained on your own back-catalog, not
-            a shared AI voice.
+          <p className="mt-6 max-w-[560px] text-[17px] leading-7 text-[#706E68]">
+            ScriptSnap helps creators turn rough ideas into engaging YouTube scripts &mdash; from the first hook to the final line.
           </p>
-          <div className="mt-9 flex flex-wrap gap-4">
-            <Button href="/auth/signup" icon={<ArrowRight size={17} aria-hidden="true" />} className="min-w-[205px]">Start writing free</Button>
-            <Button href="#how-it-works" variant="secondary" icon={<Play size={15} fill="currentColor" aria-hidden="true" />} className="min-w-[220px]">See how it works</Button>
+          <div className="mt-8 flex flex-wrap gap-4">
+            <Button href="/auth/signup" icon={<ArrowRight size={17} aria-hidden="true" />} className="min-w-[205px]">Create your first script</Button>
+            <Button href="#how-it-works" variant="secondary" icon={<Play size={15} fill="currentColor" aria-hidden="true" />} className="min-w-[190px]">See how it works</Button>
           </div>
-          <p className="mt-8 text-[13px] text-[#5D5B55]">
-            Built and used daily by <span className="font-medium text-[#3A3934]">@technosaze</span> on his own channel, before anyone else&rsquo;s.
-          </p>
+          <div className="mt-7 flex flex-wrap gap-x-5 gap-y-2 text-[13px] text-[#5D5B55]">
+            <span>✓ AI-assisted writing</span>
+            <span>✓ Creator voice</span>
+            <span>✓ Hooks that grab attention</span>
+          </div>
         </div>
         <div className="animate-fade-up" style={{ animationDelay: '80ms' }}>
           <HeroArt />

@@ -1,12 +1,33 @@
-import { Feature } from './Shared'
+import { Play, User, Flame, Zap } from 'lucide-react'
+import { Reveal } from './Shared'
+
+const BENEFITS = [
+  { icon: Play, title: 'Write faster', description: 'Turn rough ideas into structured scripts.' },
+  { icon: User, title: 'Sound like yourself', description: 'Keep your voice, tone and personality.' },
+  { icon: Flame, title: 'Create consistently', description: 'Plan ideas, write scripts and stay on track.' },
+  { icon: Zap, title: 'Get more watch time', description: 'Hooks that grab attention.' },
+]
 
 export default function Benefits() {
   return (
-    <section className="border-t border-[#E2DFD6] bg-[#F1EFE8]">
-      <div className="mx-auto grid max-w-[1380px] grid-cols-1 divide-y divide-[#DDD9CF] px-6 py-0 md:grid-cols-3 md:divide-x md:divide-y-0 lg:px-10">
-        <Feature number="01" title="Write faster" description="Turn a topic into a full script and content kit in under a minute, not an afternoon." />
-        <Feature number="02" title="Sound like yourself" description="Trained on your own back-catalog, so every script sounds like you, not a generic AI voice." />
-        <Feature number="03" title="Post with confidence" description="Every script is checked against YouTube's Community Guidelines before you post — copyright, monetization risk, all of it." />
+    <section className="py-16 sm:py-20">
+      <div className="mx-auto max-w-[1380px] px-6 lg:px-10">
+        <Reveal className="mb-10 text-center">
+          <h2 className="text-[clamp(24px,3.4vw,32px)] font-semibold tracking-[-0.02em]">Why creators love ScriptSnap</h2>
+        </Reveal>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {BENEFITS.map(({ icon: Icon, title, description }, i) => (
+            <Reveal key={title} delayMs={i * 70}>
+              <div className="h-full rounded-[14px] border border-[#E0DDD3] bg-[#F1EFE8] p-6">
+                <div className="mb-4 flex h-9 w-9 items-center justify-center rounded-full border border-[#DBD7CB] text-[#484742]">
+                  <Icon size={16} aria-hidden="true" />
+                </div>
+                <h3 className="text-[15px] font-semibold">{title}</h3>
+                <p className="mt-1.5 text-[13px] leading-5 text-[#77746C]">{description}</p>
+              </div>
+            </Reveal>
+          ))}
+        </div>
       </div>
     </section>
   )
