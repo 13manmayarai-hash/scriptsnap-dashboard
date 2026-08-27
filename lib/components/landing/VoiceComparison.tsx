@@ -7,9 +7,9 @@ export default function VoiceComparison() {
   return (
     <section className="py-16 sm:py-20">
       <div className="mx-auto max-w-[1240px] px-[18px] sm:px-6 lg:px-12">
-        <div className="grid gap-6 lg:grid-cols-[1.6fr_1fr]">
+        <div className="grid items-start gap-6 lg:grid-cols-[1.6fr_1fr]">
           <Reveal>
-            <div className="flex h-full flex-col justify-center gap-4 rounded-2xl border border-warm-border bg-warm-surface-alt p-6 sm:flex-row sm:items-center sm:gap-4 sm:p-8">
+            <div className="flex flex-col gap-4 rounded-2xl border border-warm-border bg-warm-surface-alt p-6 sm:flex-row sm:items-center sm:gap-4 sm:p-8">
               <div className="flex-1 rounded-xl border border-warm-border bg-warm-surface p-5">
                 <p className="text-[13px] font-semibold text-ink">{VOICE_COMPARISON.generic.label}</p>
                 <p className="mt-2.5 text-[14.5px] leading-6 text-ink-muted">&ldquo;{VOICE_COMPARISON.generic.text}&rdquo;</p>
