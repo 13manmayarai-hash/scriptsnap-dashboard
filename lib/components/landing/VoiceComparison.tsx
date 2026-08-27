@@ -5,7 +5,7 @@ import Reveal from '@/lib/components/ui/Reveal'
 
 export default function VoiceComparison() {
   return (
-    <section className="py-16 sm:py-20">
+    <section className="py-10 sm:py-14">
       <div className="mx-auto max-w-[1240px] px-[18px] sm:px-6 lg:px-12">
         <div className="grid items-start gap-6 lg:grid-cols-[1.6fr_1fr]">
           <Reveal>
@@ -39,8 +39,9 @@ export default function VoiceComparison() {
                 {CREATOR_VOICE_TRAITS.map((trait) => (
                   <div key={trait.label} className="flex items-center justify-between text-[13px] text-ink-muted">
                     <span>{trait.label}</span>
-                    <span className="relative inline-flex h-5 w-9 items-center rounded-full bg-sage" aria-hidden="true">
-                      <span className="ml-4 h-3.5 w-3.5 rounded-full bg-white" />
+                    <span className="relative inline-flex h-2.5 w-14 items-center" aria-hidden="true">
+                      <span className="h-px w-full bg-warm-border" />
+                      <span className="absolute right-0 h-2.5 w-2.5 rounded-full bg-sage" />
                     </span>
                   </div>
                 ))}

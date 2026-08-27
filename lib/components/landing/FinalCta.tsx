@@ -5,7 +5,7 @@ import Reveal from '@/lib/components/ui/Reveal'
 
 export default function FinalCta() {
   return (
-    <section className="py-16 sm:py-20">
+    <section className="py-10 sm:py-14">
       <div className="mx-auto max-w-[1240px] px-[18px] sm:px-6 lg:px-12">
         <Reveal>
           <div className="grid items-center gap-8 rounded-2xl border border-warm-border bg-warm-surface-alt p-6 sm:p-10 md:grid-cols-[0.85fr_1.15fr]">

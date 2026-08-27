@@ -17,6 +17,12 @@ module.exports = {
         'warm-surface': '#FFFFFF',
         'warm-surface-alt': '#FBFAF6',
         'warm-border': '#E0DDD3',
+        // Two-tone card fill used on the landing page's feature/pricing
+        // cards (Frontend_0.1 reference) — a visibly warmer/grayer tint
+        // than warm-surface-alt, so cards read as distinct from the page
+        // background without needing a border to separate them.
+        'warm-tint': '#EFE9DD',
+        'warm-tint-icon': '#E4DCC9',
         ink: '#20201E',
         'ink-muted': '#706E68',
         'ink-faint': '#918D84',

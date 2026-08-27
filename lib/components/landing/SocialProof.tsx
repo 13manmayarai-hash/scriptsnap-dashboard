@@ -16,9 +16,9 @@ export default function SocialProof() {
   }, [])
 
   return (
-    <section className="py-16 sm:py-20">
+    <section className="py-10 sm:py-14">
       <div className="mx-auto max-w-[1240px] px-[18px] sm:px-6 lg:px-12">
-        <Reveal className="mb-10 text-center">
+        <Reveal className="mb-7 text-center">
           <h2 className="mx-auto max-w-[560px] font-serif text-[clamp(1.6rem,3vw,2.1rem)] font-semibold leading-tight tracking-[-0.01em] text-ink">
             Loved by creators who don&rsquo;t want their scripts to sound like AI.
           </h2>
