@@ -10,7 +10,7 @@ function HeroArt() {
           subtle accent instead of ballooning past the column width on
           narrow screens. */}
       <div className="relative mx-auto w-full max-w-[300px] sm:max-w-[340px] lg:max-w-none lg:w-[420px]">
-        <div className="pointer-events-none absolute -right-6 -top-6 h-[200px] w-[200px] opacity-70 sm:-right-8 sm:-top-8 sm:h-[240px] sm:w-[240px] lg:-right-10 lg:-top-10 lg:h-[380px] lg:w-[380px]" aria-hidden="true">
+        <div className="pointer-events-none absolute -right-10 -top-10 h-[280px] w-[280px] opacity-70 sm:-right-12 sm:-top-12 sm:h-[340px] sm:w-[340px] lg:-right-16 lg:-top-16 lg:h-[480px] lg:w-[480px]" aria-hidden="true">
           <Image src="/hero-bg-decoration-v2.png" alt="" fill className="object-contain" priority />
         </div>
         <Image
