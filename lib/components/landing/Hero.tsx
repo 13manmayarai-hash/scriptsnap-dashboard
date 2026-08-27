@@ -10,7 +10,7 @@ const BENEFIT_PILLS = ['AI-assisted writing', 'Creator voice', 'Hooks that grab 
 // there's no breakpoint where this collapses to one column.
 export default function Hero() {
   return (
-    <section id="hero" className="pb-8 pt-10 sm:pt-14 lg:pt-20">
+    <section id="hero" className="pb-3 pt-4 sm:pb-4 sm:pt-6 lg:pt-9">
       <div className="mx-auto grid max-w-[1240px] grid-cols-[1.15fr_0.85fr] items-center gap-3 px-[14px] sm:gap-8 sm:px-6 lg:gap-16 lg:px-12">
         <div className="animate-fade-up">
           <h1 className="font-serif text-[clamp(1.4rem,6.4vw,4.25rem)] font-semibold leading-[1.08] tracking-[-0.02em] text-ink">
