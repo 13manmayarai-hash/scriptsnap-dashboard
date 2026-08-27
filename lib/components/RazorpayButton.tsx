@@ -6,11 +6,15 @@ import { useRouter } from 'next/navigation'
 interface RazorpayButtonProps {
   tier: 'basic' | 'pro'
   tierName: string
+  ctaLabel?: string
+  className?: string
 }
 
 export default function RazorpayButton({
   tier,
   tierName,
+  ctaLabel = 'Upgrade',
+  className,
 }: RazorpayButtonProps) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
@@ -133,9 +137,9 @@ export default function RazorpayButton({
       <button
         onClick={handlePayment}
         disabled={loading}
-        className="flex items-center justify-center min-h-[44px] w-full bg-sage text-white font-semibold rounded md:rounded-lg hover:bg-sage-hover transition-colors disabled:opacity-50 px-0.5 sm:px-2 md:px-6 text-xs md:text-base leading-tight focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sage focus-visible:ring-offset-2 focus-visible:ring-offset-warm-bg"
+        className={className ?? 'flex items-center justify-center min-h-[44px] w-full bg-sage text-white font-semibold rounded md:rounded-lg hover:bg-sage-hover transition-colors disabled:opacity-50 px-0.5 sm:px-2 md:px-6 text-xs md:text-base leading-tight focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sage focus-visible:ring-offset-2 focus-visible:ring-offset-warm-bg'}
       >
-        {loading ? '…' : 'Upgrade'}
+        {loading ? '…' : ctaLabel}
       </button>
       {error && (
         <p className="text-error text-xs md:text-sm mt-1 md:mt-2 break-words" aria-live="polite">

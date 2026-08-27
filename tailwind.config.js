@@ -38,7 +38,9 @@ module.exports = {
         'accent-umber': '#7D6248',
       },
       fontFamily: {
-        sans: ['system-ui', 'sans-serif'],
+        sans: ['var(--font-inter)', 'system-ui', 'sans-serif'],
+        serif: ['var(--font-fraunces)', 'Georgia', 'serif'],
+        mono: ['ui-monospace', 'SFMono-Regular', 'monospace'],
       },
     },
   },
