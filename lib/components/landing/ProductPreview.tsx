@@ -40,7 +40,7 @@ function WindowChrome() {
 
 function Sidebar() {
   return (
-    <aside className="hidden w-[180px] shrink-0 border-r border-warm-border bg-warm-surface-alt p-4 sm:block">
+    <aside className="hidden border-r border-warm-border bg-warm-surface-alt p-4 md:block">
       <nav className="space-y-1">
         {SIDEBAR_ITEMS.map(([Icon, label], i) => (
           <span
@@ -85,9 +85,15 @@ export default function ProductPreview() {
       className="overflow-hidden rounded-2xl border border-warm-border bg-warm-surface-alt shadow-[0_24px_60px_rgba(40,39,33,0.08)]"
     >
       <WindowChrome />
-      <div className="flex min-h-[480px]">
+      {/* Sidebar/editor/insights ratio (~17% / 58% / 22%) matches the
+          reference mockup, measured directly against it rather than
+          eyeballed. Both the outer 3-column split and the inner
+          editor/insights split switch on at the same breakpoint (md:) as
+          Sidebar's own hidden/visible toggle, so there's no in-between
+          width where a column silently collapses to zero. */}
+      <div className="grid min-h-[480px] grid-cols-1 bg-[#F8F7F2] md:grid-cols-[0.32fr_1fr_0.42fr]">
         <Sidebar />
-        <div className="grid flex-1 gap-4 bg-[#F8F7F2] p-4 sm:p-5 md:grid-cols-[1.4fr_0.9fr]">
+        <div className="grid grid-cols-1 gap-4 p-4 sm:p-5 md:col-span-2 md:grid-cols-[1.55fr_1fr]">
           <div className="overflow-hidden rounded-[9px] border border-warm-border bg-warm-surface">
             <div className="flex items-center justify-between border-b border-warm-border px-5 py-3">
               <h4 className="text-[15px] font-semibold text-ink">Script Editor</h4>

@@ -7,7 +7,7 @@ const BENEFIT_PILLS = ['AI-assisted writing', 'Creator voice', 'Hooks that grab 
 export default function Hero() {
   return (
     <section id="hero" className="pb-8 pt-14 sm:pt-16 lg:pt-20">
-      <div className="mx-auto grid max-w-[1240px] items-center gap-10 px-[18px] sm:px-6 lg:grid-cols-[1fr_0.85fr] lg:gap-16 lg:px-12">
+      <div className="mx-auto grid max-w-[1240px] items-center gap-10 px-[18px] sm:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16 lg:px-12">
         <div className="animate-fade-up order-1">
           <h1 className="font-serif text-[clamp(2.75rem,7vw,4.25rem)] font-semibold leading-[1.05] tracking-[-0.02em] text-ink text-balance">
             Turn ideas into
