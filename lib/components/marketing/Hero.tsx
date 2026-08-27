@@ -16,8 +16,8 @@ function HeroArt() {
         <Image
           src="/hero-character.png"
           alt="Illustration of a smiling creator in a backwards cap and hoodie, arms crossed"
-          width={622}
-          height={1024}
+          width={525}
+          height={672}
           priority
           className="relative z-10 h-auto w-full object-contain"
         />

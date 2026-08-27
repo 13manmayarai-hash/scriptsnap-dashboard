@@ -11,8 +11,8 @@ export default function FinalCta() {
             <Image
               src="/final-cta-illustration.png"
               alt="Sketch illustration of a person typing on a laptop with a notebook and coffee mug beside them"
-              width={590}
-              height={495}
+              width={773}
+              height={665}
               className="h-auto w-full object-contain"
             />
           </div>
