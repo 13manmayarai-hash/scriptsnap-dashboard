@@ -4,36 +4,49 @@ import HeroIllustration from './HeroIllustration'
 
 const BENEFIT_PILLS = ['AI-assisted writing', 'Creator voice', 'Hooks that grab attention']
 
+// Always two columns — text left, character right — at every width down to
+// a phone screen, per explicit request. Everything below scales with clamp()
+// against viewport width rather than switching to a stacked layout, since
+// there's no breakpoint where this collapses to one column.
 export default function Hero() {
   return (
-    <section id="hero" className="pb-8 pt-14 sm:pt-16 lg:pt-20">
-      <div className="mx-auto grid max-w-[1240px] items-center gap-10 px-[18px] sm:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16 lg:px-12">
-        <div className="animate-fade-up order-1">
-          <h1 className="font-serif text-[clamp(2.75rem,7vw,4.25rem)] font-semibold leading-[1.05] tracking-[-0.02em] text-ink text-balance">
+    <section id="hero" className="pb-8 pt-10 sm:pt-14 lg:pt-20">
+      <div className="mx-auto grid max-w-[1240px] grid-cols-[1.15fr_0.85fr] items-center gap-3 px-[14px] sm:gap-8 sm:px-6 lg:gap-16 lg:px-12">
+        <div className="animate-fade-up">
+          <h1 className="font-serif text-[clamp(1.4rem,6.4vw,4.25rem)] font-semibold leading-[1.08] tracking-[-0.02em] text-ink">
             Turn ideas into
             <br />
             scripts people
             <br />
             <span className="relative inline-block italic text-sage">
               want to watch.
-              <span className="absolute -bottom-1.5 left-0 h-[3px] w-[94%] rotate-[-1deg] bg-[#C99A4A]" aria-hidden="true" />
+              <span className="absolute -bottom-1 left-0 h-[2px] w-[94%] rotate-[-1deg] bg-[#C99A4A] sm:-bottom-1.5 sm:h-[3px]" aria-hidden="true" />
             </span>
           </h1>
 
-          <p className="mt-6 max-w-[500px] text-[17px] leading-7 text-ink-muted">
+          <p className="mt-3 max-w-[500px] text-[clamp(0.7rem,2.4vw,1.0625rem)] leading-[1.5] text-ink-muted sm:mt-6 sm:leading-7">
             <span className="font-semibold text-ink">ScriptSnap</span> helps creators turn rough ideas into engaging YouTube scripts — from the first hook to the final line.
           </p>
 
-          <div className="mt-8 flex flex-wrap gap-3">
-            <Button href="/auth/signup" icon={<ArrowRight size={17} aria-hidden="true" />} className="min-w-[210px]">
+          <div className="mt-4 flex flex-col gap-2 sm:mt-8 sm:flex-row sm:flex-wrap sm:gap-3">
+            <Button
+              href="/auth/signup"
+              icon={<ArrowRight aria-hidden="true" className="h-[13px] w-[13px] sm:h-[17px] sm:w-[17px]" />}
+              className="!min-h-[36px] px-3 text-[12px] sm:!min-h-[44px] sm:px-6 sm:text-[15px] sm:min-w-[210px]"
+            >
               Create your first script
             </Button>
-            <Button href="#how-it-works" variant="secondary" icon={<Play size={14} fill="currentColor" aria-hidden="true" />} className="min-w-[180px]">
+            <Button
+              href="#how-it-works"
+              variant="secondary"
+              icon={<Play fill="currentColor" aria-hidden="true" className="h-[11px] w-[11px] sm:h-[14px] sm:w-[14px]" />}
+              className="!min-h-[36px] px-3 text-[12px] sm:!min-h-[44px] sm:px-6 sm:text-[15px] sm:min-w-[180px]"
+            >
               See how it works
             </Button>
           </div>
 
-          <ul className="mt-7 flex flex-wrap gap-x-5 gap-y-2 text-[13px] text-ink-muted">
+          <ul className="mt-3 flex flex-col gap-1 text-[clamp(0.6rem,1.9vw,0.8125rem)] text-ink-muted sm:mt-7 sm:flex-row sm:flex-wrap sm:gap-x-5 sm:gap-y-2">
             {BENEFIT_PILLS.map((pill) => (
               <li key={pill} className="flex items-center gap-1.5">
                 <span className="text-sage" aria-hidden="true">✓</span>
@@ -43,7 +56,7 @@ export default function Hero() {
           </ul>
         </div>
 
-        <div className="animate-fade-up order-2" style={{ animationDelay: '80ms' }}>
+        <div className="animate-fade-up" style={{ animationDelay: '80ms' }}>
           <HeroIllustration />
         </div>
       </div>
