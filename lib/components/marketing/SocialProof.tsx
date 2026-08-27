@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import { ShieldCheck } from 'lucide-react'
 import { Reveal } from './Shared'
 
@@ -7,8 +8,11 @@ import { Reveal } from './Shared'
 // it doesn't have yet.
 export default function SocialProof() {
   return (
-    <section className="border-t border-[#E2DFD6] bg-[#F1EFE8] py-20 sm:py-28">
-      <div className="mx-auto max-w-[1380px] px-6 lg:px-10">
+    <section className="relative overflow-hidden border-t border-[#E2DFD6] bg-[#F1EFE8] py-20 sm:py-28">
+      <div className="pointer-events-none absolute -left-16 -top-16 h-[280px] w-[280px] opacity-40" aria-hidden="true">
+        <Image src="/section-bg-decoration.png" alt="" fill className="object-contain" />
+      </div>
+      <div className="relative mx-auto max-w-[1380px] px-6 lg:px-10">
         <Reveal className="flex flex-col items-center gap-8 rounded-[20px] border border-[#E0DDD3] bg-white p-8 text-center sm:p-12 md:flex-row md:text-left">
           <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-full bg-[#7A8B72] text-white">
             <span className="font-serif text-2xl italic">R</span>
