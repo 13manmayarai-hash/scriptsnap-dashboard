@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Menu, X, ChevronDown } from 'lucide-react'
 import { NAV_LINKS } from '@/lib/content/landingContent'
 import Button from '@/lib/components/ui/Button'
+import Logo from '@/lib/components/ui/Logo'
 
 export default function Navbar() {
   const [open, setOpen] = useState(false)
@@ -22,9 +23,8 @@ export default function Navbar() {
     <div className="sticky top-0 z-50 px-4 pt-4 sm:px-6 sm:pt-5 lg:px-10">
       <header className="mx-auto max-w-[1200px] rounded-2xl border border-warm-border bg-warm-surface/90 shadow-[0_4px_20px_rgba(40,39,33,0.05)] backdrop-blur-sm">
         <div className="flex h-[60px] items-center justify-between px-4 sm:px-6">
-          <Link href="/" aria-label="ScriptSnap home" className="flex items-center gap-2 font-serif text-[19px] font-semibold text-ink">
-            <span className="flex h-7 w-7 items-center justify-center rounded-[7px] bg-sage text-[13px] font-bold text-white" aria-hidden="true">S</span>
-            ScriptSnap
+          <Link href="/" aria-label="ScriptSnap home">
+            <Logo />
           </Link>
 
           <nav className="hidden items-center gap-8 lg:flex" aria-label="Primary">

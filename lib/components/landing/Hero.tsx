@@ -21,7 +21,7 @@ export default function Hero() {
           </h1>
 
           <p className="mt-6 max-w-[500px] text-[17px] leading-7 text-ink-muted">
-            ScriptSnap helps creators turn rough ideas into engaging YouTube scripts — from the first hook to the final line.
+            <span className="font-semibold text-ink">ScriptSnap</span> helps creators turn rough ideas into engaging YouTube scripts — from the first hook to the final line.
           </p>
 
           <div className="mt-8 flex flex-wrap gap-3">

@@ -5,6 +5,7 @@ import {
   HelpCircle, Share2, Link2, Image as ImageIcon,
   Home, FileText, Lightbulb, CalendarDays, LayoutTemplate, BarChart3,
 } from 'lucide-react'
+import Logo from '@/lib/components/ui/Logo'
 
 const SIDEBAR_ITEMS: Array<[typeof Home, string]> = [
   [Home, 'Dashboard'],
@@ -29,10 +30,7 @@ function WindowChrome() {
         <span className="h-2.5 w-2.5 rounded-full bg-[#F0B94B]" />
         <span className="h-2.5 w-2.5 rounded-full bg-[#5FB86A]" />
       </div>
-      <div className="flex items-center gap-1.5 text-[13px] font-semibold text-ink">
-        <span className="flex h-5 w-5 items-center justify-center rounded-[5px] bg-sage text-[10px] font-bold text-white" aria-hidden="true">S</span>
-        ScriptSnap
-      </div>
+      <Logo size={20} textClassName="text-[13px] font-semibold text-ink" />
       <HelpCircle size={16} className="absolute right-4 text-ink-faint" aria-hidden="true" />
     </div>
   )
