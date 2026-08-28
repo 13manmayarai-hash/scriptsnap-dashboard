@@ -80,7 +80,12 @@ function LibraryContent() {
         .limit(200)
 
       if (query.trim()) {
-        request = request.or(`topic.ilike.%${query.trim()}%,title.ilike.%${query.trim()}%`)
+        // Wrapped in double quotes (with any embedded quotes escaped) per
+        // PostgREST's filter grammar — otherwise a search term containing a
+        // comma or parenthesis breaks out of this clause and silently
+        // changes what the filter matches.
+        const safe = query.trim().replace(/"/g, '\\"')
+        request = request.or(`topic.ilike."%${safe}%",title.ilike."%${safe}%"`)
       }
 
       const { data } = await request

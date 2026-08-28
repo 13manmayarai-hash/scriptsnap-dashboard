@@ -96,6 +96,22 @@ export async function POST(request: NextRequest) {
     }
     userId = authUser.id
 
+    // Burst-abuse guard, independent of the monthly quota below — caps how
+    // fast a single user can trigger billable Anthropic calls, regardless
+    // of how much of their monthly allowance remains.
+    const { data: rateLimitOk } = await supabase.rpc('check_rate_limit', {
+      p_user_id: authUser.id,
+      p_route: 'generate-script',
+      p_max_requests: 5,
+      p_window_seconds: 60,
+    })
+    if (!rateLimitOk) {
+      return NextResponse.json(
+        { error: 'Too many requests — please wait a moment before generating another script.' },
+        { status: 429 }
+      )
+    }
+
     // Optional, never blocking — a YouTube API hiccup should never cost
     // the user a script they already reserved quota for. Reads a 24h
     // cache under the hood, so this is a cheap no-op for anyone who

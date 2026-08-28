@@ -36,6 +36,21 @@ export async function POST(
     }
     userId = user.id
 
+    // Burst-abuse guard — every branch below (including 'analyze', which
+    // isn't quota-metered) triggers a real Anthropic call.
+    const { data: rateLimitOk } = await supabase.rpc('check_rate_limit', {
+      p_user_id: user.id,
+      p_route: 'script-action',
+      p_max_requests: 10,
+      p_window_seconds: 60,
+    })
+    if (!rateLimitOk) {
+      return NextResponse.json(
+        { error: 'Too many requests — please wait a moment and try again.' },
+        { status: 429 }
+      )
+    }
+
     const { data: script } = await supabase
       .from('scripts')
       .select('id, script, user_id')

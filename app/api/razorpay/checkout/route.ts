@@ -44,6 +44,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
     }
 
+    // Burst-abuse guard — stops a scripted loop from spamming Razorpay
+    // order creation.
+    const { data: rateLimitOk } = await supabase.rpc('check_rate_limit', {
+      p_user_id: user.id,
+      p_route: 'razorpay-checkout',
+      p_max_requests: 10,
+      p_window_seconds: 60,
+    })
+    if (!rateLimitOk) {
+      return NextResponse.json(
+        { error: 'Too many requests — please wait a moment and try again.' },
+        { status: 429 }
+      )
+    }
+
     // RAZORPAY_KEY_ID deliberately has no NEXT_PUBLIC_ prefix even though
     // it ends up in the client's hands (via the JSON response below) — that
     // prefix makes Next.js statically inline the value into the compiled
