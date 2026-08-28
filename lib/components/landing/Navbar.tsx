@@ -20,7 +20,7 @@ export default function Navbar() {
   }, [open])
 
   return (
-    <div className="sticky top-0 z-50 px-4 pt-4 sm:px-6 sm:pt-5 lg:px-10">
+    <div className="sticky top-0 z-50 px-4 sm:px-6 lg:px-10">
       <header className="mx-auto max-w-[1200px] rounded-2xl border border-warm-border bg-warm-surface/90 shadow-[0_4px_20px_rgba(40,39,33,0.05)] backdrop-blur-sm">
         <div className="flex h-[60px] items-center justify-between px-4 sm:px-6">
           <Link href="/" aria-label="ScriptSnap home">
