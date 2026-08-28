@@ -32,7 +32,7 @@ export default function Hero() {
             <Button
               href="/auth/signup"
               icon={<ArrowRight aria-hidden="true" className="h-[13px] w-[13px] sm:h-[17px] sm:w-[17px]" />}
-              className="!min-h-[36px] !rounded-full px-3 text-[12px] sm:!min-h-[44px] sm:px-6 sm:text-[15px] sm:min-w-[210px]"
+              className="!min-h-[44px] !rounded-full px-3 text-[12px] sm:px-6 sm:text-[15px] sm:min-w-[210px]"
             >
               Create your first script
             </Button>
@@ -40,7 +40,7 @@ export default function Hero() {
               href="#how-it-works"
               variant="secondary"
               icon={<Play fill="currentColor" aria-hidden="true" className="h-[11px] w-[11px] sm:h-[14px] sm:w-[14px]" />}
-              className="!min-h-[36px] !rounded-full px-3 text-[12px] sm:!min-h-[44px] sm:px-6 sm:text-[15px] sm:min-w-[180px]"
+              className="!min-h-[44px] !rounded-full px-3 text-[12px] sm:px-6 sm:text-[15px] sm:min-w-[180px]"
             >
               See how it works
             </Button>
