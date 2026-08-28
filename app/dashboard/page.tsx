@@ -94,21 +94,6 @@ function greeting(): string {
   return 'Good evening'
 }
 
-function mostCommon(values: string[]): string | null {
-  if (values.length === 0) return null
-  const counts = new Map<string, number>()
-  for (const v of values) counts.set(v, (counts.get(v) || 0) + 1)
-  let best = values[0]
-  let bestCount = 0
-  for (const [value, count] of counts) {
-    if (count > bestCount) {
-      best = value
-      bestCount = count
-    }
-  }
-  return best
-}
-
 export default function DashboardPage() {
   return (
     <Suspense fallback={null}>
@@ -201,8 +186,14 @@ function DashboardHome() {
       setUpcoming(entries || [])
       setLoading(false)
 
-      const [{ data: allScripts }, { count: plannedCount }, { data: profile }] = await Promise.all([
-        supabase.from('scripts').select('word_count, tone, category').eq('user_id', authUser.id),
+      // Aggregated server-side (get_script_stats RPC) rather than pulling
+      // every script's word_count/tone/category to the client — a full
+      // row fetch here would grow with total scripts ever written, not
+      // just what's shown, and re-run on every dashboard load.
+      const [{ data: scriptStats }, { count: plannedCount }, { data: profile }] = await Promise.all([
+        supabase.rpc('get_script_stats', { p_user_id: authUser.id }).single() as unknown as Promise<{
+          data: { total_scripts: number; avg_word_count: number; top_tone: string | null; top_category: string | null } | null
+        }>,
         supabase
           .from('calendar_entries')
           .select('id', { count: 'exact', head: true })
@@ -211,16 +202,11 @@ function DashboardHome() {
         supabase.from('users').select('subscription_tier').eq('id', authUser.id).single(),
       ])
 
-      const allScriptRows = allScripts || []
-      const wordCounts = allScriptRows.map((s) => s.word_count).filter((w): w is number => typeof w === 'number')
-
       setStats({
-        totalScripts: allScriptRows.length,
-        avgWordCount: wordCounts.length
-          ? Math.round(wordCounts.reduce((a, b) => a + b, 0) / wordCounts.length)
-          : 0,
-        topTone: mostCommon(allScriptRows.map((s) => s.tone).filter(Boolean)),
-        topCategory: mostCommon(allScriptRows.map((s) => s.category).filter(Boolean)),
+        totalScripts: scriptStats?.total_scripts || 0,
+        avgWordCount: scriptStats?.avg_word_count || 0,
+        topTone: scriptStats?.top_tone || null,
+        topCategory: scriptStats?.top_category || null,
         contentPlanned: plannedCount || 0,
       })
       setStatsLoading(false)
