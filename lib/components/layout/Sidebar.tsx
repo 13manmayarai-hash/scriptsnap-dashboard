@@ -8,7 +8,6 @@ import {
   Lightbulb,
   Calendar,
   LayoutTemplate,
-  BarChart3,
   Settings as SettingsIcon,
   HelpCircle,
   Sparkles,
@@ -22,7 +21,6 @@ export const NAV_LINKS = [
   { href: '/dashboard/ideas', label: 'Ideas', icon: Lightbulb },
   { href: '/dashboard/calendar', label: 'Calendar', icon: Calendar },
   { href: '/dashboard/templates', label: 'Templates', icon: LayoutTemplate },
-  { href: '/dashboard/analytics', label: 'Analytics', icon: BarChart3 },
 ]
 
 export const ACCOUNT_LINKS = [

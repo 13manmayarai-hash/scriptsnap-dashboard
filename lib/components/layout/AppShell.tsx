@@ -14,7 +14,6 @@ const PAGE_META: Record<string, { title: string; breadcrumb?: string }> = {
   '/dashboard/ideas': { title: 'Ideas' },
   '/dashboard/calendar': { title: 'Calendar' },
   '/dashboard/templates': { title: 'Templates' },
-  '/dashboard/analytics': { title: 'Analytics' },
   '/dashboard/settings': { title: 'Settings' },
   '/dashboard/help': { title: 'Help' },
   '/dashboard/billing': { title: 'Usage & Billing', breadcrumb: 'Settings' },
