@@ -13,22 +13,22 @@ module.exports = {
         // page's approved design (see app/page.tsx, HANDOFF.md from the
         // original design pass). Replaces the earlier dark brand-black/
         // brand-yellow theme.
-        'warm-bg': '#F7F5F0',
+        'warm-bg': '#F8F3E8',
         'warm-surface': '#FFFFFF',
-        'warm-surface-alt': '#FBFAF6',
-        'warm-border': '#E0DDD3',
-        // Two-tone card fill used on the landing page's feature/pricing
-        // cards (Frontend_0.1 reference) — a visibly warmer/grayer tint
-        // than warm-surface-alt, so cards read as distinct from the page
-        // background without needing a border to separate them.
-        'warm-tint': '#EFE9DD',
-        'warm-tint-icon': '#E4DCC9',
-        ink: '#20201E',
-        'ink-muted': '#706E68',
-        'ink-faint': '#918D84',
-        sage: '#7A8B72',
-        'sage-hover': '#697B62',
-        'soft-accent': '#EFF1E8',
+        'warm-surface-alt': '#F1EADA',
+        'warm-border': '#E0D6BE',
+        // Two-tone card fill used on the landing page's feature/pricing/
+        // comparison cards — exact values from the approved design system.
+        'warm-tint': '#EFE8D6',
+        'warm-tint-icon': '#FFFFFF',
+        'warm-accent': '#C98B4F',
+        ink: '#211F17',
+        'ink-muted': '#4B4737',
+        'ink-faint': '#756E5C',
+        sage: '#5C6B49',
+        'sage-hover': '#45512F',
+        'soft-accent': '#DFE6D2',
+        'soft-accent-line': '#C9D4B6',
         error: '#B85C5C',
         'error-hover': '#9C4444',
         // Muted, warm accent set for dashboard stat tiles — same

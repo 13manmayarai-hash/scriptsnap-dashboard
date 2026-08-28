@@ -12,7 +12,7 @@ export default function HeroIllustration() {
   return (
     <div className="relative mx-auto w-full">
       <div
-        className="pointer-events-none absolute left-1/2 top-1/2 h-[108%] w-[108%] -translate-x-1/2 -translate-y-1/2 opacity-90 sm:h-[115%] sm:w-[115%] lg:h-[145%] lg:w-[145%]"
+        className="pointer-events-none absolute left-1/2 top-1/2 h-[108%] w-[108%] -translate-x-1/2 -translate-y-1/2 opacity-90 sm:h-[115%] sm:w-[115%] lg:h-[120%] lg:w-[120%] 2xl:h-[145%] 2xl:w-[145%]"
         aria-hidden="true"
       >
         <Image src="/hero-bg-decoration.png" alt="" fill className="object-contain" priority sizes="45vw" />

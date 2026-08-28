@@ -9,22 +9,22 @@ export default function VoiceComparison() {
       <div className="mx-auto max-w-[1240px] px-[18px] sm:px-6 lg:px-12">
         <div className="grid items-start gap-6 lg:grid-cols-[1.6fr_1fr]">
           <Reveal>
-            <div className="flex flex-col gap-4 rounded-2xl border border-warm-border bg-warm-surface-alt p-6 sm:flex-row sm:items-center sm:gap-4 sm:p-8">
-              <div className="flex-1 rounded-xl border border-warm-border bg-warm-surface p-5">
+            <div className="grid grid-cols-1 items-center gap-4 rounded-2xl border border-warm-border bg-warm-surface-alt p-6 sm:grid-cols-[1fr_44px_1fr] sm:p-8">
+              <div className="rounded-xl border border-warm-border bg-warm-surface p-5">
                 <p className="text-[13px] font-semibold text-ink">{VOICE_COMPARISON.generic.label}</p>
                 <p className="mt-2.5 text-[14.5px] leading-6 text-ink-muted">&ldquo;{VOICE_COMPARISON.generic.text}&rdquo;</p>
-                <span className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-error/10 px-2.5 py-1 text-[11px] font-semibold text-error">
+                <span className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-[#F4DEDA] px-2.5 py-1 text-[11px] font-semibold text-[#A24334]">
                   <X size={12} aria-hidden="true" />
                   {VOICE_COMPARISON.generic.badge}
                 </span>
               </div>
 
-              <ArrowRight size={22} className="mx-auto flex-shrink-0 rotate-90 text-ink-faint sm:mx-0 sm:rotate-0" aria-hidden="true" />
+              <ArrowRight size={22} className="mx-auto flex-shrink-0 rotate-90 text-ink-faint sm:rotate-0" aria-hidden="true" />
 
-              <div className="flex-1 rounded-xl border border-sage/30 bg-soft-accent p-5">
+              <div className="rounded-xl border border-sage/30 bg-soft-accent p-5">
                 <p className="text-[13px] font-semibold text-ink">{VOICE_COMPARISON.scriptsnap.label}</p>
                 <p className="mt-2.5 text-[14.5px] leading-6 text-ink">{VOICE_COMPARISON.scriptsnap.text}</p>
-                <span className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-sage/15 px-2.5 py-1 text-[11px] font-semibold text-sage-hover">
+                <span className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-[#D3E2C1] px-2.5 py-1 text-[11px] font-semibold text-sage-hover">
                   <Check size={12} aria-hidden="true" />
                   {VOICE_COMPARISON.scriptsnap.badge}
                 </span>
@@ -39,9 +39,8 @@ export default function VoiceComparison() {
                 {CREATOR_VOICE_TRAITS.map((trait) => (
                   <div key={trait.label} className="flex items-center justify-between text-[13px] text-ink-muted">
                     <span>{trait.label}</span>
-                    <span className="relative inline-flex h-2.5 w-14 items-center" aria-hidden="true">
-                      <span className="h-px w-full bg-warm-border" />
-                      <span className="absolute right-0 h-2.5 w-2.5 rounded-full bg-sage" />
+                    <span className="relative inline-block h-5 w-9 flex-shrink-0 rounded-full bg-sage" aria-hidden="true">
+                      <span className="absolute right-0.5 top-0.5 h-4 w-4 rounded-full bg-white shadow-sm" />
                     </span>
                   </div>
                 ))}

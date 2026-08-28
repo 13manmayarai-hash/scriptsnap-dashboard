@@ -1,16 +1,15 @@
 import type { Metadata, Viewport } from 'next'
-import { Fraunces, Inter } from 'next/font/google'
+import { Roboto_Slab, Inter } from 'next/font/google'
 import '../styles/globals.css'
 
-// Fraunces carries the editorial/warm personality on headlines; Inter
+// Roboto Slab carries the editorial/warm personality on headlines; Inter
 // stays quiet for UI and body copy. Loaded as CSS variables so both are
 // available through Tailwind's font-serif/font-sans everywhere in the
 // app, not just the landing page.
-const fraunces = Fraunces({
+const robotoSlab = Roboto_Slab({
   subsets: ['latin'],
   variable: '--font-fraunces',
-  style: ['normal', 'italic'],
-  weight: ['400', '500', '600'],
+  weight: ['600', '700', '800'],
   display: 'swap',
 })
 
@@ -54,7 +53,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" style={{ colorScheme: 'light' }} className={`${fraunces.variable} ${inter.variable}`}>
+    <html lang="en" style={{ colorScheme: 'light' }} className={`${robotoSlab.variable} ${inter.variable}`}>
       <body className="bg-warm-bg text-ink">
         {children}
       </body>

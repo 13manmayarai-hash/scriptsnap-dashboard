@@ -8,8 +8,8 @@ export default function FinalCta() {
     <section className="py-10 sm:py-14">
       <div className="mx-auto max-w-[1240px] px-[18px] sm:px-6 lg:px-12">
         <Reveal>
-          <div className="grid items-center gap-8 rounded-2xl border border-warm-border bg-warm-surface-alt p-6 sm:p-10 md:grid-cols-[0.85fr_1.15fr]">
-            <div className="relative mx-auto aspect-[773/665] w-full max-w-[340px]">
+          <div className="grid items-end gap-8 overflow-visible rounded-2xl border border-warm-border bg-warm-surface-alt p-6 sm:p-10 md:grid-cols-[0.85fr_1.15fr]">
+            <div className="relative mx-auto aspect-[773/665] w-full max-w-[340px] self-end md:mb-[-40px]">
               <Image
                 src="/final-cta-illustration.png"
                 alt="Illustration of a creator typing on a laptop at a desk with a notebook and coffee"

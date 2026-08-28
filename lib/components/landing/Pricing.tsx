@@ -26,10 +26,10 @@ export default function Pricing() {
           {PRICING_TIERS.map((tier, i) => (
             <Reveal key={tier.name} delayMs={i * 80}>
               <div
-                className={`relative flex h-full flex-col rounded-2xl border p-6 transition-colors ${
+                className={`relative flex h-full flex-col rounded-2xl p-6 transition-colors ${
                   tier.highlighted
-                    ? 'border-sage bg-warm-surface ring-2 ring-sage/50 lg:scale-[1.03]'
-                    : 'border-warm-border bg-warm-surface hover:border-sage/40'
+                    ? 'border-2 border-sage bg-warm-surface shadow-[0_16px_40px_rgba(40,39,33,0.10)] lg:-translate-y-2'
+                    : 'border border-warm-border bg-warm-surface hover:border-sage/40'
                 }`}
               >
                 {tier.badge && (

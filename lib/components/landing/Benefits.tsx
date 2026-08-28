@@ -18,8 +18,8 @@ export default function Benefits() {
             const Icon = ICONS[i]
             return (
               <Reveal key={benefit.title} delayMs={i * 80}>
-                <div className="h-full rounded-xl bg-warm-tint p-5">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-warm-tint-icon text-ink-muted" aria-hidden="true">
+                <div className="h-full rounded-xl border border-warm-border bg-warm-tint p-5">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full border border-ink/[0.06] bg-warm-tint-icon text-sage-hover" aria-hidden="true">
                     <Icon size={17} strokeWidth={1.8} />
                   </div>
                   <h3 className="mt-3.5 text-[15px] font-semibold text-ink">{benefit.title}</h3>
