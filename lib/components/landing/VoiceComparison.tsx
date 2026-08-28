@@ -9,7 +9,7 @@ export default function VoiceComparison() {
       <div className="mx-auto max-w-[1240px] px-[18px] sm:px-6 lg:px-12">
         <div className="grid items-start gap-6 lg:grid-cols-[1.6fr_1fr]">
           <Reveal>
-            <div className="grid grid-cols-1 items-center gap-4 rounded-2xl border border-warm-border bg-warm-surface-alt p-6 sm:grid-cols-[1fr_44px_1fr] sm:p-8">
+            <div className="grid grid-cols-1 items-center gap-4 rounded-[20px] border border-warm-border bg-warm-surface-alt p-6 sm:grid-cols-[1fr_44px_1fr] sm:p-8">
               <div className="rounded-xl border border-warm-border bg-warm-surface p-5">
                 <p className="text-[13px] font-semibold text-ink">{VOICE_COMPARISON.generic.label}</p>
                 <p className="mt-2.5 text-[14.5px] leading-6 text-ink-muted">&ldquo;{VOICE_COMPARISON.generic.text}&rdquo;</p>
@@ -33,7 +33,7 @@ export default function VoiceComparison() {
           </Reveal>
 
           <Reveal delayMs={90}>
-            <div className="h-full rounded-2xl border border-warm-border bg-warm-surface p-6">
+            <div className="h-full rounded-[20px] border border-warm-border bg-warm-surface p-6">
               <h3 className="text-[15px] font-semibold text-ink">Creator Voice</h3>
               <div className="mt-4 flex flex-col gap-3.5">
                 {CREATOR_VOICE_TRAITS.map((trait) => (
@@ -48,7 +48,7 @@ export default function VoiceComparison() {
               <p className="mt-4 text-[11.5px] leading-4 text-ink-faint">
                 A preview of the voice profile ScriptSnap builds from your own writing.
               </p>
-              <Link href="/dashboard/settings" className="btn-secondary mt-4 w-full text-[13px]">
+              <Link href="/dashboard/settings" className="btn-secondary mt-4 w-full !rounded-full text-[13px]">
                 Learn my writing style
               </Link>
             </div>

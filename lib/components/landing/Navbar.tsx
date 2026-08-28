@@ -42,7 +42,7 @@ export default function Navbar() {
 
           <div className="hidden items-center gap-5 lg:flex">
             <Link href="/auth/login" className="text-[14px] font-medium text-ink transition hover:text-sage">Log in</Link>
-            <Button href="/auth/signup" className="min-h-[42px] px-5 text-[14px]">Start creating →</Button>
+            <Button href="/auth/signup" className="min-h-[42px] !rounded-full px-5 text-[14px]">Start creating →</Button>
           </div>
 
           <button
@@ -77,7 +77,7 @@ export default function Navbar() {
               >
                 Log in
               </Link>
-              <Button href="/auth/signup" className="w-full">Start creating →</Button>
+              <Button href="/auth/signup" className="w-full !rounded-full">Start creating →</Button>
             </div>
           </div>
         )}

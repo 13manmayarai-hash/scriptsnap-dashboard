@@ -80,7 +80,7 @@ export default function ProductPreview() {
     <div
       ref={ref}
       aria-hidden="true"
-      className="overflow-hidden rounded-2xl border border-warm-border bg-warm-surface-alt shadow-[0_24px_60px_rgba(40,39,33,0.08)]"
+      className="overflow-hidden rounded-[22px] border border-warm-border bg-warm-surface-alt shadow-[0_24px_60px_rgba(40,39,33,0.08)]"
     >
       <WindowChrome />
       {/* Sidebar/editor/insights ratio (~17% / 58% / 22%) matches the

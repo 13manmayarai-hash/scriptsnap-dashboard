@@ -10,7 +10,7 @@ const priceFormatter = new Intl.NumberFormat('en-IN', {
   maximumFractionDigits: 0,
 })
 
-const paidCtaClasses = 'flex items-center justify-center min-h-[44px] w-full rounded-lg px-4 text-[14px] font-semibold transition-colors bg-sage text-white hover:bg-sage-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sage focus-visible:ring-offset-2 focus-visible:ring-offset-warm-bg disabled:opacity-50'
+const paidCtaClasses = 'flex items-center justify-center min-h-[44px] w-full rounded-full px-4 text-[14px] font-semibold transition-colors bg-sage text-white hover:bg-sage-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sage focus-visible:ring-offset-2 focus-visible:ring-offset-warm-bg disabled:opacity-50'
 
 export default function Pricing() {
   return (
@@ -26,22 +26,22 @@ export default function Pricing() {
           {PRICING_TIERS.map((tier, i) => (
             <Reveal key={tier.name} delayMs={i * 80}>
               <div
-                className={`relative flex h-full flex-col rounded-2xl p-6 transition-colors ${
+                className={`relative flex h-full flex-col rounded-[20px] p-6 transition-colors sm:p-[30px_28px] ${
                   tier.highlighted
                     ? 'border-2 border-sage bg-warm-surface shadow-[0_16px_40px_rgba(40,39,33,0.10)] lg:-translate-y-2'
-                    : 'border border-warm-border bg-warm-surface hover:border-sage/40'
+                    : 'border border-warm-border bg-warm-tint hover:border-sage/40'
                 }`}
               >
                 {tier.badge && (
-                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-sage px-3 py-1 text-[11px] font-semibold text-white">
+                  <span className="absolute -top-[13px] right-6 rounded-full bg-sage px-3.5 py-1 text-[11.5px] font-bold text-white">
                     {tier.badge}
                   </span>
                 )}
 
-                <h3 className="text-[16px] font-semibold text-ink">{tier.name}</h3>
-                <div className="mt-3 flex items-baseline gap-1">
-                  <span className="font-serif text-[34px] font-bold text-ink">{priceFormatter.format(tier.price)}</span>
-                  <span className="text-[13px] text-ink-muted">/ month</span>
+                <h3 className="text-[17px] font-semibold text-ink">{tier.name}</h3>
+                <div className="mt-3.5 flex items-baseline gap-1.5">
+                  <span className="text-[36px] font-bold leading-none text-ink">{priceFormatter.format(tier.price)}</span>
+                  <span className="text-[14px] font-medium text-ink-muted">/month</span>
                 </div>
 
                 <ul className="mt-5 flex-1 space-y-2.5">
@@ -55,7 +55,7 @@ export default function Pricing() {
 
                 <div className="mt-6">
                   {tier.tier === 'free' ? (
-                    <Link href="/auth/signup" className="btn-primary w-full text-[14px]">
+                    <Link href="/auth/signup" className="btn-primary w-full !rounded-full text-[14px]">
                       {tier.cta}
                     </Link>
                   ) : (

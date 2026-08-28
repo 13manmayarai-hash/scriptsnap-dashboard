@@ -18,12 +18,12 @@ export default function Benefits() {
             const Icon = ICONS[i]
             return (
               <Reveal key={benefit.title} delayMs={i * 80}>
-                <div className="h-full rounded-xl border border-warm-border bg-warm-tint p-5">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-full border border-ink/[0.06] bg-warm-tint-icon text-sage-hover" aria-hidden="true">
-                    <Icon size={17} strokeWidth={1.8} />
+                <div className="h-full rounded-[20px] border border-warm-border bg-warm-tint px-6 py-[30px] text-center">
+                  <div className="mx-auto flex h-[52px] w-[52px] items-center justify-center rounded-[14px] border border-ink/[0.06] bg-warm-tint-icon text-sage-hover" aria-hidden="true">
+                    <Icon size={22} strokeWidth={1.8} />
                   </div>
-                  <h3 className="mt-3.5 text-[15px] font-semibold text-ink">{benefit.title}</h3>
-                  <p className="mt-1 text-[13.5px] leading-5 text-ink-muted">{benefit.description}</p>
+                  <h3 className="mt-4 text-[16px] font-semibold text-ink">{benefit.title}</h3>
+                  <p className="mt-2 text-[14px] leading-[1.5] text-ink-muted">{benefit.description}</p>
                 </div>
               </Reveal>
             )

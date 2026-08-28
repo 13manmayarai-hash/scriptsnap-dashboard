@@ -14,7 +14,7 @@ export default function HowItWorks() {
           {HOW_IT_WORKS_STEPS.map((step, i) => (
             <div key={step.num} className="flex items-center gap-3 sm:contents">
               <Reveal delayMs={i * 90} className="relative flex flex-col items-center text-center sm:w-[220px]">
-                <div className="relative z-10 flex h-9 w-9 items-center justify-center rounded-full bg-sage text-[14px] font-semibold text-white">
+                <div className="relative z-10 flex h-11 w-11 items-center justify-center rounded-full bg-sage text-[17px] font-bold text-white">
                   {step.num}
                 </div>
                 <h3 className="mt-3 text-[15px] font-semibold text-ink">{step.title}</h3>
@@ -22,7 +22,7 @@ export default function HowItWorks() {
               </Reveal>
               {i < HOW_IT_WORKS_STEPS.length - 1 && (
                 <span
-                  className="mt-[18px] hidden h-0 max-w-[80px] flex-1 flex-shrink border-t-2 border-dashed border-warm-border sm:block"
+                  className="mt-[22px] hidden h-0 max-w-[80px] flex-1 flex-shrink border-t-2 border-dashed border-warm-border sm:block"
                   aria-hidden="true"
                 />
               )}

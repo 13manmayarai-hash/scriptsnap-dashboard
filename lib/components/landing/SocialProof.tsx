@@ -25,7 +25,7 @@ export default function SocialProof() {
         </Reveal>
 
         <Reveal>
-          <div className="flex flex-col items-center gap-6 rounded-2xl border border-warm-border bg-warm-surface p-6 sm:flex-row sm:items-center sm:justify-between sm:p-8">
+          <div className="flex flex-col items-center gap-6 rounded-[20px] border border-warm-border bg-warm-tint p-6 sm:flex-row sm:items-center sm:justify-between sm:p-9">
             <div className="flex items-center gap-4">
               <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-soft-accent text-[16px] font-semibold text-sage-hover" aria-hidden="true">
                 R
@@ -41,7 +41,7 @@ export default function SocialProof() {
               </div>
             </div>
 
-            <div className="flex items-center gap-3 rounded-xl border border-warm-border bg-warm-surface-alt px-5 py-3">
+            <div className="flex items-center gap-3 rounded-2xl bg-warm-surface px-5 py-4 shadow-[0_1px_2px_rgba(33,31,23,0.04),0_8px_24px_rgba(33,31,23,0.06)]">
               <Users size={18} className="text-sage" aria-hidden="true" />
               <div>
                 <p className="font-serif text-[22px] font-bold leading-none text-ink">
