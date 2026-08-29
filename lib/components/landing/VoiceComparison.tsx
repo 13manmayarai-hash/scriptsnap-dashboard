@@ -14,7 +14,9 @@ export default function VoiceComparison() {
                 <p className="text-[13px] font-semibold text-ink">{VOICE_COMPARISON.generic.label}</p>
                 <p className="mt-2 text-[14.5px] leading-[1.4] text-ink-muted">&ldquo;{VOICE_COMPARISON.generic.text}&rdquo;</p>
                 <span className="mt-2.5 inline-flex items-center gap-1.5 rounded-full bg-[#F4DEDA] px-2.5 py-1 text-[11px] font-semibold text-[#A24334]">
-                  <X size={12} aria-hidden="true" />
+                  <span className="flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full bg-[#A24334]" aria-hidden="true">
+                    <X size={10} className="text-white" strokeWidth={2.5} />
+                  </span>
                   {VOICE_COMPARISON.generic.badge}
                 </span>
               </div>
@@ -25,7 +27,9 @@ export default function VoiceComparison() {
                 <p className="text-[13px] font-semibold text-ink">{VOICE_COMPARISON.scriptsnap.label}</p>
                 <p className="mt-2 text-[14.5px] leading-[1.4] text-ink">{VOICE_COMPARISON.scriptsnap.text}</p>
                 <span className="mt-2.5 inline-flex items-center gap-1.5 rounded-full bg-[#D3E2C1] px-2.5 py-1 text-[11px] font-semibold text-sage-hover">
-                  <Check size={12} aria-hidden="true" />
+                  <span className="flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full bg-sage-hover" aria-hidden="true">
+                    <Check size={10} className="text-white" strokeWidth={2.5} />
+                  </span>
                   {VOICE_COMPARISON.scriptsnap.badge}
                 </span>
               </div>
@@ -48,7 +52,7 @@ export default function VoiceComparison() {
               </div>
               <Link
                 href="/dashboard/settings"
-                className="mt-3 flex min-h-[44px] w-full items-center justify-center rounded-full bg-soft-accent text-[13px] font-semibold text-sage-hover transition-colors hover:bg-soft-accent-line"
+                className="mt-3 inline-flex items-center justify-center rounded-full bg-soft-accent px-2.5 py-1 text-[11px] font-semibold text-sage-hover transition-colors hover:bg-soft-accent-line"
               >
                 Learn my writing style
               </Link>
