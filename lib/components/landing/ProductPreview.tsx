@@ -89,9 +89,9 @@ export default function ProductPreview() {
           editor/insights split switch on at the same breakpoint (md:) as
           Sidebar's own hidden/visible toggle, so there's no in-between
           width where a column silently collapses to zero. */}
-      <div className="grid grid-cols-1 items-start bg-[#F8F7F2] md:grid-cols-[0.32fr_1fr_0.42fr]">
+      <div className="grid grid-cols-1 bg-[#F8F7F2] md:grid-cols-[0.32fr_1fr_0.42fr]">
         <Sidebar />
-        <div className="grid grid-cols-1 items-start gap-4 p-4 sm:p-5 md:col-span-2 md:grid-cols-[1.55fr_1fr]">
+        <div className="grid grid-cols-1 gap-4 p-4 sm:p-5 md:col-span-2 md:grid-cols-[1.55fr_1fr]">
           <div className="overflow-hidden rounded-[9px] border border-warm-border bg-warm-surface">
             <div className="flex items-center justify-between border-b border-warm-border px-5 py-3">
               <h4 className="text-[15px] font-semibold text-ink">Script Editor</h4>
