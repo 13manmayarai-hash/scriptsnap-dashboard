@@ -89,9 +89,9 @@ export default function ProductPreview() {
           editor/insights split switch on at the same breakpoint (md:) as
           Sidebar's own hidden/visible toggle, so there's no in-between
           width where a column silently collapses to zero. */}
-      <div className="grid min-h-[480px] grid-cols-1 bg-[#F8F7F2] md:grid-cols-[0.32fr_1fr_0.42fr]">
+      <div className="grid grid-cols-1 items-start bg-[#F8F7F2] md:grid-cols-[0.32fr_1fr_0.42fr]">
         <Sidebar />
-        <div className="grid grid-cols-1 gap-4 p-4 sm:p-5 md:col-span-2 md:grid-cols-[1.55fr_1fr]">
+        <div className="grid grid-cols-1 items-start gap-4 p-4 sm:p-5 md:col-span-2 md:grid-cols-[1.55fr_1fr]">
           <div className="overflow-hidden rounded-[9px] border border-warm-border bg-warm-surface">
             <div className="flex items-center justify-between border-b border-warm-border px-5 py-3">
               <h4 className="text-[15px] font-semibold text-ink">Script Editor</h4>
@@ -118,17 +118,17 @@ export default function ProductPreview() {
               style={{ opacity: animated ? 1 : 0, transform: animated ? 'translateY(0)' : 'translateY(8px)' }}
             >
               <h5 className="text-[16px] font-semibold text-ink">Why this bamboo grows so fast</h5>
-              <div className="mt-4 space-y-4 text-[14px] leading-[1.7] text-ink">
+              <div className="mt-3 space-y-3 text-[14px] leading-[1.55] text-ink">
                 <div>
                   <span className="font-medium text-ink-muted">[HOOK]</span>
-                  <p className="mt-2">Most people think bamboo grows overnight. But here&rsquo;s what&rsquo;s actually happening&hellip;</p>
+                  <p className="mt-1.5">Most people think bamboo grows overnight. But here&rsquo;s what&rsquo;s actually happening&hellip;</p>
                 </div>
                 <div>
                   <span className="font-medium text-ink-muted">[BODY]</span>
-                  <p className="mt-2">Bamboo isn&rsquo;t just a plant &mdash; it&rsquo;s a growth machine. Some species can shoot up 60 cm in a single day&hellip;</p>
+                  <p className="mt-1.5">Bamboo isn&rsquo;t just a plant &mdash; it&rsquo;s a growth machine. Some species can shoot up 60 cm in a single day&hellip;</p>
                 </div>
               </div>
-              <div className="mt-6 text-[11px] text-ink-faint">1,246 words &middot; 3 min read</div>
+              <div className="mt-4 text-[11px] text-ink-faint">1,246 words &middot; 3 min read</div>
             </div>
           </div>
 
