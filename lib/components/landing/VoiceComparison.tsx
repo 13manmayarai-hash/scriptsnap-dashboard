@@ -33,7 +33,7 @@ export default function VoiceComparison() {
           </Reveal>
 
           <Reveal delayMs={90}>
-            <div className="h-full rounded-[20px] border border-warm-border bg-warm-surface-alt p-3 sm:p-5">
+            <div className="h-full rounded-[20px] border border-warm-border bg-warm-surface-alt p-1.5 sm:p-3.5">
               <h3 className="text-[15px] font-semibold text-ink">Creator Voice</h3>
               <div className="mt-3 flex flex-col gap-1">
                 {CREATOR_VOICE_TRAITS.map((trait) => (
