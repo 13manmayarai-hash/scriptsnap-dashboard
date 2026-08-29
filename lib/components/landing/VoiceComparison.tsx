@@ -46,9 +46,6 @@ export default function VoiceComparison() {
                   </div>
                 ))}
               </div>
-              <p className="mt-3 text-[11.5px] leading-4 text-ink-faint">
-                A preview of the voice profile ScriptSnap builds from your own writing.
-              </p>
               <Link
                 href="/dashboard/settings"
                 className="mt-3 flex min-h-[44px] w-full items-center justify-center rounded-full bg-soft-accent text-[13px] font-semibold text-sage-hover transition-colors hover:bg-soft-accent-line"
