@@ -16,8 +16,8 @@ export default function SocialProof() {
   }, [])
 
   return (
-    <section className="py-10 sm:py-14">
-      <div className="mx-auto max-w-[1240px] px-[18px] sm:px-6 lg:px-12">
+    <section className="py-5 sm:py-7">
+      <div className="mx-auto max-w-[1240px] px-[18px] sm:px-3 lg:px-6">
         <Reveal>
           <div className="flex flex-col items-center gap-4 rounded-[20px] border border-warm-border bg-warm-surface p-4 sm:flex-row sm:gap-5 sm:p-5">
             <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-soft-accent text-[16px] font-semibold text-sage-hover" aria-hidden="true">
