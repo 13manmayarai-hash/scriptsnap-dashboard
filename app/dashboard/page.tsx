@@ -54,6 +54,9 @@ interface Stats {
   contentPlanned: number
 }
 
+interface ToneStat { tone: string; avg_rating: number; times_used: number }
+interface KeywordStat { keyword: string; avg_rating: number }
+
 interface DailyPoint { date: string; views: number; watchTimeMinutes: number; subscribersNet: number }
 interface TopVideo { videoId: string; title: string; views: number; averageViewPercentage: number; thumbnailUrl?: string }
 interface CompetitorVideo { videoId: string; title: string; channelTitle: string; viewCount: number; thumbnailUrl?: string }
@@ -116,6 +119,8 @@ function DashboardHome() {
 
   const [stats, setStats] = useState<Stats | null>(null)
   const [statsLoading, setStatsLoading] = useState(true)
+  const [toneStats, setToneStats] = useState<ToneStat[]>([])
+  const [topKeywords, setTopKeywords] = useState<KeywordStat[]>([])
   const [tier, setTier] = useState<string>('free')
   const [perf, setPerf] = useState<PerformanceState | null>(null)
   const [perfLoading, setPerfLoading] = useState(false)
@@ -190,7 +195,7 @@ function DashboardHome() {
       // every script's word_count/tone/category to the client — a full
       // row fetch here would grow with total scripts ever written, not
       // just what's shown, and re-run on every dashboard load.
-      const [{ data: scriptStats }, { count: plannedCount }, { data: profile }] = await Promise.all([
+      const [{ data: scriptStats }, { count: plannedCount }, { data: profile }, { data: toneStatsData }, { data: topKeywordsData }] = await Promise.all([
         supabase.rpc('get_script_stats', { p_user_id: authUser.id }).single() as unknown as Promise<{
           data: { total_scripts: number; avg_word_count: number; top_tone: string | null; top_category: string | null } | null
         }>,
@@ -200,6 +205,8 @@ function DashboardHome() {
           .eq('user_id', authUser.id)
           .gte('scheduled_date', todayKey),
         supabase.from('users').select('subscription_tier').eq('id', authUser.id).single(),
+        supabase.rpc('get_tone_stats', { p_user_id: authUser.id }) as unknown as Promise<{ data: ToneStat[] | null }>,
+        supabase.rpc('get_top_keywords', { p_user_id: authUser.id, limit_count: 5 }) as unknown as Promise<{ data: KeywordStat[] | null }>,
       ])
 
       setStats({
@@ -209,6 +216,8 @@ function DashboardHome() {
         topCategory: scriptStats?.top_category || null,
         contentPlanned: plannedCount || 0,
       })
+      setToneStats(toneStatsData || [])
+      setTopKeywords(topKeywordsData || [])
       setStatsLoading(false)
 
       const userTier = profile?.subscription_tier || 'free'
@@ -437,6 +446,63 @@ function DashboardHome() {
                 <p className="mt-1 text-2xl font-bold heading-serif capitalize text-white">{value}</p>
               </div>
             ))}
+          </div>
+        )}
+
+        {!statsLoading && stats && stats.totalScripts > 0 && (
+          <div className="mb-8">
+            <div className="mb-2 flex items-center gap-2">
+              <ThumbsUp size={18} aria-hidden="true" className="text-sage" />
+              <h3 className="text-lg font-bold heading-serif">What resonates with your audience</h3>
+            </div>
+
+            {toneStats.length === 0 && topKeywords.length === 0 ? (
+              <p className="text-sm text-ink-muted">
+                Rate a script (👍/👎, on any script page) to start seeing which tones and keywords work best for you.
+              </p>
+            ) : (
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="card">
+                  <div className="mb-2 flex items-center gap-2 text-ink-muted">
+                    <Mic2 size={15} aria-hidden="true" />
+                    <h4 className="text-xs font-semibold uppercase tracking-wide">Best-performing tones</h4>
+                  </div>
+                  {toneStats.length === 0 ? (
+                    <p className="text-sm text-ink-muted">Not enough rated scripts yet.</p>
+                  ) : (
+                    <ul className="space-y-1.5">
+                      {toneStats.map((t) => (
+                        <li key={t.tone} className="flex items-center justify-between gap-2 text-sm text-ink">
+                          <span className="truncate capitalize">{t.tone}</span>
+                          <span className="flex-shrink-0 text-xs text-ink-faint">
+                            {Number(t.avg_rating).toFixed(1)}/5 · {t.times_used} rated
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+
+                <div className="card">
+                  <div className="mb-2 flex items-center gap-2 text-ink-muted">
+                    <Tags size={15} aria-hidden="true" />
+                    <h4 className="text-xs font-semibold uppercase tracking-wide">Top keywords</h4>
+                  </div>
+                  {topKeywords.length === 0 ? (
+                    <p className="text-sm text-ink-muted">Not enough rated scripts with keywords yet.</p>
+                  ) : (
+                    <ul className="space-y-1.5">
+                      {topKeywords.map((k) => (
+                        <li key={k.keyword} className="flex items-center justify-between gap-2 text-sm text-ink">
+                          <span className="truncate">{k.keyword}</span>
+                          <span className="flex-shrink-0 text-xs text-ink-faint">{Number(k.avg_rating).toFixed(1)}/5</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
