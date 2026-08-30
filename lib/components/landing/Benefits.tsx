@@ -6,7 +6,7 @@ const ICONS = [Play, User, Flame, Zap]
 
 export default function Benefits() {
   return (
-    <section className="py-10 sm:py-14">
+    <section className="py-5 sm:py-7">
       <div className="mx-auto max-w-[1240px] px-[18px] sm:px-6 lg:px-12">
         <Reveal className="mb-6 text-center">
           <h2 className="font-serif text-[clamp(1.6rem,3vw,2.1rem)] font-semibold tracking-[-0.01em] text-ink">
