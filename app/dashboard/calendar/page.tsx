@@ -53,7 +53,8 @@ export default function CalendarPage() {
         .from('calendar_entries')
         .select('id, title, scheduled_date, status, script_id')
         .eq('user_id', user.id)
-        .order('scheduled_date', { ascending: true }),
+        .order('scheduled_date', { ascending: true })
+        .limit(500),
       supabase
         .from('scripts')
         .select('id, title')
