@@ -9,7 +9,7 @@ export default function FinalCta() {
       <div className="mx-auto max-w-[1240px] px-[18px] sm:px-6 lg:px-12">
         <Reveal>
           <div className="flex flex-col items-center gap-6 overflow-visible rounded-[24px] border border-warm-border bg-warm-tint p-8 text-center sm:flex-row sm:items-end sm:justify-between sm:gap-8 sm:p-5 sm:pl-8 sm:pr-11 sm:text-left">
-            <div className="relative aspect-[773/665] w-[220px] flex-shrink-0 sm:mb-[-40px] sm:w-[180px] sm:self-end">
+            <div className="relative aspect-[773/665] w-[220px] flex-shrink-0 sm:mb-[-40px] sm:w-[180px] sm:self-end sm:top-[-48px]">
               <Image
                 src="/final-cta-illustration.png"
                 alt="Illustration of a creator typing on a laptop at a desk with a notebook and coffee"
@@ -18,7 +18,7 @@ export default function FinalCta() {
                 sizes="220px"
               />
             </div>
-            <div className="flex-1 sm:self-start sm:mt-2">
+            <div className="flex-1">
               <h2 className="font-serif text-[24px] font-semibold leading-[1.15] tracking-[-0.01em] text-ink">
                 Your next video starts with an idea.
               </h2>
