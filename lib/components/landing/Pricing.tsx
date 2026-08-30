@@ -14,7 +14,7 @@ const paidCtaClasses = 'flex items-center justify-center min-h-[44px] w-full rou
 
 export default function Pricing() {
   return (
-    <section id="pricing" className="scroll-mt-6 border-t border-warm-border bg-warm-bg py-10 sm:py-14">
+    <section id="pricing" className="scroll-mt-6 bg-warm-bg py-10 sm:py-14">
       <div className="mx-auto max-w-[1240px] px-[18px] sm:px-6 lg:px-12">
         <Reveal className="mb-7 text-center">
           <h2 className="font-serif text-[clamp(1.6rem,3vw,2.1rem)] font-semibold tracking-[-0.01em] text-ink">
