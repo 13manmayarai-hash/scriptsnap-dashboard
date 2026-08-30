@@ -18,7 +18,7 @@ export default function FinalCta() {
                 sizes="220px"
               />
             </div>
-            <div className="flex-1">
+            <div className="flex-1 sm:self-start sm:mt-2">
               <h2 className="font-serif text-[24px] font-semibold leading-[1.15] tracking-[-0.01em] text-ink">
                 Your next video starts with an idea.
               </h2>
