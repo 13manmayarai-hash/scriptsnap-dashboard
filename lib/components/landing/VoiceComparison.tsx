@@ -5,7 +5,7 @@ import Reveal from '@/lib/components/ui/Reveal'
 
 export default function VoiceComparison() {
   return (
-    <section className="pt-10 pb-4 sm:pt-14 sm:pb-6">
+    <section className="pt-5 pb-2 sm:pt-7 sm:pb-3">
       <div className="mx-auto max-w-[1240px] px-[18px] sm:px-6 lg:px-12">
         <div className="grid grid-cols-1 items-stretch gap-4 lg:grid-cols-[7fr_3fr]">
           <Reveal>
