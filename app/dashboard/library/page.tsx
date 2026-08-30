@@ -1,10 +1,10 @@
 'use client'
 
-import { Suspense, useEffect, useMemo, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { Trash2, Copy, Search, ShieldAlert, ArrowUpDown, Loader2 } from 'lucide-react'
+import { Trash2, Copy, Search, ShieldAlert, ArrowUpDown, Loader2, ChevronDown } from 'lucide-react'
 import LoadingState from '@/lib/components/ui/LoadingState'
 
 interface Script {
@@ -44,6 +44,8 @@ const SORTS: { key: SortKey; label: string }[] = [
   { key: 'longest', label: 'Longest first' },
 ]
 
+const PAGE_SIZE = 20
+
 export default function LibraryPage() {
   return (
     <Suspense fallback={null}>
@@ -58,50 +60,65 @@ function LibraryContent() {
   const query = searchParams.get('q') || ''
   const [scripts, setScripts] = useState<(Script & { title: string })[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [hasMore, setHasMore] = useState(false)
   const [searchInput, setSearchInput] = useState(query)
   const [sort, setSort] = useState<SortKey>('newest')
   const [busyId, setBusyId] = useState<string | null>(null)
 
+  const fetchPage = async (page: number) => {
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { rows: [] as (Script & { title: string })[], more: false }
+
+    let request = supabase
+      .from('scripts')
+      .select('id, topic, category, tone, title, created_at, word_count, guideline_passed')
+      .eq('user_id', user.id)
+      .range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE) // fetch one extra to detect "more"
+
+    if (sort === 'oldest') request = request.order('created_at', { ascending: true })
+    else if (sort === 'longest') request = request.order('word_count', { ascending: false })
+    else request = request.order('created_at', { ascending: false })
+
+    if (query.trim()) {
+      // Wrapped in double quotes (with any embedded quotes escaped) per
+      // PostgREST's filter grammar — otherwise a search term containing a
+      // comma or parenthesis breaks out of this clause and silently
+      // changes what the filter matches.
+      const safe = query.trim().replace(/"/g, '\\"')
+      request = request.or(`topic.ilike."%${safe}%",title.ilike."%${safe}%"`)
+    }
+
+    const { data } = await request
+    const rows = data || []
+    const more = rows.length > PAGE_SIZE
+    return { rows: more ? rows.slice(0, PAGE_SIZE) : rows, more }
+  }
+
   useEffect(() => {
+    let cancelled = false
     const load = async () => {
       setLoading(true)
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) {
-        setLoading(false)
-        return
-      }
-
-      let request = supabase
-        .from('scripts')
-        .select('id, topic, category, tone, title, created_at, word_count, guideline_passed')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(200)
-
-      if (query.trim()) {
-        // Wrapped in double quotes (with any embedded quotes escaped) per
-        // PostgREST's filter grammar — otherwise a search term containing a
-        // comma or parenthesis breaks out of this clause and silently
-        // changes what the filter matches.
-        const safe = query.trim().replace(/"/g, '\\"')
-        request = request.or(`topic.ilike."%${safe}%",title.ilike."%${safe}%"`)
-      }
-
-      const { data } = await request
-      setScripts(data || [])
+      const { rows, more } = await fetchPage(0)
+      if (cancelled) return
+      setScripts(rows)
+      setHasMore(more)
       setLoading(false)
     }
     load()
-  }, [query])
+    return () => { cancelled = true }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query, sort])
 
-  const sortedScripts = useMemo(() => {
-    const copy = [...scripts]
-    if (sort === 'oldest') copy.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
-    else if (sort === 'longest') copy.sort((a, b) => b.word_count - a.word_count)
-    else copy.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-    return copy
-  }, [scripts, sort])
+  const handleLoadMore = async () => {
+    setLoadingMore(true)
+    const page = Math.ceil(scripts.length / PAGE_SIZE)
+    const { rows, more } = await fetchPage(page)
+    setScripts((prev) => [...prev, ...rows])
+    setHasMore(more)
+    setLoadingMore(false)
+  }
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
@@ -138,7 +155,13 @@ function LibraryContent() {
         .select('id, topic, category, tone, title, created_at, word_count, guideline_passed')
         .single()
 
-      if (inserted) setScripts((prev) => [inserted, ...prev])
+      if (inserted) {
+        // Reload from page 0 rather than splicing the new row into the
+        // current list — the current sort/search may not put it first.
+        const { rows, more } = await fetchPage(0)
+        setScripts(rows)
+        setHasMore(more)
+      }
     } finally {
       setBusyId(null)
     }
@@ -177,7 +200,7 @@ function LibraryContent() {
 
       {loading ? (
         <LoadingState message="Loading scripts…" />
-      ) : sortedScripts.length === 0 ? (
+      ) : scripts.length === 0 ? (
         <div className="card py-16 text-center">
           <div className="mb-4 text-5xl text-ink-muted/70">📭</div>
           <h2 className="mb-2 text-2xl font-bold heading-serif">
@@ -192,7 +215,7 @@ function LibraryContent() {
         </div>
       ) : (
         <div className="space-y-2">
-          {sortedScripts.map((script) => (
+          {scripts.map((script) => (
             <div key={script.id} className="card flex items-center gap-3 py-3">
               <Link href={`/dashboard/scripts/${script.id}`} className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
@@ -235,6 +258,23 @@ function LibraryContent() {
               </div>
             </div>
           ))}
+
+          {hasMore && (
+            <div className="flex justify-center pt-2">
+              <button
+                onClick={handleLoadMore}
+                disabled={loadingMore}
+                className="btn-secondary flex items-center gap-2 px-6 text-sm"
+              >
+                {loadingMore ? (
+                  <Loader2 size={16} aria-hidden="true" className="animate-spin" />
+                ) : (
+                  <ChevronDown size={16} aria-hidden="true" />
+                )}
+                {loadingMore ? 'Loading…' : 'Load more'}
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>
