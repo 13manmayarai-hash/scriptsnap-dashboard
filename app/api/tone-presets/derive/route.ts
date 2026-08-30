@@ -35,6 +35,22 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
   }
 
+  // Burst-abuse guard — this triggers a real Anthropic call and isn't
+  // gated by quota (see comment above), so without this an authenticated
+  // user could loop it for unbounded billable spend.
+  const { data: rateLimitOk } = await supabase.rpc('check_rate_limit', {
+    p_user_id: user.id,
+    p_route: 'tone-presets-derive',
+    p_max_requests: 10,
+    p_window_seconds: 60,
+  })
+  if (!rateLimitOk) {
+    return NextResponse.json(
+      { error: 'Too many requests — please wait a moment and try again.' },
+      { status: 429 }
+    )
+  }
+
   const body = await request.json()
   const sampleText = typeof body?.sampleText === 'string' ? body.sampleText.trim() : ''
   if (!sampleText) {
