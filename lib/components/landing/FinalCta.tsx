@@ -8,7 +8,7 @@ export default function FinalCta() {
     <section className="py-5 sm:py-7">
       <div className="mx-auto max-w-[1240px] px-[18px] sm:px-6 lg:px-12">
         <Reveal>
-          <div className="flex flex-col items-center gap-4 overflow-visible rounded-[24px] border border-warm-border bg-warm-tint p-8 text-center md:flex-row md:items-end md:justify-between md:gap-12 md:pb-5 md:pt-0 md:pl-8 md:pr-11 md:text-left">
+          <div className="flex flex-col items-center gap-4 overflow-visible rounded-[24px] border border-warm-border bg-warm-tint p-8 text-center md:flex-row md:items-end md:justify-between md:gap-20 md:pb-5 md:pt-0 md:pl-8 md:pr-11 md:text-left">
             <div className="relative aspect-[773/665] w-[220px] flex-shrink-0 md:mb-[-40px] md:w-[180px] md:self-end">
               <Image
                 src="/final-cta-illustration.png"
