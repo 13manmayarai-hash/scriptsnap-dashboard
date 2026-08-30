@@ -132,7 +132,7 @@ export default function TonePresetsPage() {
             </div>
             <button
               onClick={() => handleDelete(preset.id)}
-              className="flex-shrink-0 p-2 bg-ink/5 hover:bg-ink/10 rounded transition-colors text-error"
+              className="flex min-h-[44px] min-w-[44px] flex-shrink-0 items-center justify-center rounded bg-ink/5 text-error transition-colors hover:bg-ink/10"
               aria-label={`Delete ${preset.name}`}
             >
               <Trash2 size={16} aria-hidden="true" />

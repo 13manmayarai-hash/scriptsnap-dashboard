@@ -95,7 +95,7 @@ export default function PricingPage() {
                     className="absolute inset-0"
                     style={{
                       background:
-                        'linear-gradient(135deg, rgba(59,130,246,0.32) 0%, rgba(59,130,246,0) 55%)',
+                        'linear-gradient(135deg, rgba(92,107,73,0.32) 0%, rgba(92,107,73,0) 55%)',
                     }}
                   />
                 </div>
