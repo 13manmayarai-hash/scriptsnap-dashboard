@@ -15,7 +15,7 @@ export default function FinalCta() {
                 alt="Illustration of a creator typing on a laptop at a desk with a notebook and coffee"
                 width={778}
                 height={670}
-                className="absolute bottom-0 left-0 h-auto w-[210px] max-w-none md:w-[205px]"
+                className="absolute bottom-0 left-0 h-auto w-[220px] max-w-none md:w-[215px]"
               />
             </div>
             <div className="flex-1">
