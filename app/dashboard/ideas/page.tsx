@@ -57,6 +57,7 @@ export default function IdeasPage() {
   const [error, setError] = useState('')
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editingText, setEditingText] = useState('')
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null)
 
   const [tier, setTier] = useState<string>('free')
   const [trending, setTrending] = useState<TrendingState | null>(null)
@@ -473,27 +474,69 @@ export default function IdeasPage() {
                       >
                         Convert <ArrowRight size={13} aria-hidden="true" />
                       </button>
-                      <button
-                        onClick={() => startEdit(idea)}
-                        className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded hover:bg-warm-surface-alt"
-                        aria-label={`Edit ${idea.text}`}
-                      >
-                        <Pencil size={15} aria-hidden="true" />
-                      </button>
-                      <button
-                        onClick={() => handleToggleUsed(idea)}
-                        className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded hover:bg-warm-surface-alt"
-                        aria-label={`Mark "${idea.text}" as used`}
-                      >
-                        <Check size={15} aria-hidden="true" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(idea.id)}
-                        className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded text-error hover:bg-error/10"
-                        aria-label={`Delete ${idea.text}`}
-                      >
-                        <Trash2 size={15} aria-hidden="true" />
-                      </button>
+
+                      {/* Full controls from sm: up, where there's room for all four */}
+                      <div className="hidden items-center gap-1 sm:flex">
+                        <button
+                          onClick={() => startEdit(idea)}
+                          className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded hover:bg-warm-surface-alt"
+                          aria-label={`Edit ${idea.text}`}
+                        >
+                          <Pencil size={15} aria-hidden="true" />
+                        </button>
+                        <button
+                          onClick={() => handleToggleUsed(idea)}
+                          className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded hover:bg-warm-surface-alt"
+                          aria-label={`Mark "${idea.text}" as used`}
+                        >
+                          <Check size={15} aria-hidden="true" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(idea.id)}
+                          className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded text-error hover:bg-error/10"
+                          aria-label={`Delete ${idea.text}`}
+                        >
+                          <Trash2 size={15} aria-hidden="true" />
+                        </button>
+                      </div>
+
+                      {/* Collapsed into a menu below sm: so the idea text isn't squeezed by four buttons */}
+                      <div className="relative sm:hidden">
+                        <button
+                          onClick={() => setOpenMenuId((v) => (v === idea.id ? null : idea.id))}
+                          aria-haspopup="menu"
+                          aria-expanded={openMenuId === idea.id}
+                          aria-label={`More actions for ${idea.text}`}
+                          className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded hover:bg-warm-surface-alt"
+                        >
+                          <MoreHorizontal size={15} aria-hidden="true" />
+                        </button>
+                        {openMenuId === idea.id && (
+                          <div role="menu" className="absolute right-0 z-10 mt-1 w-40 rounded-lg border border-warm-border bg-warm-surface p-1 shadow-lg">
+                            <button
+                              role="menuitem"
+                              onClick={() => { setOpenMenuId(null); startEdit(idea) }}
+                              className="flex min-h-[44px] w-full items-center gap-2 rounded px-3 text-left text-sm text-ink hover:bg-warm-surface-alt"
+                            >
+                              <Pencil size={14} aria-hidden="true" /> Edit
+                            </button>
+                            <button
+                              role="menuitem"
+                              onClick={() => { setOpenMenuId(null); handleToggleUsed(idea) }}
+                              className="flex min-h-[44px] w-full items-center gap-2 rounded px-3 text-left text-sm text-ink hover:bg-warm-surface-alt"
+                            >
+                              <Check size={14} aria-hidden="true" /> Mark as used
+                            </button>
+                            <button
+                              role="menuitem"
+                              onClick={() => { setOpenMenuId(null); handleDelete(idea.id) }}
+                              className="flex min-h-[44px] w-full items-center gap-2 rounded px-3 text-left text-sm text-error hover:bg-error/10"
+                            >
+                              <Trash2 size={14} aria-hidden="true" /> Delete
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}
