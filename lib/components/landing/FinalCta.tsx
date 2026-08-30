@@ -8,14 +8,14 @@ export default function FinalCta() {
     <section className="py-5 sm:py-7">
       <div className="mx-auto max-w-[1240px] px-[18px] sm:px-6 lg:px-12">
         <Reveal>
-          <div className="flex flex-col items-center gap-4 overflow-visible rounded-[24px] border border-warm-border bg-warm-tint p-8 text-center sm:flex-row sm:items-end sm:justify-between sm:gap-8 sm:pb-5 sm:pt-0 sm:pl-8 sm:pr-11 sm:text-left">
-            <div className="relative aspect-[773/665] w-[220px] flex-shrink-0 sm:mb-[-40px] sm:w-[180px] sm:self-end">
+          <div className="flex flex-col items-center gap-4 overflow-visible rounded-[24px] border border-warm-border bg-warm-tint p-8 text-center md:flex-row md:items-end md:justify-between md:gap-8 md:pb-5 md:pt-0 md:pl-8 md:pr-11 md:text-left">
+            <div className="relative aspect-[773/665] w-[220px] flex-shrink-0 md:mb-[-40px] md:w-[180px] md:self-end">
               <Image
                 src="/final-cta-illustration.png"
                 alt="Illustration of a creator typing on a laptop at a desk with a notebook and coffee"
                 width={773}
                 height={665}
-                className="absolute bottom-0 left-0 h-auto w-[220px] max-w-none sm:w-[205px]"
+                className="absolute bottom-0 left-0 h-auto w-[220px] max-w-none md:w-[205px]"
               />
             </div>
             <div className="flex-1">
@@ -26,7 +26,7 @@ export default function FinalCta() {
                 Turn it into a script people want to watch.
               </p>
             </div>
-            <div className="flex flex-shrink-0 flex-col items-center gap-2 sm:items-end">
+            <div className="flex flex-shrink-0 flex-col items-center gap-2 md:items-end">
               <Button href="/auth/signup" icon={<ArrowRight size={17} aria-hidden="true" />} className="!rounded-full">
                 Start creating
               </Button>
