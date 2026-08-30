@@ -8,7 +8,7 @@ export default function VoiceComparison() {
     <section className="pt-5 pb-2 sm:pt-7 sm:pb-3">
       <div className="mx-auto max-w-[1240px] px-[18px] sm:px-6 lg:px-12">
         <div className="grid grid-cols-1 items-stretch gap-4 lg:grid-cols-[7fr_3fr]">
-          <Reveal>
+          <Reveal className="min-w-0">
             <div className="grid h-full grid-cols-1 items-center gap-4 rounded-[20px] border border-warm-border bg-warm-surface-alt p-6 sm:grid-cols-[1fr_44px_1fr] sm:p-8">
               <div className="rounded-xl border border-warm-border bg-warm-surface p-4">
                 <p className="text-[13px] font-semibold text-ink">{VOICE_COMPARISON.generic.label}</p>
@@ -36,7 +36,7 @@ export default function VoiceComparison() {
             </div>
           </Reveal>
 
-          <Reveal delayMs={90}>
+          <Reveal className="min-w-0" delayMs={90}>
             <div className="h-full rounded-[20px] border border-warm-border bg-warm-surface-alt p-1.5 sm:p-3.5">
               <h3 className="text-[15px] font-semibold text-ink">Creator Voice</h3>
               <div className="mt-3 flex flex-col gap-1">
