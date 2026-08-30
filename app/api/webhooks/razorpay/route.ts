@@ -21,7 +21,17 @@ export async function POST(request: NextRequest) {
     shasum.update(body)
     const digest = shasum.digest('hex')
 
-    if (digest !== signature) {
+    // Constant-time comparison -- a plain !== leaks how many leading bytes
+    // matched via response timing, which an attacker could use to forge a
+    // valid signature byte-by-byte. Buffers must be equal length before
+    // timingSafeEqual will even compare them.
+    const digestBuffer = Buffer.from(digest, 'hex')
+    const signatureBuffer = Buffer.from(signature || '', 'hex')
+    const signaturesMatch =
+      digestBuffer.length === signatureBuffer.length &&
+      crypto.timingSafeEqual(digestBuffer, signatureBuffer)
+
+    if (!signaturesMatch) {
       return NextResponse.json(
         { error: 'Invalid signature' },
         { status: 400 }
