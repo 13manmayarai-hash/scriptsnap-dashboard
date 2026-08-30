@@ -8,8 +8,8 @@ export default function FinalCta() {
     <section className="py-5 sm:py-7">
       <div className="mx-auto max-w-[1240px] px-[18px] sm:px-6 lg:px-12">
         <Reveal>
-          <div className="flex flex-col items-center gap-6 overflow-visible rounded-[24px] border border-warm-border bg-warm-tint p-8 text-center sm:flex-row sm:items-end sm:justify-between sm:gap-8 sm:p-5 sm:pl-8 sm:pr-11 sm:text-left">
-            <div className="relative aspect-[773/665] w-[220px] flex-shrink-0 sm:mb-[-40px] sm:w-[180px] sm:self-end sm:top-[-48px]">
+          <div className="flex flex-col items-center gap-6 overflow-visible rounded-[24px] border border-warm-border bg-warm-tint p-8 text-center sm:flex-row sm:items-end sm:justify-between sm:gap-8 sm:pb-5 sm:pt-0 sm:pl-8 sm:pr-11 sm:text-left">
+            <div className="relative aspect-[773/665] w-[220px] flex-shrink-0 sm:mb-[-40px] sm:w-[180px] sm:self-end">
               <Image
                 src="/final-cta-illustration.png"
                 alt="Illustration of a creator typing on a laptop at a desk with a notebook and coffee"
