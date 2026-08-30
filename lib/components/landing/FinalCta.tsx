@@ -13,9 +13,9 @@ export default function FinalCta() {
               <Image
                 src="/final-cta-illustration.png"
                 alt="Illustration of a creator typing on a laptop at a desk with a notebook and coffee"
-                fill
-                className="object-contain"
-                sizes="220px"
+                width={773}
+                height={665}
+                className="absolute bottom-0 left-0 h-auto w-[220px] max-w-none sm:w-[205px]"
               />
             </div>
             <div className="flex-1">
