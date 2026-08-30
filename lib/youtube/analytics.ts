@@ -97,7 +97,11 @@ export async function getCreatorAnalyticsContext(
 
     await supabase
       .from('youtube_connections')
-      .update({ cached_analytics_summary: summary, analytics_cached_at: new Date().toISOString() })
+      .update({
+        cached_analytics_summary: summary,
+        analytics_cached_at: new Date().toISOString(),
+        youtube_channel_title: channelTitle,
+      })
       .eq('user_id', userId)
 
     return { summary, channelTitle }
