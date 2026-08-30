@@ -75,12 +75,12 @@ export default function PricingPage() {
           </p>
         </div>
 
-        {/* Pricing Cards — always 3 columns, even on phone screens, per request */}
-        <div className="grid grid-cols-3 gap-1.5 sm:gap-4 md:gap-8 mb-10 sm:mb-14 md:mb-20">
+        {/* Pricing Cards — stack on phones so the description and feature list stay visible; 3 columns from sm: up */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 sm:gap-4 md:gap-8 mb-10 sm:mb-14 md:mb-20">
           {tiers.map((tier, i) => (
             <div
               key={i}
-              className={`relative border rounded-lg transition-colors p-1.5 sm:p-4 md:p-6 ${
+              className={`relative border rounded-lg transition-colors p-5 sm:p-4 md:p-6 ${
                 tier.highlighted
                   ? 'bg-sage/10 border-sage ring-2 ring-sage md:scale-105'
                   : 'bg-warm-surface border-warm-border hover:border-sage/40'
@@ -102,41 +102,40 @@ export default function PricingPage() {
               )}
 
               {tier.highlighted && (
-                <div className="absolute -top-2 sm:-top-3 md:-top-4 left-1/2 z-10 -translate-x-1/2 w-[90%] sm:w-auto flex justify-center">
-                  <span className="bg-sage text-white px-1 py-0.5 sm:px-3 sm:py-1 md:px-4 md:py-1 rounded-full text-[9px] sm:text-xs md:text-sm font-bold text-center sm:whitespace-nowrap">
-                    <span className="sm:hidden">Popular</span>
-                    <span className="hidden sm:inline">Most Popular</span>
+                <div className="absolute -top-3 sm:-top-3 md:-top-4 left-1/2 z-10 -translate-x-1/2 flex justify-center">
+                  <span className="bg-sage text-white px-3 py-1 sm:px-3 sm:py-1 md:px-4 md:py-1 rounded-full text-xs sm:text-xs md:text-sm font-bold text-center whitespace-nowrap">
+                    Most Popular
                   </span>
                 </div>
               )}
 
-              <div className="relative z-10 mb-2 sm:mb-4 md:mb-8">
-                <h2 className="text-xs sm:text-lg md:text-3xl font-bold text-ink mb-0.5 md:mb-2">
+              <div className="relative z-10 mb-4 sm:mb-4 md:mb-8">
+                <h2 className="text-xl sm:text-lg md:text-3xl font-bold text-ink mb-1 md:mb-2">
                   {tier.name}
                 </h2>
-                <p className="hidden sm:block text-ink-muted text-[10px] md:text-sm leading-snug">
+                <p className="text-ink-muted text-sm md:text-sm leading-snug">
                   {tier.description}
                 </p>
               </div>
 
-              <div className="relative z-10 mb-2 sm:mb-4 md:mb-8">
-                <div className="flex items-baseline gap-0.5 md:gap-2">
-                  <span className="text-sm sm:text-xl md:text-5xl font-bold text-ink">
+              <div className="relative z-10 mb-4 sm:mb-4 md:mb-8">
+                <div className="flex items-baseline gap-1 md:gap-2">
+                  <span className="text-3xl sm:text-xl md:text-5xl font-bold text-ink">
                     {priceFormatter.format(tier.price)}
                   </span>
-                  <span className="text-xs md:text-base text-ink-muted">/mo</span>
+                  <span className="text-sm md:text-base text-ink-muted">/mo</span>
                 </div>
-                <p className="text-sage font-semibold text-xs md:text-base mt-0.5 md:mt-2">
+                <p className="text-sage font-semibold text-sm md:text-base mt-1 md:mt-2">
                   {tier.scripts} scripts/mo
                 </p>
               </div>
 
               {/* CTA Button - Different for Free vs Paid */}
-              <div className="relative z-10 mb-2 sm:mb-4 md:mb-8">
+              <div className="relative z-10 mb-4 sm:mb-4 md:mb-8">
                 {tier.price === 0 ? (
                   <Link
                     href="/auth/signup"
-                    className={`flex items-center justify-center min-h-[44px] w-full px-0.5 sm:px-2 md:px-4 rounded md:rounded-lg font-semibold text-center leading-tight text-xs md:text-base transition-colors ${
+                    className={`flex items-center justify-center min-h-[44px] w-full px-4 sm:px-2 md:px-4 rounded md:rounded-lg font-semibold text-center leading-tight text-sm md:text-base transition-colors ${
                       tier.highlighted
                         ? 'bg-sage text-white hover:bg-sage-hover'
                         : 'bg-ink/5 text-ink hover:bg-ink/10'
@@ -152,12 +151,12 @@ export default function PricingPage() {
                 )}
               </div>
 
-              <div className="relative z-10 hidden sm:block space-y-1 md:space-y-4">
+              <div className="relative z-10 space-y-2 sm:space-y-1 md:space-y-4">
                 {tier.features.map((feature, j) => (
-                  <div key={j} className="flex gap-1 md:gap-3">
-                    <Check size={12} aria-hidden="true" className="md:hidden text-sage flex-shrink-0 mt-0.5" />
+                  <div key={j} className="flex gap-2 sm:gap-1 md:gap-3">
+                    <Check size={16} aria-hidden="true" className="md:hidden text-sage flex-shrink-0 mt-0.5" />
                     <Check size={20} aria-hidden="true" className="hidden md:block text-sage flex-shrink-0" />
-                    <span className="text-ink/80 text-[10px] md:text-sm leading-snug">{feature}</span>
+                    <span className="text-ink/80 text-sm sm:text-[10px] md:text-sm leading-snug">{feature}</span>
                   </div>
                 ))}
               </div>
