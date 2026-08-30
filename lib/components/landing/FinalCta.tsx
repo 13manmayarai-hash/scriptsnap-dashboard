@@ -9,12 +9,12 @@ export default function FinalCta() {
       <div className="mx-auto max-w-[1240px] px-[18px] sm:px-6 lg:px-12">
         <Reveal>
           <div className="flex flex-col items-center gap-2 overflow-visible rounded-[24px] border border-warm-border bg-warm-tint p-8 text-center md:flex-row md:items-end md:justify-between md:gap-48 md:pb-5 md:pt-0 md:pl-8 md:pr-11 md:text-left">
-            <div className="relative aspect-[773/665] w-[220px] flex-shrink-0 md:mb-[-40px] md:w-[180px] md:self-end">
+            <div className="relative aspect-[778/670] w-[220px] flex-shrink-0 md:mb-[-40px] md:w-[180px] md:self-end">
               <Image
                 src="/final-cta-illustration.png"
                 alt="Illustration of a creator typing on a laptop at a desk with a notebook and coffee"
-                width={773}
-                height={665}
+                width={778}
+                height={670}
                 className="absolute bottom-0 left-0 h-auto w-[210px] max-w-none md:w-[205px]"
               />
             </div>
