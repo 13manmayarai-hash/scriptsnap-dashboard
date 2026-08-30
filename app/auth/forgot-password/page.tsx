@@ -41,7 +41,7 @@ export default function ForgotPasswordPage() {
           {sent ? (
             <div className="space-y-6">
               <div className="rounded-lg bg-soft-accent p-4 text-sm text-ink">
-                If an account exists for <span className="font-medium">{email}</span>, we've sent a
+                If an account exists for <span className="font-medium">{email}</span>, we&apos;ve sent a
                 password reset link to that address. Check your inbox (and spam folder).
               </div>
               <Link href="/auth/login" className="block text-center text-sm text-sage hover:underline">

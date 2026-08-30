@@ -70,7 +70,7 @@ const TEMPLATES = [
 export default function TemplatesPage() {
   const router = useRouter()
 
-  const useTemplate = (context: string) => {
+  const applyTemplate = (context: string) => {
     router.push(`/dashboard/new?context=${encodeURIComponent(context)}`)
   }
 
@@ -88,7 +88,7 @@ export default function TemplatesPage() {
         {TEMPLATES.map((template, i) => (
           <button
             key={template.name}
-            onClick={() => useTemplate(template.context)}
+            onClick={() => applyTemplate(template.context)}
             className="card-hover flex flex-col items-start text-left"
           >
             <div className={`mb-3 flex h-9 w-9 items-center justify-center rounded-lg ${ACCENT_COLORS[i % ACCENT_COLORS.length]}`}>

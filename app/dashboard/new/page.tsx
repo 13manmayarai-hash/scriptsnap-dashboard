@@ -202,7 +202,7 @@ function NewScriptForm() {
             </button>
           </div>
           <p className="mb-3 text-sm text-ink-muted">
-            Paste 2-3 of your past scripts, some captions, or just describe how you talk — we'll turn it into a tone preset instead of picking a generic default.
+            Paste 2-3 of your past scripts, some captions, or just describe how you talk — we&apos;ll turn it into a tone preset instead of picking a generic default.
           </p>
           <label htmlFor="voice-sample" className="sr-only">Sample of your writing</label>
           <textarea
@@ -238,7 +238,7 @@ function NewScriptForm() {
       {onboardingSuccessName && (
         <div className="card mb-6 flex items-center justify-between gap-3 border-sage/40 bg-sage/5">
           <p className="text-sm text-ink">
-            ✓ Added <span className="font-semibold">"{onboardingSuccessName}"</span> as your tone — selected below.
+            ✓ Added <span className="font-semibold">&quot;{onboardingSuccessName}&quot;</span> as your tone — selected below.
           </p>
           <button
             onClick={() => setOnboardingSuccessName('')}

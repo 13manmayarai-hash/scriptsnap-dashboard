@@ -271,7 +271,7 @@ export default function IdeasPage() {
         <Lightbulb size={24} aria-hidden="true" className="text-sage" />
         <h1 className="text-2xl font-bold heading-serif">Ideas</h1>
       </div>
-      <p className="mb-6 text-sm text-ink-muted">Quick thoughts, parked until you're ready to turn them into a script.</p>
+      <p className="mb-6 text-sm text-ink-muted">Quick thoughts, parked until you&apos;re ready to turn them into a script.</p>
 
       <form onSubmit={handleAdd} className="card mb-6">
         <label htmlFor="idea-text" className="sr-only">New idea</label>
@@ -312,7 +312,7 @@ export default function IdeasPage() {
             <h2 className="text-sm font-semibold text-ink-muted">TRENDING SUGGESTIONS</h2>
           </div>
           <p className="mb-3 text-sm text-ink-muted">
-            Connect your YouTube channel to see topic suggestions from your own videos and what's trending in your category.
+            Connect your YouTube channel to see topic suggestions from your own videos and what&apos;s trending in your category.
           </p>
           <a href="/api/youtube/connect" className="btn-primary inline-flex items-center gap-2 px-4 py-2 text-sm">
             <YouTubeIcon size={16} />

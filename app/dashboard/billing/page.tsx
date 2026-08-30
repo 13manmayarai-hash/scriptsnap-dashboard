@@ -50,7 +50,7 @@ export default function BillingPage() {
         <h1 className="text-2xl font-bold heading-serif">Usage &amp; Billing</h1>
       </div>
       <p className="text-ink-muted text-sm mb-6">
-        Your current plan, this month's usage, and where to change it.
+        Your current plan, this month&apos;s usage, and where to change it.
       </p>
 
       <div className="card mb-4">
@@ -87,7 +87,7 @@ export default function BillingPage() {
       </div>
 
       <div className="card">
-        <h2 className="text-sm font-semibold text-ink-muted mb-3">WHAT'S INCLUDED IN {TIER_NAMES[tier].toUpperCase()}</h2>
+        <h2 className="text-sm font-semibold text-ink-muted mb-3">WHAT&apos;S INCLUDED IN {TIER_NAMES[tier].toUpperCase()}</h2>
         <ul className="space-y-2">
           {TIER_BENEFITS[tier].map((benefit, i) => (
             <li key={i} className="flex gap-2 text-ink text-sm">

@@ -120,10 +120,10 @@ export default function VideoBreakdownPanel({
         <div className="border-t border-warm-border pt-3">
           <div className="mb-1 flex items-center gap-1.5">
             <Sparkles size={13} aria-hidden="true" className="text-sage" />
-            <h3 className="text-xs font-semibold uppercase tracking-wide text-ink-muted">Why it's likely performing</h3>
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-ink-muted">Why it&apos;s likely performing</h3>
           </div>
           <p className="text-sm text-ink">{d.performanceNote}</p>
-          <p className="mt-1 text-[10px] italic text-ink-faint">AI estimate — not YouTube's own analytics. Real CTR/retention are only visible to the video's own channel.</p>
+          <p className="mt-1 text-[10px] italic text-ink-faint">AI estimate — not YouTube&apos;s own analytics. Real CTR/retention are only visible to the video&apos;s own channel.</p>
         </div>
       )}
 

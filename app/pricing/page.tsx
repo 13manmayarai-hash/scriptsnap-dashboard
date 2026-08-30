@@ -191,10 +191,10 @@ export default function PricingPage() {
 
             <div className="card">
               <h3 className="text-lg font-semibold text-ink mb-2">
-                What if I don't use all my scripts?
+                What if I don&apos;t use all my scripts?
               </h3>
               <p className="text-ink-muted">
-                Your script count resets to your plan's monthly allowance on your billing date — unused scripts don't carry over.
+                Your script count resets to your plan&apos;s monthly allowance on your billing date — unused scripts don&apos;t carry over.
               </p>
             </div>
 
@@ -203,7 +203,7 @@ export default function PricingPage() {
                 Is there a discount for annual billing?
               </h3>
               <p className="text-ink-muted">
-                Coming soon! Sign up now and we'll notify you about it.
+                Coming soon! Sign up now and we&apos;ll notify you about it.
               </p>
             </div>
           </div>

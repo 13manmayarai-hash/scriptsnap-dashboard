@@ -295,9 +295,9 @@ function DashboardHome() {
               </div>
               <div>
                 <h3 className="mb-1 text-lg font-bold text-ink">
-                  Thank you! You're now on the {TIER_NAMES[displayTier]} plan
+                  Thank you! You&apos;re now on the {TIER_NAMES[displayTier]} plan
                 </h3>
-                <p className="mb-3 text-sm text-ink-muted">Here's what you get with {TIER_NAMES[displayTier]}:</p>
+                <p className="mb-3 text-sm text-ink-muted">Here&apos;s what you get with {TIER_NAMES[displayTier]}:</p>
                 <ul className="space-y-1.5">
                   {TIER_BENEFITS[displayTier].map((benefit, i) => (
                     <li key={i} className="flex gap-2 text-sm text-ink">
@@ -429,7 +429,7 @@ function DashboardHome() {
           <BarChart3 size={24} aria-hidden="true" className="text-sage" />
           <h2 className="text-2xl font-bold heading-serif">Analytics</h2>
         </div>
-        <p className="mb-6 text-sm text-ink-muted">A quick read on what you've made so far.</p>
+        <p className="mb-6 text-sm text-ink-muted">A quick read on what you&apos;ve made so far.</p>
 
         {statsLoading ? (
           <div className="card mb-8 py-16"><LoadingState message="Loading analytics…" compact /></div>
@@ -529,7 +529,7 @@ function DashboardHome() {
             {tier === 'pro' && perf && !perf.connected && (
               <div className="card">
                 <p className="mb-3 text-sm text-ink-muted">
-                  Connect your YouTube channel to see real views, watch time, retention, and an AI-written breakdown of what's working.
+                  Connect your YouTube channel to see real views, watch time, retention, and an AI-written breakdown of what&apos;s working.
                 </p>
                 <a href="/api/youtube/connect" className="btn-primary inline-flex items-center gap-2 px-4 py-2 text-sm">
                   <YouTubeIcon size={16} />
@@ -630,7 +630,7 @@ function DashboardHome() {
                     {perfData.competitorVideos.length > 0 && (
                       <div>
                         <h4 className="mb-1 text-xs font-semibold uppercase tracking-wide text-ink-muted">Popular in your niche right now</h4>
-                        <p className="mb-2 text-xs text-ink-faint">Other creators' videos close to your top video's topic — see what's working for them.</p>
+                        <p className="mb-2 text-xs text-ink-faint">Other creators&apos; videos close to your top video&apos;s topic — see what&apos;s working for them.</p>
                         <div className="space-y-2">
                           {perfData.competitorVideos.map((v) => (
                             <VideoRow

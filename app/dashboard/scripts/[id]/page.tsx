@@ -292,7 +292,7 @@ export default function ScriptWorkspacePage() {
     setPreviousText(null)
   }
 
-  const useAlternative = (alt: string) => {
+  const applyAlternative = (alt: string) => {
     setPreviousText(scriptText)
     // Replace the opening line/sentence with the chosen hook.
     const rest = scriptText.split(/\n/).slice(1).join('\n')
@@ -512,7 +512,7 @@ export default function ScriptWorkspacePage() {
               {alternatives.map((alt, i) => (
                 <div key={i} className="flex items-start justify-between gap-2 rounded border border-warm-border bg-warm-surface p-2">
                   <p className="flex-1 text-sm text-ink">{alt}</p>
-                  <button onClick={() => useAlternative(alt)} className="btn-secondary flex-shrink-0 px-2 py-1 text-xs">
+                  <button onClick={() => applyAlternative(alt)} className="btn-secondary flex-shrink-0 px-2 py-1 text-xs">
                     Use this
                   </button>
                 </div>
