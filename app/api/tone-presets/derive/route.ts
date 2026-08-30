@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import Anthropic from '@anthropic-ai/sdk'
+import { friendlyApiErrorMessage } from '@/lib/utils/apiErrors'
 
 const client = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -98,7 +99,7 @@ ${sampleText.slice(0, 4000)}`,
   } catch (error) {
     console.error('Tone derivation failed:', error)
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Could not analyze your voice' },
+      { error: friendlyApiErrorMessage(error) },
       { status: 500 }
     )
   }

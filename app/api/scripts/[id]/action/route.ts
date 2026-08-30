@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@/lib/supabase/server'
 import { TIER_SCRIPT_LIMITS, type SubscriptionTier } from '@/lib/tiers'
+import { friendlyApiErrorMessage } from '@/lib/utils/apiErrors'
 
 const client = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -186,7 +187,7 @@ ${text}`,
     }
     console.error('Script action failed:', error)
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'AI action failed' },
+      { error: friendlyApiErrorMessage(error) },
       { status: 500 }
     )
   }

@@ -5,6 +5,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import { TIER_SCRIPT_LIMITS, type SubscriptionTier } from '@/lib/tiers'
 import { getCreatorAnalyticsContext } from '@/lib/youtube/analytics'
 import { getRatingFeedback, formatRatingFeedback } from '@/lib/scripts/ratingFeedback'
+import { friendlyApiErrorMessage } from '@/lib/utils/apiErrors'
 
 const client = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -412,7 +413,7 @@ Generate the script now:`
     }
     console.error('Error:', error)
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Failed to generate script' },
+      { error: friendlyApiErrorMessage(error) },
       { status: 500 }
     )
   }
