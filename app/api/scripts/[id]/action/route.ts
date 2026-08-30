@@ -3,6 +3,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@/lib/supabase/server'
 import { TIER_SCRIPT_LIMITS, type SubscriptionTier } from '@/lib/tiers'
 import { friendlyApiErrorMessage } from '@/lib/utils/apiErrors'
+import * as Sentry from '@sentry/nextjs'
 
 const client = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -186,6 +187,7 @@ ${text}`,
       try { await supabase.rpc('decrement_script_usage', { p_user_id: userId, p_amount: quotaAmount }) } catch {}
     }
     console.error('Script action failed:', error)
+    Sentry.captureException(error)
     return NextResponse.json(
       { error: friendlyApiErrorMessage(error) },
       { status: 500 }

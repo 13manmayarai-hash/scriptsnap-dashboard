@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import crypto from 'crypto'
+import * as Sentry from '@sentry/nextjs'
 
 export async function POST(request: NextRequest) {
   // Initialize Supabase at request time, not build time
@@ -55,6 +56,7 @@ export async function POST(request: NextRequest) {
 
       if (error) {
         console.error('Webhook update error:', error)
+        Sentry.captureException(error)
         return NextResponse.json(
           { error: 'Database update failed' },
           { status: 500 }
@@ -73,12 +75,14 @@ export async function POST(request: NextRequest) {
 
       if (error) {
         console.error('Webhook pause error:', error)
+        Sentry.captureException(error)
       }
     }
 
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Webhook error:', error)
+    Sentry.captureException(error)
     return NextResponse.json(
       { error: 'Webhook processing failed' },
       { status: 500 }

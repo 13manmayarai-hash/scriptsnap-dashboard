@@ -1,3 +1,5 @@
+const { withSentryConfig } = require('@sentry/nextjs')
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
@@ -9,4 +11,12 @@ const nextConfig = {
   },
 }
 
-module.exports = nextConfig
+// Source map upload only runs when SENTRY_AUTH_TOKEN is set (Vercel/CI
+// without it just skip the upload step, config still builds fine).
+module.exports = withSentryConfig(nextConfig, {
+  org: 'man-maya-rai',
+  project: 'scriptsnap-dashboard',
+  silent: true,
+  widenClientFileUpload: true,
+  disableLogger: true,
+})

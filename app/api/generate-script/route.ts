@@ -6,6 +6,7 @@ import { TIER_SCRIPT_LIMITS, type SubscriptionTier } from '@/lib/tiers'
 import { getCreatorAnalyticsContext } from '@/lib/youtube/analytics'
 import { getRatingFeedback, formatRatingFeedback } from '@/lib/scripts/ratingFeedback'
 import { friendlyApiErrorMessage } from '@/lib/utils/apiErrors'
+import * as Sentry from '@sentry/nextjs'
 
 const client = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -59,6 +60,7 @@ ${script}`,
     // The guideline check is a value-add, not a gate — a failure here
     // should never block a script the creator already paid quota for.
     console.error('Guideline check failed:', err)
+    Sentry.captureException(err)
     return { passed: true, flags: [] }
   }
 }
@@ -122,6 +124,7 @@ export async function POST(request: NextRequest) {
       analyticsContext = await getCreatorAnalyticsContext(supabase, authUser.id)
     } catch (err) {
       console.error('YouTube analytics context failed:', err)
+      Sentry.captureException(err)
     }
 
     // Same never-blocking treatment for the creator's own thumbs up/down
@@ -132,6 +135,7 @@ export async function POST(request: NextRequest) {
       if (feedback) ratingFeedback = formatRatingFeedback(feedback)
     } catch (err) {
       console.error('Rating feedback context failed:', err)
+      Sentry.captureException(err)
     }
 
     const { data: profile } = await supabase
@@ -252,6 +256,7 @@ Generate the script now:`
         aiMetadata = JSON.parse(metadataMatch[1])
       } catch (err) {
         console.error('Metadata parse failed:', err)
+        Sentry.captureException(err)
       }
       scriptContent = scriptContent.slice(0, metadataMatch.index).trim()
     }
@@ -378,6 +383,7 @@ Generate the script now:`
       savedId = inserted?.id ?? null
     } catch (saveErr) {
       console.error('Failed to persist script:', saveErr)
+      Sentry.captureException(saveErr)
     }
 
     return NextResponse.json({
@@ -412,6 +418,7 @@ Generate the script now:`
       } catch {}
     }
     console.error('Error:', error)
+    Sentry.captureException(error)
     return NextResponse.json(
       { error: friendlyApiErrorMessage(error) },
       { status: 500 }

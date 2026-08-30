@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { getRazorpayErrorMessage } from '@/lib/razorpay'
+import * as Sentry from '@sentry/nextjs'
 
 const Razorpay = require('razorpay')
 
@@ -94,6 +95,7 @@ export async function POST(request: NextRequest) {
     })
   } catch (error) {
     console.error('Checkout error:', error)
+    Sentry.captureException(error)
     return NextResponse.json(
       { error: getRazorpayErrorMessage(error, 'Failed to create order') },
       { status: 500 }

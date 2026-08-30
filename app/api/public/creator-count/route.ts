@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import * as Sentry from '@sentry/nextjs'
 
 // Must stay dynamic — a static build would bake in whatever count existed
 // at build time and never update, defeating the point of a live counter.
@@ -23,6 +24,7 @@ export async function GET() {
     return NextResponse.json({ count: count ?? 0 })
   } catch (err) {
     console.error('creator-count failed:', err)
+    Sentry.captureException(err)
     return NextResponse.json({ count: null })
   }
 }

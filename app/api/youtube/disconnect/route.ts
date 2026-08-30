@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import * as Sentry from '@sentry/nextjs'
 
 export async function POST(request: NextRequest) {
   const cookieStore = cookies()
@@ -41,6 +42,7 @@ export async function POST(request: NextRequest) {
       })
     } catch (err) {
       console.error('YouTube token revoke failed:', err)
+      Sentry.captureException(err)
     }
   }
 

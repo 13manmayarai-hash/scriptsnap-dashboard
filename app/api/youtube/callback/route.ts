@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { google } from 'googleapis'
 import { getYouTubeOAuthClient } from '@/lib/youtube/oauth'
+import * as Sentry from '@sentry/nextjs'
 
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url)
@@ -93,6 +94,7 @@ export async function GET(request: NextRequest) {
     return response
   } catch (err) {
     console.error('YouTube connect callback failed:', err)
+    Sentry.captureException(err)
     return redirectTo('/dashboard/settings?youtube_error=connect_failed')
   }
 }

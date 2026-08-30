@@ -3,6 +3,7 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import crypto from 'crypto'
 import { getRazorpayErrorMessage } from '@/lib/razorpay'
+import * as Sentry from '@sentry/nextjs'
 
 const Razorpay = require('razorpay')
 
@@ -104,6 +105,10 @@ export async function POST(request: NextRequest) {
 
     if (updateError || !updatedRows || updatedRows.length === 0) {
       console.error('Database error:', updateError ?? 'No matching user row was updated')
+      Sentry.captureMessage('Razorpay verify: tier update matched 0 rows or failed', {
+        level: 'error',
+        extra: { userId: user.id, tier, updateError },
+      })
       return NextResponse.json(
         { error: 'Failed to update subscription' },
         { status: 500 }
@@ -113,6 +118,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Verify error:', error)
+    Sentry.captureException(error)
     return NextResponse.json(
       { error: getRazorpayErrorMessage(error, 'Verification failed') },
       { status: 500 }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { createClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
+import * as Sentry from '@sentry/nextjs'
 
 export async function POST(request: NextRequest) {
   const cookieStore = cookies()
@@ -44,6 +45,7 @@ export async function POST(request: NextRequest) {
       })
     } catch (err) {
       console.error('YouTube token revoke failed during account deletion:', err)
+      Sentry.captureException(err)
     }
   }
 
@@ -57,6 +59,7 @@ export async function POST(request: NextRequest) {
   const { error: deleteError } = await serviceClient.auth.admin.deleteUser(user.id)
   if (deleteError) {
     console.error('Account deletion failed:', deleteError)
+    Sentry.captureException(deleteError)
     return NextResponse.json({ error: 'Failed to delete account' }, { status: 500 })
   }
 
@@ -68,6 +71,7 @@ export async function POST(request: NextRequest) {
     await supabase.auth.signOut()
   } catch (err) {
     console.error('Sign-out after account deletion failed:', err)
+    Sentry.captureException(err)
   }
   return response
 }

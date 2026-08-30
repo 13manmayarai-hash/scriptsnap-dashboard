@@ -3,6 +3,7 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import Anthropic from '@anthropic-ai/sdk'
 import { friendlyApiErrorMessage } from '@/lib/utils/apiErrors'
+import * as Sentry from '@sentry/nextjs'
 
 const client = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -98,6 +99,7 @@ ${sampleText.slice(0, 4000)}`,
     return NextResponse.json({ preset: inserted })
   } catch (error) {
     console.error('Tone derivation failed:', error)
+    Sentry.captureException(error)
     return NextResponse.json(
       { error: friendlyApiErrorMessage(error) },
       { status: 500 }
