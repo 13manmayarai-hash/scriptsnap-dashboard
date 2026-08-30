@@ -270,7 +270,14 @@ export default function CalendarPage() {
           <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-muted">Upcoming content</h2>
           {upcoming.length === 0 ? (
             <div className="card py-8 text-center">
-              <p className="text-sm text-ink-muted">Nothing planned yet.</p>
+              <p className="mb-3 text-sm text-ink-muted">Nothing planned yet.</p>
+              <button
+                onClick={() => setShowForm(true)}
+                className="btn-primary inline-flex items-center gap-1.5 px-4 py-2 text-xs"
+              >
+                <Plus size={14} aria-hidden="true" />
+                Plan your first post
+              </button>
             </div>
           ) : (
             <div className="space-y-2">

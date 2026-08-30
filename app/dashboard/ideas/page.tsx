@@ -444,7 +444,11 @@ export default function IdeasPage() {
 
       {ideas.length === 0 ? (
         <div className="card py-12 text-center">
-          <p className="text-sm text-ink-muted">No ideas yet — jot one down above.</p>
+          <div className="mb-3 text-4xl text-ink-muted/70">💡</div>
+          <h2 className="mb-2 text-lg font-bold heading-serif">No ideas yet</h2>
+          <p className="text-sm text-ink-muted">
+            Jot one down above — even a half-formed thought is enough to come back to later.
+          </p>
         </div>
       ) : (
         <div className="space-y-6">
