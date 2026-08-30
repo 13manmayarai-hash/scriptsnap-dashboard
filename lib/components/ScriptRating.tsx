@@ -4,7 +4,15 @@ import { useEffect, useState } from 'react'
 import { ThumbsUp, ThumbsDown } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 
-export default function ScriptRating({ scriptId }: { scriptId: string }) {
+export default function ScriptRating({
+  scriptId,
+  tone,
+  keywords,
+}: {
+  scriptId: string
+  tone?: string
+  keywords?: string[]
+}) {
   const [rating, setRating] = useState<number | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -60,6 +68,28 @@ export default function ScriptRating({ scriptId }: { scriptId: string }) {
         { script_id: scriptId, user_id: user.id, rating: next },
         { onConflict: 'script_id,user_id' }
       )
+
+      // Feed this rating into the tone/keyword performance stats shown on
+      // the dashboard. Mapped onto a 1-5 scale (thumbs up -> 5, thumbs
+      // down -> 1) so avg_rating reads like a familiar rating rather than
+      // a raw +1/-1 sum. Best-effort only -- there's no corresponding
+      // decrement RPC, so un-rating (next === null, handled above) can't
+      // retroactively undo its contribution to the running average.
+      const scaledRating = next === 1 ? 5 : 1
+      if (tone) {
+        await supabase.rpc('update_tone_stats', {
+          p_user_id: user.id,
+          p_tone: tone,
+          p_rating: scaledRating,
+        })
+      }
+      if (keywords && keywords.length > 0) {
+        await supabase.rpc('update_keyword_stats', {
+          p_user_id: user.id,
+          p_keywords: keywords,
+          p_rating: scaledRating,
+        })
+      }
     }
 
     setRating(next)

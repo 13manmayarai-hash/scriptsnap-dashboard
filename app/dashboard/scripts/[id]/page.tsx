@@ -34,6 +34,7 @@ interface Script {
   topic: string
   category: string
   tone: string
+  keywords: string[] | null
   language: string
   duration: number
   script: string
@@ -103,7 +104,7 @@ export default function ScriptWorkspacePage() {
       const { data } = await supabase
         .from('scripts')
         .select(
-          'id, topic, category, tone, language, duration, script, title, description, hashtags, pinned_comment, alternative_titles, key_points, guideline_passed, guideline_flags, used_analytics_context, analytics_strategy_note, published_video_id, created_at'
+          'id, topic, category, tone, keywords, language, duration, script, title, description, hashtags, pinned_comment, alternative_titles, key_points, guideline_passed, guideline_flags, used_analytics_context, analytics_strategy_note, published_video_id, created_at'
         )
         .eq('id', params.id)
         .eq('user_id', user.id)
@@ -402,7 +403,7 @@ export default function ScriptWorkspacePage() {
             </p>
           </div>
           <div className="flex flex-shrink-0 items-center gap-1">
-            <ScriptRating scriptId={script.id} />
+            <ScriptRating scriptId={script.id} tone={script.tone} keywords={script.keywords ?? undefined} />
             <button
               onClick={() => handleCopy(script.title, 'main-title')}
               className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded transition-colors hover:bg-warm-surface-alt"
