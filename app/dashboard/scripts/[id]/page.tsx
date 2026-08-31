@@ -403,6 +403,13 @@ export default function ScriptWorkspacePage() {
             </p>
           </div>
           <div className="flex flex-shrink-0 items-center gap-1">
+            <Link
+              href={`/dashboard/scripts/${script.id}/analyze`}
+              className="btn-secondary flex items-center gap-1.5 px-3 py-2 text-xs"
+            >
+              <TrendingUp size={14} aria-hidden="true" />
+              Analyze
+            </Link>
             <ScriptRating scriptId={script.id} tone={script.tone} keywords={script.keywords ?? undefined} />
             <button
               onClick={() => handleCopy(script.title, 'main-title')}
