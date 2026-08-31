@@ -8,7 +8,8 @@ import ErrorMessage from '@/lib/components/ui/ErrorMessage'
 import LoadingState from '@/lib/components/ui/LoadingState'
 import { buildScriptBlocks, formatSeconds } from '@/lib/youtube/scriptBlocks'
 import type { RetentionDip } from '@/lib/youtube/retention'
-import { ArrowLeft, Mic2, TrendingDown, Loader2, Sparkles, AlertTriangle, Download } from 'lucide-react'
+import type { StructuredScript } from '@/lib/scripts/structuredScript'
+import { ArrowLeft, Mic2, TrendingDown, Loader2, Sparkles, AlertTriangle, Download, Clapperboard, Zap } from 'lucide-react'
 
 interface Script {
   id: string
@@ -47,6 +48,10 @@ export default function ScriptAnalyzePage() {
   const [retention, setRetention] = useState<RetentionState | null>(null)
   const [retentionLoading, setRetentionLoading] = useState(false)
 
+  const [structured, setStructured] = useState<StructuredScript | null>(null)
+  const [structuredLoading, setStructuredLoading] = useState(false)
+  const [structuredError, setStructuredError] = useState('')
+
   useEffect(() => {
     const load = async () => {
       const supabase = createClient()
@@ -68,6 +73,10 @@ export default function ScriptAnalyzePage() {
       const voiceRes = await fetch('/api/voice-profile/analyze', { credentials: 'same-origin' })
       const voiceData = await voiceRes.json()
       setVoiceProfile(voiceData.profile)
+
+      const structuredRes = await fetch(`/api/scripts/${scriptId}/structured`, { credentials: 'same-origin' })
+      const structuredData = await structuredRes.json()
+      setStructured(structuredData.structured || null)
 
       if (scriptData?.published_video_id && (profile?.subscription_tier || 'free') === 'pro') {
         setRetentionLoading(true)
@@ -104,6 +113,24 @@ export default function ScriptAnalyzePage() {
       setVoiceError('Failed to generate VoicePrint — try again in a moment.')
     } finally {
       setVoiceLoading(false)
+    }
+  }
+
+  const handleGenerateStructured = async () => {
+    setStructuredLoading(true)
+    setStructuredError('')
+    try {
+      const res = await fetch(`/api/scripts/${scriptId}/structured`, { method: 'POST', credentials: 'same-origin' })
+      const data = await res.json()
+      if (!res.ok) {
+        setStructuredError(data.error || 'Failed to generate structured script')
+        return
+      }
+      setStructured(data.structured)
+    } catch {
+      setStructuredError('Failed to generate structured script — try again in a moment.')
+    } finally {
+      setStructuredLoading(false)
     }
   }
 
@@ -289,6 +316,54 @@ export default function ScriptAnalyzePage() {
             </div>
           ))}
         </div>
+      </div>
+
+      {/* Structured shooting script (Feature C) */}
+      <div className="card mt-6">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <Clapperboard size={18} aria-hidden="true" className="text-sage" />
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-muted">Structured shooting script</h2>
+          </div>
+          <button
+            onClick={handleGenerateStructured}
+            disabled={structuredLoading}
+            className="btn-secondary flex items-center gap-1.5 px-3 py-2 text-xs"
+          >
+            {structuredLoading ? <Loader2 size={14} aria-hidden="true" className="animate-spin" /> : <Clapperboard size={14} aria-hidden="true" />}
+            {structuredLoading ? 'Generating…' : structured ? 'Regenerate' : 'Generate structured script'}
+          </button>
+        </div>
+        {structuredError && <ErrorMessage className="mb-3">{structuredError}</ErrorMessage>}
+        {!structured && !structuredLoading && (
+          <p className="text-sm text-ink-muted">
+            Break this script into a dual-column shooting script — audio, visuals, and SFX per block, timed to your own
+            measured speaking pace{dips.length > 0 ? ", with Pattern Interrupt blocks placed at this video's known retention drop-offs" : ''}.
+          </p>
+        )}
+        {structured && (
+          <>
+            <p className="mb-3 text-xs text-ink-faint">Target pace: {structured.targetWPM} WPM</p>
+            <div className="space-y-3">
+              {structured.blocks.map((block, i) => (
+                <div key={i} className="flex flex-col gap-2 rounded-lg border border-ink/10 p-3 md:flex-row md:items-start">
+                  <div className="flex-shrink-0 font-mono text-xs text-ink-faint md:w-14">{block.timestamp}</div>
+                  <div className="flex-1">
+                    <p className="text-sm text-ink">{block.audio}</p>
+                    {block.visual && <p className="mt-1 text-xs text-ink-muted">🎥 {block.visual}</p>}
+                    {block.sfx && <p className="mt-0.5 text-xs text-ink-muted">🔊 {block.sfx}</p>}
+                  </div>
+                  {block.retentionTrigger && (
+                    <span className="inline-flex flex-shrink-0 items-center gap-1 rounded-full bg-error/10 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-error">
+                      <Zap size={10} aria-hidden="true" />
+                      {block.retentionTrigger}
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </>
+        )}
       </div>
     </div>
   )
