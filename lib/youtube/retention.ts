@@ -28,7 +28,7 @@ export interface RetentionAnalysis {
 const DIP_THRESHOLD = 0.08
 const WINDOW_BUCKETS = 3
 
-function parseDurationSeconds(iso?: string | null): number | null {
+export function parseDurationSeconds(iso?: string | null): number | null {
   if (!iso) return null
   const match = iso.match(/^PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$/)
   if (!match) return null
@@ -38,7 +38,7 @@ function parseDurationSeconds(iso?: string | null): number | null {
   return hours * 3600 + minutes * 60 + seconds
 }
 
-function detectDips(curve: RetentionPoint[], durationSeconds: number | null): RetentionDip[] {
+export function detectDips(curve: RetentionPoint[], durationSeconds: number | null): RetentionDip[] {
   const dips: RetentionDip[] = []
   let i = 0
   while (i < curve.length - 1) {

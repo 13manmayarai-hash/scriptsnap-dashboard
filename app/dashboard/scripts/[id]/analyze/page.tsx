@@ -6,7 +6,9 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import ErrorMessage from '@/lib/components/ui/ErrorMessage'
 import LoadingState from '@/lib/components/ui/LoadingState'
-import { ArrowLeft, Mic2, TrendingDown, Loader2, Sparkles, AlertTriangle } from 'lucide-react'
+import { buildScriptBlocks, formatSeconds } from '@/lib/youtube/scriptBlocks'
+import type { RetentionDip } from '@/lib/youtube/retention'
+import { ArrowLeft, Mic2, TrendingDown, Loader2, Sparkles, AlertTriangle, Download } from 'lucide-react'
 
 interface Script {
   id: string
@@ -21,12 +23,6 @@ interface VoiceProfile {
   last_analyzed_at: string
 }
 
-interface RetentionDip {
-  startSeconds: number
-  endSeconds: number
-  dropPercent: number
-}
-
 interface RetentionState {
   tierAllowed: boolean
   connected?: boolean
@@ -34,51 +30,6 @@ interface RetentionState {
   dips?: RetentionDip[]
   videoDurationSeconds?: number | null
   error?: string
-}
-
-interface ScriptBlock {
-  text: string
-  dip?: RetentionDip
-}
-
-function formatSeconds(s: number): string {
-  const m = Math.floor(s / 60)
-  const sec = s % 60
-  return m > 0 ? `${m}:${String(sec).padStart(2, '0')}` : `${sec}s`
-}
-
-// Approximates where in the script text a retention dip "happened" by
-// assuming roughly even pacing across the video's duration — there's no
-// forced word-to-timestamp alignment here (that needs real audio
-// transcription/alignment, out of scope), so this is a labeled estimate,
-// not a claim of precision.
-function buildScriptBlocks(scriptText: string, dips: RetentionDip[], videoDurationSeconds: number | null | undefined): ScriptBlock[] {
-  const words = scriptText.split(/\s+/).filter(Boolean)
-  const totalWords = words.length
-
-  if (!videoDurationSeconds || dips.length === 0 || totalWords === 0) {
-    return [{ text: scriptText }]
-  }
-
-  const cuts = dips
-    .map((dip) => ({
-      wordIndex: Math.min(totalWords, Math.max(1, Math.round((dip.startSeconds / videoDurationSeconds) * totalWords))),
-      dip,
-    }))
-    .sort((a, b) => a.wordIndex - b.wordIndex)
-
-  const blocks: ScriptBlock[] = []
-  let cursor = 0
-  for (const { wordIndex, dip } of cuts) {
-    if (wordIndex > cursor) {
-      blocks.push({ text: words.slice(cursor, wordIndex).join(' '), dip })
-      cursor = wordIndex
-    }
-  }
-  if (cursor < totalWords) {
-    blocks.push({ text: words.slice(cursor).join(' ') })
-  }
-  return blocks.length > 0 ? blocks : [{ text: scriptText }]
 }
 
 export default function ScriptAnalyzePage() {
@@ -154,6 +105,61 @@ export default function ScriptAnalyzePage() {
     } finally {
       setVoiceLoading(false)
     }
+  }
+
+  const handleExportPdf = async () => {
+    if (!script) return
+    const { jsPDF } = await import('jspdf')
+    const doc = new jsPDF({ unit: 'pt', format: 'a4' })
+    const pageWidth = doc.internal.pageSize.getWidth()
+    const pageHeight = doc.internal.pageSize.getHeight()
+    const margin = 48
+    const maxWidth = pageWidth - margin * 2
+    let y = margin
+
+    const ensureSpace = (lineHeight: number) => {
+      if (y + lineHeight > pageHeight - margin) {
+        doc.addPage()
+        y = margin
+      }
+    }
+    const writeParagraph = (text: string, fontSize: number, lineHeight: number, style: 'normal' | 'bold' = 'normal') => {
+      doc.setFont('helvetica', style)
+      doc.setFontSize(fontSize)
+      const lines = doc.splitTextToSize(text, maxWidth) as string[]
+      for (const line of lines) {
+        ensureSpace(lineHeight)
+        doc.text(line, margin, y)
+        y += lineHeight
+      }
+    }
+
+    writeParagraph(`Analysis: ${script.title}`, 18, 22, 'bold')
+    y += 8
+
+    if (voiceProfile) {
+      writeParagraph('VOICEPRINT', 11, 16, 'bold')
+      writeParagraph(voiceProfile.analysis_summary, 10, 14)
+      y += 10
+    }
+
+    writeParagraph('SCRIPT', 11, 16, 'bold')
+    const exportBlocks = buildScriptBlocks(script.script, retention?.dips || [], retention?.videoDurationSeconds)
+    for (const block of exportBlocks) {
+      writeParagraph(block.text, 11, 15)
+      if (block.dip) {
+        y += 2
+        writeParagraph(
+          `[Retention drop ~${formatSeconds(block.dip.startSeconds)}–${formatSeconds(block.dip.endSeconds)} into the video, -${block.dip.dropPercent}% watch ratio]`,
+          9,
+          12,
+          'bold'
+        )
+        y += 6
+      }
+    }
+
+    doc.save(`${script.title.replace(/\s+/g, '_')}_analysis.pdf`)
   }
 
   if (loading) {
@@ -257,7 +263,13 @@ export default function ScriptAnalyzePage() {
 
       {/* Dual-column: script segments left, retention annotations right */}
       <div className="card">
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-ink-muted">SCRIPT</h2>
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-muted">SCRIPT</h2>
+          <button onClick={handleExportPdf} className="btn-secondary flex items-center gap-1.5 px-3 py-2 text-xs">
+            <Download size={14} aria-hidden="true" />
+            Download analysis PDF
+          </button>
+        </div>
         <div className="space-y-4">
           {blocks.map((block, i) => (
             <div key={i} className="flex flex-col gap-3 md:flex-row md:items-stretch">
