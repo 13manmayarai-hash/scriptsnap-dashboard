@@ -14,6 +14,7 @@ export interface StructuredBlock {
   visual: string
   sfx: string
   retentionTrigger: string | null
+  brollPrompt: string | null
 }
 
 export interface StructuredScript {
@@ -30,7 +31,9 @@ export interface StructuredScript {
 // for timestamps, and — when the script is linked to a video with known
 // retention drop-offs — asks Claude to place a "Pattern Interrupt" block at
 // each one, reusing the same never-throw retention lookup already used on
-// the analyze page.
+// the analyze page. Each block also carries an optional ready-to-paste
+// generative B-roll prompt, produced in the same call rather than a second
+// billable Claude request.
 export async function generateStructuredScript(
   supabase: SupabaseClient,
   userId: string,
@@ -73,12 +76,13 @@ SCRIPT:
 ${script.script}
 
 Break the script above into sequential shooting blocks. Respond with ONLY a single valid JSON object (no markdown, no code fences, no commentary) with this exact shape:
-{"title": "short production title for this shoot", "targetWPM": ${targetWPM}, "blocks": [{"timestamp": "0:00", "audio": "the spoken line(s) for this block, verbatim from the script", "visual": "what's on screen — shot type, action, on-screen text", "sfx": "sound effect or music cue, or empty string if none", "retentionTrigger": "a short label like 'Pattern Interrupt' if this block exists specifically to counter a known retention drop-off, else null"}]}
+{"title": "short production title for this shoot", "targetWPM": ${targetWPM}, "blocks": [{"timestamp": "0:00", "audio": "the spoken line(s) for this block, verbatim from the script", "visual": "what's on screen — shot type, action, on-screen text", "sfx": "sound effect or music cue, or empty string if none", "retentionTrigger": "a short label like 'Pattern Interrupt' if this block exists specifically to counter a known retention drop-off, else null", "brollPrompt": "a ready-to-paste image/video generation prompt (for tools like Midjourney, Runway, or Sora) describing this block's visual in concrete, literal, tool-agnostic terms — camera angle, subject, lighting, style — or null if the visual is on-screen text/graphics with no real footage to generate"}]}
 
 Rules:
 - Every word of the original script must appear in exactly one block's "audio" field, in order — don't summarize or drop any of it.
 - Timestamps are cumulative, computed from ${targetWPM} words/minute pacing, formatted "M:SS".
-- Only set "retentionTrigger" on a block when it corresponds to a listed drop-off point above; otherwise use null.`
+- Only set "retentionTrigger" on a block when it corresponds to a listed drop-off point above; otherwise use null.
+- "brollPrompt" should stand alone (no reference to "this video" or the script) since it's pasted directly into a separate generative tool.`
 
   const message = await client.messages.create({
     model: 'claude-sonnet-5',
@@ -113,6 +117,7 @@ Rules:
       visual: typeof b.visual === 'string' ? b.visual : '',
       sfx: typeof b.sfx === 'string' ? b.sfx : '',
       retentionTrigger: typeof b.retentionTrigger === 'string' && b.retentionTrigger.trim() ? b.retentionTrigger.trim() : null,
+      brollPrompt: typeof b.brollPrompt === 'string' && b.brollPrompt.trim() ? b.brollPrompt.trim() : null,
     }))
 
   if (blocks.length === 0) {

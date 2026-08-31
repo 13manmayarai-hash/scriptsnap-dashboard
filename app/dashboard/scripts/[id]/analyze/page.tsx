@@ -9,10 +9,19 @@ import LoadingState from '@/lib/components/ui/LoadingState'
 import { buildScriptBlocks, formatSeconds } from '@/lib/youtube/scriptBlocks'
 import type { RetentionDip } from '@/lib/youtube/retention'
 import type { StructuredScript } from '@/lib/scripts/structuredScript'
+import type { RepurposePlatform, RepurposedVariant } from '@/lib/scripts/repurpose'
+import type { SponsorSlotSuggestion } from '@/lib/scripts/sponsorSlot'
 import TeleprompterModal from '@/lib/components/ui/TeleprompterModal'
-import { ArrowLeft, Mic2, TrendingDown, Loader2, Sparkles, AlertTriangle, Download, Clapperboard, Zap, MonitorPlay } from 'lucide-react'
+import { ArrowLeft, Mic2, TrendingDown, Loader2, Sparkles, AlertTriangle, Download, Clapperboard, Zap, MonitorPlay, Copy, Check, Image as ImageIcon, Repeat, Banknote } from 'lucide-react'
 
 const DEFAULT_WPM = 140
+
+const PLATFORM_LABELS: Record<RepurposePlatform, string> = {
+  youtube_shorts: 'YouTube Shorts',
+  tiktok: 'TikTok',
+  instagram_reels: 'Instagram Reels',
+}
+const ALL_PLATFORMS = Object.keys(PLATFORM_LABELS) as RepurposePlatform[]
 
 interface Script {
   id: string
@@ -57,6 +66,20 @@ export default function ScriptAnalyzePage() {
 
   const [showTeleprompter, setShowTeleprompter] = useState(false)
 
+  const [copiedBrollIndex, setCopiedBrollIndex] = useState<number | null>(null)
+
+  const [variants, setVariants] = useState<RepurposedVariant[] | null>(null)
+  const [variantsLoading, setVariantsLoading] = useState(false)
+  const [variantsError, setVariantsError] = useState('')
+  const [selectedPlatforms, setSelectedPlatforms] = useState<RepurposePlatform[]>(ALL_PLATFORMS)
+  const [copiedVariantIndex, setCopiedVariantIndex] = useState<number | null>(null)
+
+  const [sponsorBrief, setSponsorBrief] = useState('')
+  const [sponsorSuggestion, setSponsorSuggestion] = useState<SponsorSlotSuggestion | null>(null)
+  const [sponsorLoading, setSponsorLoading] = useState(false)
+  const [sponsorError, setSponsorError] = useState('')
+  const [sponsorCopied, setSponsorCopied] = useState(false)
+
   useEffect(() => {
     const load = async () => {
       const supabase = createClient()
@@ -82,6 +105,10 @@ export default function ScriptAnalyzePage() {
       const structuredRes = await fetch(`/api/scripts/${scriptId}/structured`, { credentials: 'same-origin' })
       const structuredData = await structuredRes.json()
       setStructured(structuredData.structured || null)
+
+      const variantsRes = await fetch(`/api/scripts/${scriptId}/repurpose`, { credentials: 'same-origin' })
+      const variantsData = await variantsRes.json()
+      setVariants(variantsData.variants || null)
 
       if (scriptData?.published_video_id && (profile?.subscription_tier || 'free') === 'pro') {
         setRetentionLoading(true)
@@ -136,6 +163,100 @@ export default function ScriptAnalyzePage() {
       setStructuredError('Failed to generate structured script — try again in a moment.')
     } finally {
       setStructuredLoading(false)
+    }
+  }
+
+  const handleTogglePlatform = (platform: RepurposePlatform) => {
+    setSelectedPlatforms((prev) =>
+      prev.includes(platform) ? prev.filter((p) => p !== platform) : [...prev, platform]
+    )
+  }
+
+  const handleGenerateVariants = async () => {
+    if (selectedPlatforms.length === 0) {
+      setVariantsError('Select at least one platform.')
+      return
+    }
+    setVariantsLoading(true)
+    setVariantsError('')
+    try {
+      const res = await fetch(`/api/scripts/${scriptId}/repurpose`, {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ platforms: selectedPlatforms }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setVariantsError(data.error || 'Failed to generate repurposed variants')
+        return
+      }
+      setVariants(data.variants)
+    } catch {
+      setVariantsError('Failed to generate repurposed variants — try again in a moment.')
+    } finally {
+      setVariantsLoading(false)
+    }
+  }
+
+  const handleCopyVariant = async (text: string, index: number) => {
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopiedVariantIndex(index)
+      setTimeout(() => setCopiedVariantIndex((prev) => (prev === index ? null : prev)), 2000)
+    } catch {
+      // Clipboard access can fail silently in some embedded browser
+      // contexts — the script text is still visible on-screen to select manually.
+    }
+  }
+
+  const handleFindSponsorSlot = async () => {
+    if (!sponsorBrief.trim()) {
+      setSponsorError('Describe the sponsor first.')
+      return
+    }
+    setSponsorLoading(true)
+    setSponsorError('')
+    try {
+      const res = await fetch(`/api/scripts/${scriptId}/sponsor-slot`, {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sponsorBrief }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setSponsorError(data.error || 'Failed to find a sponsor slot')
+        return
+      }
+      setSponsorSuggestion(data.suggestion)
+    } catch {
+      setSponsorError('Failed to find a sponsor slot — try again in a moment.')
+    } finally {
+      setSponsorLoading(false)
+    }
+  }
+
+  const handleCopySponsorRead = async () => {
+    if (!sponsorSuggestion) return
+    try {
+      await navigator.clipboard.writeText(sponsorSuggestion.sponsorRead)
+      setSponsorCopied(true)
+      setTimeout(() => setSponsorCopied(false), 2000)
+    } catch {
+      // Clipboard access can fail silently in some embedded browser
+      // contexts — the read text is still visible on-screen to select manually.
+    }
+  }
+
+  const handleCopyBroll = async (prompt: string, index: number) => {
+    try {
+      await navigator.clipboard.writeText(prompt)
+      setCopiedBrollIndex(index)
+      setTimeout(() => setCopiedBrollIndex((prev) => (prev === index ? null : prev)), 2000)
+    } catch {
+      // Clipboard access can fail silently in some embedded browser
+      // contexts — the prompt text is still visible on-screen to select manually.
     }
   }
 
@@ -370,6 +491,19 @@ export default function ScriptAnalyzePage() {
                     <p className="text-sm text-ink">{block.audio}</p>
                     {block.visual && <p className="mt-1 text-xs text-ink-muted">🎥 {block.visual}</p>}
                     {block.sfx && <p className="mt-0.5 text-xs text-ink-muted">🔊 {block.sfx}</p>}
+                    {block.brollPrompt && (
+                      <div className="mt-2 flex items-start gap-2 rounded-md bg-ink/5 p-2">
+                        <ImageIcon size={12} aria-hidden="true" className="mt-0.5 flex-shrink-0 text-ink-faint" />
+                        <p className="flex-1 font-mono text-[11px] leading-relaxed text-ink-muted">{block.brollPrompt}</p>
+                        <button
+                          onClick={() => handleCopyBroll(block.brollPrompt!, i)}
+                          className="flex-shrink-0 rounded p-1 text-ink-faint hover:bg-ink/10 hover:text-ink"
+                          aria-label="Copy B-roll prompt"
+                        >
+                          {copiedBrollIndex === i ? <Check size={12} aria-hidden="true" /> : <Copy size={12} aria-hidden="true" />}
+                        </button>
+                      </div>
+                    )}
                   </div>
                   {block.retentionTrigger && (
                     <span className="inline-flex flex-shrink-0 items-center gap-1 rounded-full bg-error/10 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-error">
@@ -381,6 +515,115 @@ export default function ScriptAnalyzePage() {
               ))}
             </div>
           </>
+        )}
+      </div>
+
+      {/* Multi-format repurposer (Feature F) */}
+      <div className="card mt-6">
+        <div className="mb-3 flex items-center gap-2">
+          <Repeat size={18} aria-hidden="true" className="text-sage" />
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-muted">Repurpose for other platforms</h2>
+        </div>
+        <p className="mb-3 text-sm text-ink-muted">
+          Adapt this script&apos;s hook, pacing, and CTA for each platform&apos;s native style — same core content, different opener and close.
+        </p>
+        <div className="mb-3 flex flex-wrap gap-2">
+          {ALL_PLATFORMS.map((platform) => (
+            <label
+              key={platform}
+              className={`flex cursor-pointer items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs ${
+                selectedPlatforms.includes(platform) ? 'border-sage bg-sage/10 text-ink' : 'border-ink/15 text-ink-muted'
+              }`}
+            >
+              <input
+                type="checkbox"
+                checked={selectedPlatforms.includes(platform)}
+                onChange={() => handleTogglePlatform(platform)}
+                className="sr-only"
+              />
+              {PLATFORM_LABELS[platform]}
+            </label>
+          ))}
+        </div>
+        {variantsError && <ErrorMessage className="mb-3">{variantsError}</ErrorMessage>}
+        <button
+          onClick={handleGenerateVariants}
+          disabled={variantsLoading}
+          className="btn-secondary flex items-center gap-1.5 px-3 py-2 text-xs"
+        >
+          {variantsLoading ? <Loader2 size={14} aria-hidden="true" className="animate-spin" /> : <Repeat size={14} aria-hidden="true" />}
+          {variantsLoading ? 'Adapting…' : variants ? 'Regenerate' : 'Generate variants'}
+        </button>
+
+        {variants && (
+          <div className="mt-4 space-y-3">
+            {variants.map((variant, i) => (
+              <div key={i} className="rounded-lg border border-ink/10 p-3">
+                <div className="mb-1 flex items-center justify-between gap-2">
+                  <span className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
+                    {PLATFORM_LABELS[variant.platform]}
+                  </span>
+                  <button
+                    onClick={() => handleCopyVariant(variant.script, i)}
+                    className="flex items-center gap-1 rounded p-1 text-ink-faint hover:bg-ink/10 hover:text-ink"
+                    aria-label={`Copy ${PLATFORM_LABELS[variant.platform]} script`}
+                  >
+                    {copiedVariantIndex === i ? <Check size={13} aria-hidden="true" /> : <Copy size={13} aria-hidden="true" />}
+                  </button>
+                </div>
+                {variant.note && <p className="mb-2 text-xs text-ink-faint">{variant.note}</p>}
+                <p className="whitespace-pre-wrap text-sm leading-relaxed text-ink">{variant.script}</p>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Sponsor slot finder (Feature G) */}
+      <div className="card mt-6">
+        <div className="mb-3 flex items-center gap-2">
+          <Banknote size={18} aria-hidden="true" className="text-sage" />
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-muted">Sponsor slot finder</h2>
+        </div>
+        <p className="mb-3 text-sm text-ink-muted">
+          Describe a sponsor and get the single best insertion point in this script — chosen to avoid the hook, the
+          close, and any known retention drop-off — plus a drafted read in your voice.
+        </p>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <input
+            type="text"
+            value={sponsorBrief}
+            onChange={(e) => setSponsorBrief(e.target.value)}
+            placeholder="e.g. NordVPN — privacy-focused VPN, 30-day money-back guarantee"
+            className="input flex-1 text-sm"
+          />
+          <button
+            onClick={handleFindSponsorSlot}
+            disabled={sponsorLoading}
+            className="btn-secondary flex items-center justify-center gap-1.5 px-3 py-2 text-xs"
+          >
+            {sponsorLoading ? <Loader2 size={14} aria-hidden="true" className="animate-spin" /> : <Banknote size={14} aria-hidden="true" />}
+            {sponsorLoading ? 'Finding…' : 'Find slot'}
+          </button>
+        </div>
+        {sponsorError && <ErrorMessage className="mt-3">{sponsorError}</ErrorMessage>}
+        {sponsorSuggestion && (
+          <div className="mt-4 rounded-lg border border-ink/10 p-3">
+            <p className="text-xs text-ink-faint">
+              Insert after: <span className="italic text-ink-muted">&ldquo;{sponsorSuggestion.afterText}&rdquo;</span>
+            </p>
+            <div className="mt-2 flex items-start justify-between gap-2">
+              <p className="flex-1 text-sm leading-relaxed text-ink">{sponsorSuggestion.sponsorRead}</p>
+              <button
+                onClick={handleCopySponsorRead}
+                className="flex-shrink-0 rounded p-1 text-ink-faint hover:bg-ink/10 hover:text-ink"
+                aria-label="Copy sponsor read"
+              >
+                {sponsorCopied ? <Check size={13} aria-hidden="true" /> : <Copy size={13} aria-hidden="true" />}
+              </button>
+            </div>
+            {sponsorSuggestion.reasoning && <p className="mt-2 text-xs text-ink-faint">{sponsorSuggestion.reasoning}</p>}
+          </div>
         )}
       </div>
 
