@@ -1,0 +1,77 @@
+import { Check } from 'lucide-react'
+import Link from 'next/link'
+import RazorpayButton from '@/lib/components/RazorpayButton'
+import { PRICING_TIERS } from '@/lib/content/landingContent'
+import Reveal from '@/lib/components/ui/Reveal'
+
+const priceFormatter = new Intl.NumberFormat('en-IN', {
+  style: 'currency',
+  currency: 'INR',
+  maximumFractionDigits: 0,
+})
+
+const paidCtaClasses = 'flex items-center justify-center min-h-[44px] w-full rounded-full px-4 text-[14px] font-semibold transition-colors bg-sage text-white hover:bg-sage-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sage focus-visible:ring-offset-2 focus-visible:ring-offset-warm-bg disabled:opacity-50'
+
+export default function Pricing() {
+  return (
+    <section id="pricing" className="scroll-mt-6 bg-warm-bg py-5 sm:py-7">
+      <div className="mx-auto max-w-[1240px] px-[18px] sm:px-6 lg:px-12">
+        <Reveal className="mb-7 text-center">
+          <h2 className="font-serif text-[clamp(1.6rem,3vw,2.1rem)] font-semibold tracking-[-0.01em] text-ink">
+            Simple pricing. Serious results.
+          </h2>
+        </Reveal>
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          {PRICING_TIERS.map((tier, i) => (
+            <Reveal key={tier.name} delayMs={i * 80}>
+              <div
+                className={`relative flex h-full flex-col rounded-[20px] p-6 transition-colors sm:p-[30px_28px] ${
+                  tier.highlighted
+                    ? 'border-2 border-sage bg-warm-surface shadow-[0_16px_40px_rgba(40,39,33,0.10)] lg:-translate-y-2'
+                    : 'border border-warm-border bg-warm-tint hover:border-sage/40'
+                }`}
+              >
+                {tier.badge && (
+                  <span className="absolute -top-[13px] right-6 rounded-full bg-sage px-3.5 py-1 text-[11.5px] font-bold text-white">
+                    {tier.badge}
+                  </span>
+                )}
+
+                <h3 className="text-[17px] font-semibold text-ink">{tier.name}</h3>
+                <div className="mt-3.5 flex items-baseline gap-1.5">
+                  <span className="text-[36px] font-bold leading-none text-ink">{priceFormatter.format(tier.price)}</span>
+                  <span className="text-[14px] font-medium text-ink-muted">/month</span>
+                </div>
+
+                <ul className="mt-5 flex-1 space-y-2.5">
+                  {tier.features.map((feature) => (
+                    <li key={feature} className="flex items-start gap-2 text-[13.5px] text-ink">
+                      <Check size={16} className="mt-0.5 flex-shrink-0 text-sage" aria-hidden="true" />
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+
+                <div className="mt-6">
+                  {tier.tier === 'free' ? (
+                    <Link href="/auth/signup" className="btn-primary w-full !rounded-full text-[14px]">
+                      {tier.cta}
+                    </Link>
+                  ) : (
+                    <RazorpayButton
+                      tier={tier.tier}
+                      tierName={tier.name}
+                      ctaLabel={tier.cta}
+                      className={paidCtaClasses}
+                    />
+                  )}
+                </div>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}

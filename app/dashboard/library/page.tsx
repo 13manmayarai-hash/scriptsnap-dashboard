@@ -1,234 +1,282 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useAppStore } from '@/lib/store/app'
-import { Trash2, Copy, Download } from 'lucide-react'
+import { Suspense, useEffect, useState } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { createClient } from '@/lib/supabase/client'
+import { Trash2, Copy, Search, ShieldAlert, ArrowUpDown, Loader2, ChevronDown } from 'lucide-react'
+import LoadingState from '@/lib/components/ui/LoadingState'
 
 interface Script {
   id: string
   topic: string
   category: string
   tone: string
-  duration: number
-  script: string
-  title: string
-  description: string
   created_at: string
   word_count: number
+  guideline_passed: boolean
 }
 
+type SortKey = 'newest' | 'oldest' | 'longest'
+
+const CATEGORY_COLORS = [
+  'bg-sage/15 text-sage',
+  'bg-accent-slate/15 text-accent-slate',
+  'bg-accent-plum/15 text-accent-plum',
+  'bg-accent-ochre/15 text-accent-ochre',
+  'bg-accent-clay/15 text-accent-clay',
+  'bg-accent-teal/15 text-accent-teal',
+  'bg-accent-umber/15 text-accent-umber',
+]
+
+// Deterministic, not random — the same category always lands on the same
+// color across renders/sessions, so it reads as a real visual language
+// rather than flickering between colors.
+function categoryColor(category: string): string {
+  let hash = 0
+  for (let i = 0; i < category.length; i++) hash = (hash * 31 + category.charCodeAt(i)) | 0
+  return CATEGORY_COLORS[Math.abs(hash) % CATEGORY_COLORS.length]
+}
+
+const SORTS: { key: SortKey; label: string }[] = [
+  { key: 'newest', label: 'Newest first' },
+  { key: 'oldest', label: 'Oldest first' },
+  { key: 'longest', label: 'Longest first' },
+]
+
+const PAGE_SIZE = 20
+
 export default function LibraryPage() {
-  const { user } = useAppStore()
-  const [scripts, setScripts] = useState<Script[]>([])
+  return (
+    <Suspense fallback={null}>
+      <LibraryContent />
+    </Suspense>
+  )
+}
+
+function LibraryContent() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const query = searchParams.get('q') || ''
+  const [scripts, setScripts] = useState<(Script & { title: string })[]>([])
   const [loading, setLoading] = useState(true)
-  const [selectedScript, setSelectedScript] = useState<Script | null>(null)
-  const [copied, setCopied] = useState(false)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [hasMore, setHasMore] = useState(false)
+  const [searchInput, setSearchInput] = useState(query)
+  const [sort, setSort] = useState<SortKey>('newest')
+  const [busyId, setBusyId] = useState<string | null>(null)
+
+  const fetchPage = async (page: number) => {
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { rows: [] as (Script & { title: string })[], more: false }
+
+    let request = supabase
+      .from('scripts')
+      .select('id, topic, category, tone, title, created_at, word_count, guideline_passed')
+      .eq('user_id', user.id)
+      .range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE) // fetch one extra to detect "more"
+
+    if (sort === 'oldest') request = request.order('created_at', { ascending: true })
+    else if (sort === 'longest') request = request.order('word_count', { ascending: false })
+    else request = request.order('created_at', { ascending: false })
+
+    if (query.trim()) {
+      // Wrapped in double quotes (with any embedded quotes escaped) per
+      // PostgREST's filter grammar — otherwise a search term containing a
+      // comma or parenthesis breaks out of this clause and silently
+      // changes what the filter matches.
+      const safe = query.trim().replace(/"/g, '\\"')
+      request = request.or(`topic.ilike."%${safe}%",title.ilike."%${safe}%"`)
+    }
+
+    const { data } = await request
+    const rows = data || []
+    const more = rows.length > PAGE_SIZE
+    return { rows: more ? rows.slice(0, PAGE_SIZE) : rows, more }
+  }
 
   useEffect(() => {
-    // TODO: Fetch from /api/library or Supabase
-    // For now, show demo scripts from localStorage
-    const savedScripts = localStorage.getItem('scriptsnap_scripts')
-    if (savedScripts) {
-      setScripts(JSON.parse(savedScripts))
+    let cancelled = false
+    const load = async () => {
+      setLoading(true)
+      const { rows, more } = await fetchPage(0)
+      if (cancelled) return
+      setScripts(rows)
+      setHasMore(more)
+      setLoading(false)
     }
-    setLoading(false)
-  }, [])
+    load()
+    return () => { cancelled = true }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query, sort])
 
-  const handleCopy = (text: string) => {
-    navigator.clipboard.writeText(text)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
+  const handleLoadMore = async () => {
+    setLoadingMore(true)
+    const page = Math.ceil(scripts.length / PAGE_SIZE)
+    const { rows, more } = await fetchPage(page)
+    setScripts((prev) => [...prev, ...rows])
+    setHasMore(more)
+    setLoadingMore(false)
   }
 
-  const handleDelete = (id: string) => {
-    const updated = scripts.filter(s => s.id !== id)
-    setScripts(updated)
-    localStorage.setItem('scriptsnap_scripts', JSON.stringify(updated))
-    setSelectedScript(null)
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault()
+    const params = new URLSearchParams()
+    if (searchInput.trim()) params.set('q', searchInput.trim())
+    router.push(`/dashboard/library${params.toString() ? `?${params}` : ''}`)
   }
 
-  const handleDownload = (script: Script) => {
-    const content = `
-TITLE: ${script.title}
-TOPIC: ${script.topic}
-CATEGORY: ${script.category}
-TONE: ${script.tone}
-DURATION: ${script.duration}s
-WORD COUNT: ${script.word_count}
-DATE: ${new Date(script.created_at).toLocaleDateString()}
-
-SCRIPT:
-${script.script}
-
-DESCRIPTION:
-${script.description}
-    `.trim()
-
-    const element = document.createElement('a')
-    element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(content))
-    element.setAttribute('download', `${script.title.replace(/\s+/g, '_')}.txt`)
-    element.style.display = 'none'
-    document.body.appendChild(element)
-    element.click()
-    document.body.removeChild(element)
+  const handleDelete = async (id: string) => {
+    if (!window.confirm("Delete this script? This can't be undone.")) return
+    const supabase = createClient()
+    await supabase.from('scripts').delete().eq('id', id)
+    setScripts((prev) => prev.filter((s) => s.id !== id))
   }
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <p className="text-white/60">Loading library...</p>
-      </div>
-    )
-  }
+  const handleDuplicate = async (id: string) => {
+    setBusyId(id)
+    try {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
 
-  if (scripts.length === 0) {
-    return (
-      <div className="card text-center py-16">
-        <div className="text-white/40 mb-4 text-5xl">📭</div>
-        <h2 className="text-2xl font-bold text-white mb-2">No Scripts Yet</h2>
-        <p className="text-white/60 mb-6">
-          Generate your first script to see it appear here.
-        </p>
-        <a
-          href="/dashboard"
-          className="btn-primary inline-block"
-        >
-          Generate Scripts
-        </a>
-      </div>
-    )
+      const { data: original } = await supabase
+        .from('scripts')
+        .select('*')
+        .eq('id', id)
+        .single()
+      if (!original) return
+
+      const { id: _id, created_at: _createdAt, updated_at: _updatedAt, ...rest } = original
+      const { data: inserted } = await supabase
+        .from('scripts')
+        .insert({ ...rest, title: `${original.title} (copy)` })
+        .select('id, topic, category, tone, title, created_at, word_count, guideline_passed')
+        .single()
+
+      if (inserted) {
+        // Reload from page 0 rather than splicing the new row into the
+        // current list — the current sort/search may not put it first.
+        const { rows, more } = await fetchPage(0)
+        setScripts(rows)
+        setHasMore(more)
+      }
+    } finally {
+      setBusyId(null)
+    }
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      {/* Scripts List */}
-      <div className="lg:col-span-1">
-        <div className="card">
-          <h2 className="text-xl font-bold mb-4 text-gradient">
-            📚 Library ({scripts.length})
-          </h2>
-          <div className="space-y-2 max-h-[600px] overflow-y-auto">
-            {scripts.map((script) => (
-              <button
-                key={script.id}
-                onClick={() => setSelectedScript(script)}
-                className={`w-full text-left p-3 rounded-lg transition-colors ${
-                  selectedScript?.id === script.id
-                    ? 'bg-brand-yellow/20 border border-brand-yellow'
-                    : 'bg-white/5 hover:bg-white/10 border border-white/10'
-                }`}
-              >
-                <p className="font-semibold text-white truncate text-sm">
-                  {script.title}
-                </p>
-                <p className="text-xs text-white/50 truncate">
-                  {script.topic} • {script.tone}
-                </p>
-                <p className="text-xs text-white/40 mt-1">
-                  {new Date(script.created_at).toLocaleDateString()}
-                </p>
-              </button>
+    <div>
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <form onSubmit={handleSearch} className="relative max-w-md flex-1">
+          <Search size={16} aria-hidden="true" className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted" />
+          <input
+            type="search"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            placeholder="Search your scripts by topic or title…"
+            className="input pl-9"
+            aria-label="Search scripts"
+          />
+        </form>
+
+        <div className="flex items-center gap-2">
+          <ArrowUpDown size={14} aria-hidden="true" className="text-ink-muted" />
+          <label htmlFor="sort-scripts" className="sr-only">Sort scripts</label>
+          <select
+            id="sort-scripts"
+            value={sort}
+            onChange={(e) => setSort(e.target.value as SortKey)}
+            className="input min-h-[40px] py-1.5 text-sm"
+          >
+            {SORTS.map((s) => (
+              <option key={s.key} value={s.key}>{s.label}</option>
             ))}
-          </div>
+          </select>
         </div>
       </div>
 
-      {/* Script Detail */}
-      <div className="lg:col-span-2">
-        {selectedScript ? (
-          <div className="space-y-4">
-            {/* Header */}
-            <div className="card">
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <h1 className="text-3xl font-bold text-white mb-2">
-                    {selectedScript.title}
-                  </h1>
-                  <div className="flex gap-2 flex-wrap">
-                    <span className="inline-block bg-brand-yellow/20 text-brand-yellow px-3 py-1 rounded text-xs font-medium">
-                      {selectedScript.category}
-                    </span>
-                    <span className="inline-block bg-white/10 text-white/70 px-3 py-1 rounded text-xs font-medium">
-                      {selectedScript.tone}
-                    </span>
-                    <span className="inline-block bg-white/10 text-white/70 px-3 py-1 rounded text-xs font-medium">
-                      {selectedScript.duration}s
-                    </span>
-                    <span className="inline-block bg-white/10 text-white/70 px-3 py-1 rounded text-xs font-medium">
-                      {selectedScript.word_count} words
-                    </span>
-                  </div>
+      {loading ? (
+        <LoadingState message="Loading scripts…" />
+      ) : scripts.length === 0 ? (
+        <div className="card py-16 text-center">
+          <div className="mb-4 text-5xl text-ink-muted/70">📭</div>
+          <h2 className="mb-2 text-2xl font-bold heading-serif">
+            {query ? 'No scripts match your search' : 'No Scripts Yet'}
+          </h2>
+          <p className="mb-6 text-ink-muted">
+            {query ? 'Try a different search term.' : 'Generate your first script to see it appear here.'}
+          </p>
+          <Link href="/dashboard/new" className="btn-primary inline-flex">
+            Start a new script
+          </Link>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {scripts.map((script) => (
+            <div key={script.id} className="card flex items-center gap-3 py-3">
+              <Link href={`/dashboard/scripts/${script.id}`} className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <p className="truncate text-sm font-semibold text-ink">{script.title}</p>
+                  {!script.guideline_passed && (
+                    <ShieldAlert size={14} aria-hidden="true" className="flex-shrink-0 text-accent-ochre" />
+                  )}
                 </div>
-              </div>
-            </div>
-
-            {/* Description */}
-            <div className="card">
-              <h3 className="text-sm font-semibold text-white/60 mb-2">DESCRIPTION</h3>
-              <p className="text-white text-sm leading-relaxed">
-                {selectedScript.description}
-              </p>
-            </div>
-
-            {/* Script Content */}
-            <div className="card">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-sm font-semibold text-white/60">SCRIPT</h3>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleCopy(selectedScript.script)}
-                    className="flex items-center gap-2 px-3 py-2 bg-white/10 hover:bg-white/20 rounded text-white text-sm transition-colors"
-                  >
-                    <Copy size={16} />
-                    {copied ? 'Copied!' : 'Copy'}
-                  </button>
-                  <button
-                    onClick={() => handleDownload(selectedScript)}
-                    className="flex items-center gap-2 px-3 py-2 bg-white/10 hover:bg-white/20 rounded text-white text-sm transition-colors"
-                  >
-                    <Download size={16} />
-                    Download
-                  </button>
+                <div className="flex min-w-0 items-center gap-1.5 text-xs text-ink-muted">
+                  <span className="truncate">{script.topic}</span>
+                  <span className={`flex-shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-medium ${categoryColor(script.category)}`}>
+                    {script.category}
+                  </span>
+                  <span className="flex-shrink-0">{script.tone}</span>
                 </div>
-              </div>
-              <div className="bg-black/50 border border-white/10 rounded-lg p-4">
-                <p className="text-white whitespace-pre-wrap text-sm leading-relaxed font-mono">
-                  {selectedScript.script}
+                <p className="mt-0.5 text-xs text-ink-faint">
+                  {new Date(script.created_at).toLocaleDateString()} • {script.word_count} words
                 </p>
+              </Link>
+              <div className="flex flex-shrink-0 items-center gap-1">
+                <button
+                  onClick={() => handleDuplicate(script.id)}
+                  disabled={busyId === script.id}
+                  className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded transition-colors hover:bg-warm-surface-alt disabled:opacity-50"
+                  aria-label={`Duplicate ${script.title}`}
+                >
+                  {busyId === script.id ? (
+                    <Loader2 size={16} aria-hidden="true" className="animate-spin" />
+                  ) : (
+                    <Copy size={16} aria-hidden="true" />
+                  )}
+                </button>
+                <button
+                  onClick={() => handleDelete(script.id)}
+                  className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded text-error transition-colors hover:bg-error/10"
+                  aria-label={`Delete ${script.title}`}
+                >
+                  <Trash2 size={16} aria-hidden="true" />
+                </button>
               </div>
             </div>
+          ))}
 
-            {/* Metadata */}
-            <div className="card">
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <p className="text-white/60 text-xs">TOPIC</p>
-                  <p className="text-white font-semibold">{selectedScript.topic}</p>
-                </div>
-                <div>
-                  <p className="text-white/60 text-xs">CREATED</p>
-                  <p className="text-white font-semibold">
-                    {new Date(selectedScript.created_at).toLocaleDateString()}
-                  </p>
-                </div>
-              </div>
+          {hasMore && (
+            <div className="flex justify-center pt-2">
+              <button
+                onClick={handleLoadMore}
+                disabled={loadingMore}
+                className="btn-secondary flex items-center gap-2 px-6 text-sm"
+              >
+                {loadingMore ? (
+                  <Loader2 size={16} aria-hidden="true" className="animate-spin" />
+                ) : (
+                  <ChevronDown size={16} aria-hidden="true" />
+                )}
+                {loadingMore ? 'Loading…' : 'Load more'}
+              </button>
             </div>
-
-            {/* Delete Button */}
-            <button
-              onClick={() => handleDelete(selectedScript.id)}
-              className="w-full flex items-center justify-center gap-2 btn-secondary py-3 text-red-400 hover:text-red-300"
-            >
-              <Trash2 size={18} />
-              Delete Script
-            </button>
-          </div>
-        ) : (
-          <div className="card text-center py-20">
-            <p className="text-white/40">← Select a script to view details</p>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }

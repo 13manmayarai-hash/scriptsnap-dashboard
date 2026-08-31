@@ -1,8 +1,9 @@
 # ScriptSnap — Project Plan (Mission, Vision, Roadmap, Current Status)
 
 **Owner:** Rajiv (@technosaze)
-**Last reconciled:** August 15, 2026
-**Companion doc:** `CLAUDE_CODE_HANDOFF.md` (the specific payment bug to fix first)
+**Last reconciled:** August 30, 2026
+**Companion doc:** `CLAUDE_CODE_HANDOFF.md` (historical — the Razorpay
+payment bug it was written for is resolved; kept as a root-cause record)
 
 > Note: The original product spec (written earlier) specifies **Stripe** as
 > the payment processor. That was superseded — **Stripe is not available in
@@ -45,25 +46,36 @@ what to make next.
 ## 5. MVP SCOPE
 
 ### In scope for launch (required to charge money)
-- ✅ AI script generation (Anthropic API) — **working**
+- ✅ AI script generation (Anthropic API, `claude-sonnet-5`) — **working**
 - ✅ Topic + Context + Keywords personalization — **working**
-- ✅ Tone options: Meditative, Balanced, Energetic — **working**
+- ✅ Tone options + custom tone presets — **working**
 - ✅ User authentication (email + Google OAuth via Supabase) — **working**
-- ✅ Free tier + paid tiers — **working (free tier)**
-- 🔴 **Razorpay payment integration — BROKEN, this is the current blocker**
-- ⏳ Usage tracking / tier enforcement (limits per month) — **not yet enforced,
-  UI shows a counter but backend enforcement is unconfirmed**
+- ✅ Free tier + paid tiers — **working**
+- ✅ **Razorpay payment integration — working, verified live** (see
+  `CLAUDE_CODE_HANDOFF.md` for the root causes that were fixed)
+- ✅ Usage tracking / tier enforcement — **working**, enforced atomically via
+  the `increment_script_usage` Postgres RPC (check-and-increment in one
+  transaction, closes the race condition where two concurrent requests
+  could both bypass the monthly limit)
+
+### Since MVP: shipped ahead of the original phase order
+- ✅ YouTube OAuth integration (Pro tier) — connect a channel, cached
+  analytics summary feeds into script generation, trending-videos-in-your-
+  category + Claude-extracted recurring topics surfaced on `/dashboard/ideas`
+- ✅ Privacy Policy, Terms of Service, data export (JSON), account deletion
+  (`/dashboard/settings`)
+- ✅ Script library, ratings (thumbs up/down feeding tone/keyword
+  performance stats on the dashboard), PDF export, calendar, categories
 
 ### Explicitly deferred (not MVP)
-- ❌ YouTube OAuth / Analytics integration
 - ❌ Auto-publish to YouTube
-- ❌ Trending keywords engine
 - ❌ Team collaboration
-- ❌ Advanced analytics dashboard
+- ❌ Advanced analytics dashboard beyond what shipped above
 
 **Why this scope:** users can get value (better scripts, saved time) and pay
-for it without YouTube integration. That's a Phase 3 differentiator, not a
-launch requirement.
+for it without YouTube integration — that was true at launch, and the
+YouTube/analytics work above shipped as a fast-follow once the payment flow
+was actually working.
 
 ---
 
@@ -73,14 +85,22 @@ launch requirement.
 FREE
 ₹0/month — 5 scripts/month, basic personalization, all 3 tones
 
-BASIC — ₹10/month
+BASIC — ₹199/month
 50 scripts/month, full AI personalization, context & keyword support,
 export to PDF, script history, email support
 
-PRO — ₹25/month
+PRO — ₹499/month
 200 scripts/month, all Basic features, YouTube analytics (future),
 trending keywords (future), priority support, API access
 ```
+
+> Repriced from the original ₹10/₹25 flat tiers on Aug 15, 2026, after a
+> unit-economics review: at ₹10/₹25, Basic and Pro were losing money on
+> Anthropic API cost alone, before Razorpay fees or hosting were even
+> counted. ₹199/₹499 covers real cost at ~85-90% gross margin on the AI line
+> while staying well under comparable creator tools (VidIQ/TubeBuddy run
+> ₹600-3,250/month). Treat these as a starting hypothesis to validate with
+> real willingness-to-pay, not a final answer.
 
 Flat monthly tiers were chosen over pay-as-you-go because flat pricing is
 easier to understand and gives predictable revenue; usage-based billing was
@@ -93,68 +113,55 @@ considered and rejected (see original spec §3 for the tradeoff discussion).
 - **Frontend:** Next.js 14.2.35 (App Router) + Tailwind CSS
 - **Backend:** Vercel Serverless Functions (Next.js API routes)
 - **Database + Auth:** Supabase (Postgres + Supabase Auth, email + Google OAuth)
-- **AI:** Anthropic API (`claude-3-5-sonnet-20241022` currently hardcoded in
-  `app/api/generate-script/route.ts` — consider updating to a current model)
-- **Payment:** **Razorpay** (not Stripe — India-only constraint)
+- **AI:** Anthropic API (`claude-sonnet-5` in `app/api/generate-script/route.ts`)
+- **Payment:** **Razorpay** (not Stripe — India-only constraint) — working,
+  verified live; tier is sourced server-side from the Razorpay order's own
+  `notes.tier`, never trusted from client input
+- **CI:** GitHub Actions (`.github/workflows/ci.yml`) — `npm ci` / lint /
+  build on every push and PR
 - **Hosting/deploy:** GitHub → Vercel, auto-deploy on push to `main`
 - **Dev environment:** Rajiv has **no local machine** — all development
   happens via GitHub's mobile web interface + Claude Code cloud sessions.
   Any workflow you set up must not assume a local terminal on Rajiv's end.
 
-### Database schema (target — verify against actual live Supabase state)
-```sql
-users (
-  id, email, subscription_tier default 'free',
-  razorpay_payment_id, razorpay_order_id, razorpay_customer_id,
-  next_billing_date, scripts_generated_month, created_at
-)
+### Database schema (confirmed live, RLS-scoped ownership policies on every
+user-owned table — `(select auth.uid()) = user_id`, or `= id` on `users`)
+Core tables in active use: `users` (subscription_tier, last_reset_date,
+scripts_generated_month), `scripts`, `script_ratings`, `ideas`,
+`calendar_entries`, `tone_presets`, `categories`, `youtube_connections`.
+`subscriptions` and `api_usage` from the original spec were never wired up —
+confirmed dead, not referenced anywhere in the app code.
 
-subscriptions (
-  id, user_id, tier, razorpay_order_id, razorpay_payment_id,
-  razorpay_subscription_id, status, next_billing_date,
-  created_at, updated_at
-)
-
-api_usage (
-  id, user_id, date, scripts_generated, created_at
-)
-```
-Migration file: `lib/database/migrations/add_subscription_fields.sql`.
-**Unconfirmed whether this has actually been run against the live Supabase
-project** — verify before assuming the columns exist.
-
-### Error handling philosophy (from original spec, still valid)
-- If Anthropic API is rate-limited → show "generating, high demand" message,
-  don't crash.
-- If Razorpay is down → don't block free-tier usage; log and retry rather
-  than losing the transaction.
-- Any API failure → log it (Sentry not yet wired up — see Phase 1 gaps below),
-  return a helpful error to the user, never a blank crash.
+### Error handling philosophy (from original spec)
+- If Anthropic API is rate-limited or fails → the atomic quota reservation
+  is refunded so a failed generation doesn't cost the user a script; a
+  readable error message is returned, not a blank crash.
+- If Razorpay is down → doesn't block free-tier usage.
+- **Sentry/error monitoring is still not wired up** — this is a real,
+  outstanding gap (see §9, §13).
 
 ---
 
 ## 8. FEATURE ROADMAP
 
-### Phase 1 — MVP Launch (current phase, in progress)
-1. 🔴 Razorpay payment integration — **broken, top priority, see handoff doc**
-2. ⏳ Subscription tier enforcement (block generation past monthly limit)
-3. ⏳ Usage tracking accuracy (the `api_usage` table exists in migration but
-   is it actually being written to on each script generation?)
+### Phase 1 — MVP Launch — ✅ DONE
+1. ✅ Razorpay payment integration
+2. ✅ Subscription tier enforcement (atomic RPC, blocks generation past
+   monthly limit)
+3. ✅ Usage tracking accuracy
 
-**Cannot launch/charge money until Phase 1 is fully working.**
+### Phase 2 — User Engagement — ✅ DONE
+1. ✅ Script library (`/dashboard/library`)
+2. ✅ Script ratings, feeding tone/keyword performance stats
+3. ✅ Export to PDF
 
-### Phase 2 — User Engagement (after Phase 1)
-1. Script library / saved scripts (UI exists at `/dashboard/library` —
-   confirm it's reading real data, not a stub)
-2. Script ratings
-3. Export to PDF/text
+### Phase 3 — YouTube Intelligence — ✅ DONE
+1. ✅ YouTube OAuth integration (Pro tier, `/dashboard/settings`)
+2. ✅ Channel analytics summary feeds into script generation prompt
+3. ✅ Trending videos (by content category) + Claude-extracted recurring
+   topics from the creator's own channel, surfaced on `/dashboard/ideas`
 
-### Phase 3 — YouTube Intelligence
-1. YouTube OAuth integration
-2. Basic analytics dashboard (last 30 days)
-3. Trending keywords for the user's own channel
-
-### Phase 4 — Advanced
+### Phase 4 — Advanced (not started)
 1. Auto-publish to YouTube Shorts
 2. A/B script testing (generate 3 versions, track which performs)
 3. Team collaboration
@@ -165,30 +172,37 @@ project** — verify before assuming the columns exist.
 ## 9. QUALITY, MONITORING, ROLLBACK
 
 - **No automated tests currently exist.** Original spec proposed Jest + RTL
-  with an 80% coverage target — this was never implemented. Worth flagging
-  to Rajiv as a gap, not silently skipping.
-- **No Sentry or error monitoring currently wired up**, despite being in the
-  original plan. `console.error` calls exist in the API routes but nothing
-  aggregates or alerts on them.
+  with an 80% coverage target — this was never implemented. Still a real gap.
+- **No Sentry or error monitoring wired up.** `console.error` calls exist in
+  the API routes but nothing aggregates or alerts on them. Requires the
+  owner to create a Sentry account and provide a DSN before this can be
+  wired up.
+- **CI now exists**: `.github/workflows/ci.yml` runs `npm ci` / lint / build
+  on every push and PR, catching build breaks before merge — this closes the
+  "no CI gate" gap that used to let broken builds reach `main` unnoticed.
 - **Rollback plan:** Vercel's one-click "redeploy previous deployment" is the
   de facto rollback mechanism (no formal process beyond that yet).
-- Manual QA has been the only testing method so far — and even that has been
-  inconsistent (see handoff doc's list of unverified pushes).
 
-**Recommendation for Claude Code:** don't add heavy test infrastructure
-unprompted, but do verify things actually work (real logs, real console
-output) before declaring a fix complete — that discipline gap is what caused
-this handoff in the first place.
+**Recommendation for Claude Code:** verify things actually work (real logs,
+real tool output, direct DB queries) before declaring a fix complete —
+several past bugs in this project were caused by fixes pushed on assumption
+rather than verified evidence.
 
 ---
 
-## 10. DATA & COMPLIANCE
+## 10. DATA & COMPLIANCE — ✅ DONE
 
-- Scripts stored indefinitely (user-owned data).
+- Scripts stored indefinitely (user-owned data), deleted via cascade on
+  account deletion.
 - Payment data handled by Razorpay (ScriptSnap doesn't store card details).
-- GDPR-style requirements from spec: privacy policy, TOS, user-initiated data
-  deletion, data export as JSON — **status of these is unconfirmed; likely
-  not yet built.** Not urgent for MVP launch but should be tracked.
+- ✅ Privacy Policy (`/privacy`) and Terms of Service (`/terms`) — AI-drafted
+  from the app's actual data practices, **not a substitute for real legal
+  review**; contains `[PLACEHOLDER]` brackets for business legal name/
+  address, support contact, governing-law jurisdiction, and refund policy
+  specifics that only the owner can fill in.
+- ✅ User-initiated data export (JSON) and account deletion —
+  `/dashboard/settings`, backed by `/api/account/export` and
+  `/api/account/delete`.
 
 ---
 
@@ -196,7 +210,11 @@ this handoff in the first place.
 
 ### Month 1
 - 20 paying users, ≥50% sourced from @technosaze channel
-- ₹2,000+ MRR (10 users × ₹10, roughly — scale with actual tier mix)
+- ₹2,000+ MRR (10 users × ₹199, roughly — scale with actual tier mix). Note:
+  at the repriced ₹199/₹499 tiers this target is now cleared by ~10 Basic
+  conversions instead of ~200 — worth revisiting whether ₹2,000 is still the
+  right Month 1 bar now that unit price is ~20x higher, rather than treating
+  it as untouched.
 - <2% error rate on script generation
 - <1 minute generation time
 
@@ -215,42 +233,44 @@ this handoff in the first place.
 | Risk | Mitigation |
 |---|---|
 | Anthropic API rate limits | Queue/retry, show "high demand" message |
-| Creator doesn't see value from free tier | Free tier is trial; Phase 3 YouTube integration is the real hook |
-| Payment processing fails | Currently the active bug — see handoff doc |
+| Creator doesn't see value from free tier | Free tier is trial; YouTube analytics/trending (Phase 3, shipped) is the real hook |
+| Payment processing fails | Resolved — see `CLAUDE_CODE_HANDOFF.md` for root causes |
 | Wrong pricing | Survey users after Month 1, adjust Month 2 |
-| Competitors | YouTube-data integration (Phase 3) is the differentiator, not the generator alone |
+| Competitors | YouTube-data integration (shipped) is the differentiator, not the generator alone |
 
 ---
 
-## 13. CURRENT STATE SUMMARY (as of this handoff)
+## 13. CURRENT STATE SUMMARY
 
 **Working:**
-- Script generation end-to-end (Anthropic API)
-- Auth (signup/login via Supabase)
-- Dashboard UI, pricing page UI
+- Script generation end-to-end (Anthropic API, current model)
+- Auth (signup/login + Google OAuth via Supabase)
+- Razorpay payment flow, tier enforcement, quota tracking
+- YouTube channel connection, analytics-informed generation, trending/ideas
+- Privacy policy, TOS, data export, account deletion
+- CI (build/lint gate on every push and PR)
 
-**Broken / blocking launch:**
-- Razorpay payment flow (see `CLAUDE_CODE_HANDOFF.md` for full detail —
-  clicking "Upgrade" does not open the payment modal, root cause unconfirmed)
-
-**Unverified — check before assuming either way:**
-- Whether the subscription DB migration has actually run
-- Whether tier limits are enforced anywhere in the generate-script flow
-- Whether the Razorpay account itself is fully activated for live payments
+**Genuinely open gaps:**
+- Confirm the Razorpay account is fully activated for **live** (not test)
+  mode — manual check in the Razorpay dashboard.
+- No error monitoring (Sentry) — needs the owner to create an account and
+  provide a DSN.
+- No automated test suite.
+- Legal pages need real legal review before the `[PLACEHOLDER]` fields are
+  filled in and the drafts are relied on as compliance-complete.
 
 **Not started:**
-- Phase 2, 3, 4 features
-- Automated testing
-- Error monitoring (Sentry)
-- Privacy policy / TOS / GDPR data export
+- Phase 4 features (auto-publish, A/B script testing, team collaboration)
 
 ---
 
-## 14. WHAT "DONE WITH MVP" LOOKS LIKE
+## 14. WHAT "DONE WITH MVP" LOOKS LIKE — ✅ REACHED
 
 A user can: sign up → generate free scripts → hit the 5/month limit → click
 Upgrade → pay via Razorpay → get bumped to Basic/Pro → generate more scripts
-within the new limit → all of this confirmed via real logs, not assumption.
+within the new limit. Confirmed live, not just by code inspection.
 
-That's the finish line for Phase 1. Everything in Phase 2+ is genuinely
-next, not urgent.
+Phase 1–3 are done. What's left is Phase 4 (genuinely next, not urgent) plus
+the open gaps in §13 above (Sentry, tests, live-Razorpay-activation check,
+legal review) — none of which block the product from being used and paid
+for today.

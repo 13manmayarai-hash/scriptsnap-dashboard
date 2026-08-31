@@ -6,11 +6,15 @@ import { useRouter } from 'next/navigation'
 interface RazorpayButtonProps {
   tier: 'basic' | 'pro'
   tierName: string
+  ctaLabel?: string
+  className?: string
 }
 
 export default function RazorpayButton({
   tier,
   tierName,
+  ctaLabel = 'Upgrade',
+  className,
 }: RazorpayButtonProps) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
@@ -25,6 +29,7 @@ export default function RazorpayButton({
       const checkoutRes = await fetch('/api/razorpay/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
         body: JSON.stringify({ tier }),
       })
 
@@ -32,7 +37,7 @@ export default function RazorpayButton({
 
       // Handle 401 - not authenticated
       if (checkoutRes.status === 401) {
-        router.push('/auth/login')
+        router.push(`/auth/login?redirectTo=${encodeURIComponent('/pricing')}`)
         return
       }
 
@@ -68,6 +73,7 @@ export default function RazorpayButton({
               const verifyRes = await fetch('/api/razorpay/verify', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
+                credentials: 'same-origin',
                 body: JSON.stringify({
                   razorpay_order_id: orderId,
                   razorpay_payment_id: response.razorpay_payment_id,
@@ -91,7 +97,7 @@ export default function RazorpayButton({
             }
           },
           theme: {
-            color: '#FFD700',
+            color: '#7A8B72',
           },
           modal: {
             ondismiss: () => {
@@ -100,9 +106,18 @@ export default function RazorpayButton({
           },
         }
 
-        // Step 5: Open Razorpay checkout
-        const razorpay = new (window as any).Razorpay(options)
-        razorpay.open()
+        // Step 5: Open Razorpay checkout.
+        // This callback runs after the outer try/catch's call stack has
+        // already finished, so exceptions here (e.g. window.Razorpay not
+        // actually available) would otherwise be uncatchable and leave the
+        // button stuck on "Processing..." with no visible error.
+        try {
+          const razorpay = new (window as any).Razorpay(options)
+          razorpay.open()
+        } catch (err) {
+          setError(err instanceof Error ? err.message : 'Failed to open payment gateway')
+          setLoading(false)
+        }
       }
 
       script.onerror = () => {
@@ -122,11 +137,15 @@ export default function RazorpayButton({
       <button
         onClick={handlePayment}
         disabled={loading}
-        className="w-full bg-brand-yellow text-brand-black font-semibold py-3 px-6 rounded-lg hover:bg-yellow-400 transition-colors disabled:opacity-50"
+        className={className ?? 'flex items-center justify-center min-h-[44px] w-full bg-sage text-white font-semibold rounded md:rounded-lg hover:bg-sage-hover transition-colors disabled:opacity-50 px-0.5 sm:px-2 md:px-6 text-xs md:text-base leading-tight focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sage focus-visible:ring-offset-2 focus-visible:ring-offset-warm-bg'}
       >
-        {loading ? 'Processing...' : `Upgrade to ${tierName}`}
+        {loading ? '…' : ctaLabel}
       </button>
-      {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+      {error && (
+        <p className="text-error text-xs md:text-sm mt-1 md:mt-2 break-words" aria-live="polite">
+          {error}
+        </p>
+      )}
     </>
   )
 }

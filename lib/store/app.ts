@@ -1,10 +1,17 @@
 import { create } from 'zustand'
+import type { SubscriptionTier } from '@/lib/tiers'
 
 export interface User {
   id: string
   email: string
-  subscription_tier: 'free' | 'pro' | 'pro_plus' | 'team'
+  subscription_tier: SubscriptionTier
   scripts_generated_month: number
+}
+
+export interface TopbarAction {
+  label: string
+  href?: string
+  onClick?: () => void
 }
 
 interface AppState {
@@ -12,6 +19,12 @@ interface AppState {
   setUser: (user: User | null) => void
   scripts: any[]
   setScripts: (scripts: any[]) => void
+  topbarAction: TopbarAction | null
+  setTopbarAction: (action: TopbarAction | null) => void
+  topbarSaveState: string | null
+  setTopbarSaveState: (state: string | null) => void
+  hasUnsavedChanges: boolean
+  setHasUnsavedChanges: (value: boolean) => void
 }
 
 export const useAppStore = create<AppState>((set) => ({
@@ -19,4 +32,10 @@ export const useAppStore = create<AppState>((set) => ({
   setUser: (user) => set({ user }),
   scripts: [],
   setScripts: (scripts) => set({ scripts }),
+  topbarAction: null,
+  setTopbarAction: (topbarAction) => set({ topbarAction }),
+  topbarSaveState: null,
+  setTopbarSaveState: (topbarSaveState) => set({ topbarSaveState }),
+  hasUnsavedChanges: false,
+  setHasUnsavedChanges: (hasUnsavedChanges) => set({ hasUnsavedChanges }),
 }))
