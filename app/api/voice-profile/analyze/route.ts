@@ -82,7 +82,7 @@ export async function GET(request: NextRequest) {
 
   const { data: profile } = await supabase
     .from('voice_profiles')
-    .select('analysis_summary, script_count_analyzed, last_analyzed_at')
+    .select('analysis_summary, script_count_analyzed, last_analyzed_at, source, avg_wpm, avg_sentence_length, vocabulary_richness, top_catchphrases')
     .eq('user_id', user.id)
     .maybeSingle()
 

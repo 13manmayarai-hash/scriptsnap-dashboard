@@ -1,10 +1,23 @@
 import { google } from 'googleapis'
 
-// Read-only scopes only — this feature never needs to modify anything on
-// the creator's channel, just read performance data to inform generation.
+// Read-only scopes — this feature never needs to modify anything on the
+// creator's channel, just read performance data (and, as of the addition
+// of youtube.force-ssl, caption tracks) to inform generation.
+//
+// youtube.force-ssl is broader than the other two: it's required by
+// captions.download (real transcript ingestion, VoicePrint Feature A) and
+// is on Google's sensitive-scope list, unlike youtube.readonly/
+// yt-analytics.readonly. A user who connected before this scope was added
+// has a refresh token that doesn't carry it — the ingestion code detects
+// that (insufficientPermissions, not invalid_grant) and flags
+// needs_reconnect so the existing "reconnect in Settings" flow picks it
+// up naturally, without touching every other YouTube call in this app
+// (they only ever needed the first two scopes and keep working on old
+// tokens unchanged).
 export const YOUTUBE_SCOPES = [
   'https://www.googleapis.com/auth/youtube.readonly',
   'https://www.googleapis.com/auth/yt-analytics.readonly',
+  'https://www.googleapis.com/auth/youtube.force-ssl',
 ]
 
 // Separate Google Cloud OAuth client from Supabase's login-with-Google —
