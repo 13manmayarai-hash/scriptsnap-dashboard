@@ -9,7 +9,10 @@ import LoadingState from '@/lib/components/ui/LoadingState'
 import { buildScriptBlocks, formatSeconds } from '@/lib/youtube/scriptBlocks'
 import type { RetentionDip } from '@/lib/youtube/retention'
 import type { StructuredScript } from '@/lib/scripts/structuredScript'
-import { ArrowLeft, Mic2, TrendingDown, Loader2, Sparkles, AlertTriangle, Download, Clapperboard, Zap } from 'lucide-react'
+import TeleprompterModal from '@/lib/components/ui/TeleprompterModal'
+import { ArrowLeft, Mic2, TrendingDown, Loader2, Sparkles, AlertTriangle, Download, Clapperboard, Zap, MonitorPlay } from 'lucide-react'
+
+const DEFAULT_WPM = 140
 
 interface Script {
   id: string
@@ -51,6 +54,8 @@ export default function ScriptAnalyzePage() {
   const [structured, setStructured] = useState<StructuredScript | null>(null)
   const [structuredLoading, setStructuredLoading] = useState(false)
   const [structuredError, setStructuredError] = useState('')
+
+  const [showTeleprompter, setShowTeleprompter] = useState(false)
 
   useEffect(() => {
     const load = async () => {
@@ -205,6 +210,10 @@ export default function ScriptAnalyzePage() {
   const dips = retention?.dips || []
   const blocks = buildScriptBlocks(script.script, dips, retention?.videoDurationSeconds)
 
+  const teleprompterWpm = structured?.targetWPM || DEFAULT_WPM
+  const scriptWordCount = script.script.trim().split(/\s+/).filter(Boolean).length
+  const estimatedReadSeconds = Math.round((scriptWordCount / teleprompterWpm) * 60)
+
   return (
     <div className="mx-auto max-w-4xl">
       <Link
@@ -290,13 +299,22 @@ export default function ScriptAnalyzePage() {
 
       {/* Dual-column: script segments left, retention annotations right */}
       <div className="card">
-        <div className="mb-3 flex items-center justify-between gap-2">
+        <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-muted">SCRIPT</h2>
-          <button onClick={handleExportPdf} className="btn-secondary flex items-center gap-1.5 px-3 py-2 text-xs">
-            <Download size={14} aria-hidden="true" />
-            Download analysis PDF
-          </button>
+          <div className="flex items-center gap-2">
+            <button onClick={() => setShowTeleprompter(true)} className="btn-secondary flex items-center gap-1.5 px-3 py-2 text-xs">
+              <MonitorPlay size={14} aria-hidden="true" />
+              Teleprompter
+            </button>
+            <button onClick={handleExportPdf} className="btn-secondary flex items-center gap-1.5 px-3 py-2 text-xs">
+              <Download size={14} aria-hidden="true" />
+              Download analysis PDF
+            </button>
+          </div>
         </div>
+        <p className="mb-3 text-xs text-ink-faint">
+          ~{formatSeconds(estimatedReadSeconds)} at {teleprompterWpm} WPM{structured ? ' (your VoicePrint pace)' : ' (estimated)'}
+        </p>
         <div className="space-y-4">
           {blocks.map((block, i) => (
             <div key={i} className="flex flex-col gap-3 md:flex-row md:items-stretch">
@@ -365,6 +383,14 @@ export default function ScriptAnalyzePage() {
           </>
         )}
       </div>
+
+      {showTeleprompter && (
+        <TeleprompterModal
+          text={script.script}
+          initialWpm={teleprompterWpm}
+          onClose={() => setShowTeleprompter(false)}
+        />
+      )}
     </div>
   )
 }
