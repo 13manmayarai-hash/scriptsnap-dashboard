@@ -27,6 +27,7 @@ import {
   Link2,
   Unlink,
   TrendingUp,
+  MessageCircle,
 } from 'lucide-react'
 
 interface Script {
@@ -403,6 +404,13 @@ export default function ScriptWorkspacePage() {
             </p>
           </div>
           <div className="flex flex-shrink-0 items-center gap-1">
+            <Link
+              href={`/dashboard/chat?scriptId=${script.id}`}
+              className="btn-secondary flex items-center gap-1.5 px-3 py-2 text-xs"
+            >
+              <MessageCircle size={14} aria-hidden="true" />
+              Discuss with AI
+            </Link>
             <Link
               href={`/dashboard/scripts/${script.id}/analyze`}
               className="btn-secondary flex items-center gap-1.5 px-3 py-2 text-xs"
