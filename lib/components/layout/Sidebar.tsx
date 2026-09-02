@@ -13,11 +13,13 @@ import {
   Sparkles,
   LogOut,
   Search,
+  MessageCircle,
 } from 'lucide-react'
 
 export const NAV_LINKS = [
   { href: '/dashboard', label: 'Dashboard', icon: Home },
   { href: '/dashboard/library', label: 'Scripts', icon: FileText },
+  { href: '/dashboard/chat', label: 'Ask AI', icon: MessageCircle },
   { href: '/dashboard/ideas', label: 'Ideas', icon: Lightbulb },
   { href: '/dashboard/calendar', label: 'Calendar', icon: Calendar },
   { href: '/dashboard/templates', label: 'Templates', icon: LayoutTemplate },
