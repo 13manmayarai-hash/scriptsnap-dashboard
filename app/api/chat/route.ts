@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { sendChatMessage } from '@/lib/chat/assistant'
+import { sendChatMessage, clearChatHistory } from '@/lib/chat/assistant'
 import { TIER_SCRIPT_LIMITS, type SubscriptionTier } from '@/lib/tiers'
 import { friendlyApiErrorMessage } from '@/lib/utils/apiErrors'
 import * as Sentry from '@sentry/nextjs'
@@ -26,6 +26,21 @@ export async function GET(request: NextRequest) {
   }
 
   return NextResponse.json({ messages: (messages || []).slice().reverse() })
+}
+
+export async function DELETE(request: NextRequest) {
+  const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
+  }
+
+  const { error } = await clearChatHistory(supabase, user.id)
+  if (error) {
+    return NextResponse.json({ error }, { status: 500 })
+  }
+
+  return NextResponse.json({ success: true })
 }
 
 export async function POST(request: NextRequest) {
@@ -61,6 +76,7 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json().catch(() => ({}))
     const message = typeof body.message === 'string' ? body.message.trim() : ''
+    const scriptId = typeof body.scriptId === 'string' ? body.scriptId : undefined
     if (!message) {
       return NextResponse.json({ error: 'Message is empty' }, { status: 400 })
     }
@@ -91,7 +107,7 @@ export async function POST(request: NextRequest) {
     }
     quotaReserved = true
 
-    const { reply, error } = await sendChatMessage(supabase, user.id, message)
+    const { reply, error } = await sendChatMessage(supabase, user.id, message, scriptId)
     if (!reply) {
       if (quotaReserved) {
         try { await supabase.rpc('decrement_script_usage', { p_user_id: user.id, p_amount: quotaAmount }) } catch {}

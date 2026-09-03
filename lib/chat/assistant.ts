@@ -24,7 +24,8 @@ Stay focused on scriptwriting and YouTube strategy — if asked something unrela
 export async function sendChatMessage(
   supabase: SupabaseClient,
   userId: string,
-  message: string
+  message: string,
+  scriptId?: string
 ): Promise<{ reply: string | null; error: string | null }> {
   const { data: history, error: historyError } = await supabase
     .from('chat_messages')
@@ -45,9 +46,24 @@ export async function sendChatMessage(
     .eq('user_id', userId)
     .maybeSingle<{ analysis_summary: string }>()
 
-  const system = voiceProfile?.analysis_summary
+  let system = voiceProfile?.analysis_summary
     ? `${SYSTEM_PROMPT}\n\nThis creator's VoicePrint (their established writing voice): ${voiceProfile.analysis_summary}`
     : SYSTEM_PROMPT
+
+  // "Discuss with AI" from a script's page passes its ID so the assistant
+  // can reference the actual text, not just the creator's general voice.
+  if (scriptId) {
+    const { data: script } = await supabase
+      .from('scripts')
+      .select('title, script')
+      .eq('id', scriptId)
+      .eq('user_id', userId)
+      .maybeSingle<{ title: string; script: string }>()
+
+    if (script) {
+      system = `${system}\n\nThe creator is currently discussing this specific script, titled "${script.title}":\n${script.script.slice(0, 4000)}`
+    }
+  }
 
   const { error: insertUserError } = await supabase
     .from('chat_messages')
@@ -89,4 +105,15 @@ export async function sendChatMessage(
   }
 
   return { reply, error: null }
+}
+
+export async function clearChatHistory(
+  supabase: SupabaseClient,
+  userId: string
+): Promise<{ error: string | null }> {
+  const { error } = await supabase.from('chat_messages').delete().eq('user_id', userId)
+  if (error) {
+    return { error: 'Failed to clear chat history' }
+  }
+  return { error: null }
 }
