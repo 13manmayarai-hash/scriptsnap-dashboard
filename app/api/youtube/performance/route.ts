@@ -55,6 +55,25 @@ export async function GET(request: NextRequest) {
   }
 
   const { searchParams } = new URL(request.url)
+
+  // getPerformanceContext calls Claude and is normally shielded by its own
+  // 24h cache -- but ?refresh=1 deliberately bypasses that cache, and
+  // nothing was stopping a Pro user (or a scripted session) from hitting
+  // refresh=1 in a tight loop, each one a real billable call.
+  const { data: rateLimitOk } = await supabase.rpc('check_rate_limit', {
+    p_user_id: user.id,
+    p_route: 'youtube-performance-refresh',
+    p_max_requests: 10,
+    p_window_seconds: 300,
+  })
+  if (!rateLimitOk) {
+    return NextResponse.json({
+      tierAllowed: true,
+      connected: true,
+      error: 'Refreshed recently — try again in a few minutes.',
+    })
+  }
+
   const context = await getPerformanceContext(supabase, user.id, { forceRefresh: searchParams.get('refresh') === '1' })
 
   if (!context) {
