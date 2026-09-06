@@ -6,10 +6,15 @@ import { friendlyApiErrorMessage } from '@/lib/utils/apiErrors'
 import * as Sentry from '@sentry/nextjs'
 
 // Builds/refreshes a creator's VoicePrint. Not gated by script-generation
-// quota — this reads existing scripts and makes one small analysis call,
-// same category as tone-presets/derive. Rate-limited for the same reason:
-// it's a real billable Anthropic call an authenticated user could
-// otherwise loop for free.
+// quota -- a voice profile is a slow-changing snapshot of writing style,
+// not something that needs rebuilding per-request. Previously rate-limited
+// at 5/60s on the reasoning that this was "the same category as
+// tone-presets/derive" -- it isn't: that route sends a short user-pasted
+// sample (max_tokens 200), this sends up to 12,000 characters of real
+// transcript/script corpus (max_tokens 500) with no monthly cap either
+// way, so 5/60s allowed an unbounded loop of a meaningfully more
+// expensive call. Tightened to a real cooldown instead: profiles don't
+// need rebuilding more than a few times an hour even while iterating.
 export async function POST(request: NextRequest) {
   const cookieStore = cookies()
   const supabase = createServerClient(
@@ -35,12 +40,12 @@ export async function POST(request: NextRequest) {
   const { data: rateLimitOk } = await supabase.rpc('check_rate_limit', {
     p_user_id: user.id,
     p_route: 'voice-profile-analyze',
-    p_max_requests: 5,
-    p_window_seconds: 60,
+    p_max_requests: 3,
+    p_window_seconds: 3600,
   })
   if (!rateLimitOk) {
     return NextResponse.json(
-      { error: 'Too many requests — please wait a moment and try again.' },
+      { error: 'Voice profile was just rebuilt — try again in a bit. Writing style rarely changes minute to minute.' },
       { status: 429 }
     )
   }
