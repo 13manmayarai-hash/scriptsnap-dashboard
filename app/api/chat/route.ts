@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { sendChatMessage, clearChatHistory } from '@/lib/chat/assistant'
-import { TIER_SCRIPT_LIMITS, CHAT_FREE_MESSAGES_PER_MONTH, type SubscriptionTier } from '@/lib/tiers'
+import { TIER_SCRIPT_LIMITS, CHAT_FREE_MESSAGES_PER_MONTH, getEffectiveTier } from '@/lib/tiers'
 import { friendlyApiErrorMessage } from '@/lib/utils/apiErrors'
 import * as Sentry from '@sentry/nextjs'
 
@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
   }
 
-  const [{ data: messages, error }, { data: profile }] = await Promise.all([
+  const [{ data: messages, error }, { data: profile }, tier] = await Promise.all([
     supabase
       .from('chat_messages')
       .select('role, content, created_at')
@@ -23,16 +23,16 @@ export async function GET(request: NextRequest) {
       .limit(CHAT_HISTORY_LIMIT),
     supabase
       .from('users')
-      .select('subscription_tier, scripts_generated_month, chat_free_messages_used')
+      .select('scripts_generated_month, chat_free_messages_used')
       .eq('id', user.id)
       .single(),
+    getEffectiveTier(supabase, user.id),
   ])
 
   if (error) {
     return NextResponse.json({ error: 'Failed to load chat history' }, { status: 500 })
   }
 
-  const tier = (profile?.subscription_tier as SubscriptionTier) || 'free'
   const usage = {
     freeUsed: profile?.chat_free_messages_used ?? 0,
     freeLimit: CHAT_FREE_MESSAGES_PER_MONTH,
@@ -97,12 +97,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Message is empty' }, { status: 400 })
     }
 
-    const { data: profile } = await supabase
-      .from('users')
-      .select('subscription_tier')
-      .eq('id', user.id)
-      .single()
-    const tier = (profile?.subscription_tier as SubscriptionTier) || 'free'
+    const tier = await getEffectiveTier(supabase, user.id)
     const limit = TIER_SCRIPT_LIMITS[tier] ?? TIER_SCRIPT_LIMITS.free
 
     // Same atomic reserve-before-generating pattern used across every other

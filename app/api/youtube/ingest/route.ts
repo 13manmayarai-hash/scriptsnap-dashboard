@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { ingestChannelTranscripts } from '@/lib/youtube/transcripts'
+import { getEffectiveTier } from '@/lib/tiers'
 import * as Sentry from '@sentry/nextjs'
 
 // Pulls the connected channel's latest videos' real captions into
@@ -30,13 +31,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
   }
 
-  const { data: profile } = await supabase
-    .from('users')
-    .select('subscription_tier')
-    .eq('id', user.id)
-    .single()
+  const tier = await getEffectiveTier(supabase, user.id)
 
-  if (profile?.subscription_tier !== 'pro') {
+  if (tier !== 'pro') {
     return NextResponse.json({ tierAllowed: false })
   }
 

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { getRetentionAnalysis } from '@/lib/youtube/retention'
+import { getEffectiveTier } from '@/lib/tiers'
 
 // ?videoId= is required — no ownership check beyond what YouTube itself
 // enforces (channel==MINE scoping in getRetentionAnalysis returns no rows
@@ -29,13 +30,9 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
   }
 
-  const { data: profile } = await supabase
-    .from('users')
-    .select('subscription_tier')
-    .eq('id', user.id)
-    .single()
+  const tier = await getEffectiveTier(supabase, user.id)
 
-  if (profile?.subscription_tier !== 'pro') {
+  if (tier !== 'pro') {
     return NextResponse.json({ tierAllowed: false })
   }
 

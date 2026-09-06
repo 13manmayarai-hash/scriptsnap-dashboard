@@ -40,7 +40,26 @@ export async function GET(request: NextRequest) {
   }
 
   // Explicit "Sync now" — bypass the cache so the founder can see the
-  // freshest data feeding the prompt.
+  // freshest data feeding the prompt. Unlike trending/performance, this
+  // always force-refreshes (no query-param gate) and isn't Pro-tier
+  // restricted, so it was the most exposed instance of this pattern: any
+  // authenticated user, any tier, calling this repeatedly always bypassed
+  // the cache, each call a real billable Claude call.
+  const { data: rateLimitOk } = await supabase.rpc('check_rate_limit', {
+    p_user_id: user.id,
+    p_route: 'youtube-analytics-sync',
+    p_max_requests: 10,
+    p_window_seconds: 300,
+  })
+  if (!rateLimitOk) {
+    return NextResponse.json({
+      connected: true,
+      needsReconnect: false,
+      channelTitle: connection.youtube_channel_title,
+      error: 'Synced recently — try again in a few minutes.',
+    })
+  }
+
   const context = await getCreatorAnalyticsContext(supabase, user.id, { forceRefresh: true })
 
   if (!context) {

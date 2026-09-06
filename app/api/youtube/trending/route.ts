@@ -3,6 +3,7 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { getTrendingContext, getTrendingVideosForFilter } from '@/lib/youtube/trending'
 import { CATEGORY_LABELS } from '@/lib/youtube/categories'
+import { getEffectiveTier } from '@/lib/tiers'
 
 export async function GET(request: NextRequest) {
   const cookieStore = cookies()
@@ -29,13 +30,9 @@ export async function GET(request: NextRequest) {
   // Re-checked on every request, not just at connect time — a user can
   // downgrade after connecting while Pro, and their youtube_connections
   // row survives the downgrade.
-  const { data: profile } = await supabase
-    .from('users')
-    .select('subscription_tier')
-    .eq('id', user.id)
-    .single()
+  const tier = await getEffectiveTier(supabase, user.id)
 
-  if (profile?.subscription_tier !== 'pro') {
+  if (tier !== 'pro') {
     return NextResponse.json({ tierAllowed: false })
   }
 
@@ -65,7 +62,10 @@ export async function GET(request: NextRequest) {
   // The category-tab / region picker on the Ideas page hits this branch —
   // a lightweight, uncached, single live fetch, distinct from the
   // full cached context (channel keywords + inferred-category trending)
-  // used on initial page load.
+  // used on initial page load. No rate limit here deliberately: this is
+  // a plain YouTube Data API call (fetchMostPopularVideos), no Anthropic
+  // call, bounded by Google's own API quota rather than an open-ended
+  // Anthropic cost.
   if (category !== null || region !== null) {
     const videoCategoryId = category && category !== 'all' ? category : undefined
     const trendingVideos = await getTrendingVideosForFilter(supabase, user.id, {
@@ -80,6 +80,25 @@ export async function GET(request: NextRequest) {
       connected: true,
       trendingVideos,
       trendingCategoryLabel: videoCategoryId ? CATEGORY_LABELS[videoCategoryId] || null : null,
+    })
+  }
+
+  // getTrendingContext calls Claude (via extractKeywords) and is normally
+  // shielded by its own 24h cache -- but ?refresh=1 deliberately bypasses
+  // that cache, and nothing was stopping a Pro user (or a scripted
+  // session) from hitting refresh=1 in a tight loop, each one a real
+  // billable call.
+  const { data: rateLimitOk } = await supabase.rpc('check_rate_limit', {
+    p_user_id: user.id,
+    p_route: 'youtube-trending-refresh',
+    p_max_requests: 10,
+    p_window_seconds: 300,
+  })
+  if (!rateLimitOk) {
+    return NextResponse.json({
+      tierAllowed: true,
+      connected: true,
+      error: 'Refreshed recently — try again in a few minutes.',
     })
   }
 

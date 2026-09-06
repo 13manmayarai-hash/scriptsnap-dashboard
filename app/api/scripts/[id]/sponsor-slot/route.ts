@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { findSponsorSlot } from '@/lib/scripts/sponsorSlot'
-import { TIER_SCRIPT_LIMITS, type SubscriptionTier } from '@/lib/tiers'
+import { TIER_SCRIPT_LIMITS, getEffectiveTier } from '@/lib/tiers'
 import { friendlyApiErrorMessage } from '@/lib/utils/apiErrors'
 import * as Sentry from '@sentry/nextjs'
 
@@ -52,12 +52,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       return NextResponse.json({ error: 'Script not found' }, { status: 404 })
     }
 
-    const { data: profile } = await supabase
-      .from('users')
-      .select('subscription_tier')
-      .eq('id', user.id)
-      .single()
-    const tier = (profile?.subscription_tier as SubscriptionTier) || 'free'
+    const tier = await getEffectiveTier(supabase, user.id)
     const limit = TIER_SCRIPT_LIMITS[tier] ?? TIER_SCRIPT_LIMITS.free
 
     const { data: usage, error: usageError } = await supabase

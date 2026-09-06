@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@/lib/supabase/server'
-import { TIER_SCRIPT_LIMITS, type SubscriptionTier } from '@/lib/tiers'
+import { TIER_SCRIPT_LIMITS, getEffectiveTier } from '@/lib/tiers'
 import { friendlyApiErrorMessage } from '@/lib/utils/apiErrors'
 import * as Sentry from '@sentry/nextjs'
 
@@ -80,12 +80,7 @@ export async function POST(
     quotaAmount = action in TRANSFORM_INSTRUCTIONS ? 1 : action === 'alternatives' ? 0.5 : 0
 
     if (quotaAmount > 0) {
-      const { data: profile } = await supabase
-        .from('users')
-        .select('subscription_tier')
-        .eq('id', user.id)
-        .single()
-      const tier = (profile?.subscription_tier as SubscriptionTier) || 'free'
+      const tier = await getEffectiveTier(supabase, user.id)
       const limit = TIER_SCRIPT_LIMITS[tier] ?? TIER_SCRIPT_LIMITS.free
 
       const { data: usage, error: usageError } = await supabase

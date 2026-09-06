@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { getVideoDetails } from '@/lib/youtube/video-details'
+import { getEffectiveTier } from '@/lib/tiers'
 
 export async function GET(request: NextRequest) {
   const cookieStore = cookies()
@@ -25,13 +26,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
   }
 
-  const { data: profile } = await supabase
-    .from('users')
-    .select('subscription_tier')
-    .eq('id', user.id)
-    .single()
-
-  if (profile?.subscription_tier !== 'pro') {
+  const tier = await getEffectiveTier(supabase, user.id)
+  if (tier !== 'pro') {
     return NextResponse.json({ error: 'Pro tier required' }, { status: 403 })
   }
 
@@ -54,6 +50,21 @@ export async function GET(request: NextRequest) {
   }
   if (connection.needs_reconnect) {
     return NextResponse.json({ connected: true, needsReconnect: true })
+  }
+
+  // getVideoDetails calls Claude for the AI hypothesis note and has no
+  // cache at all (deliberately -- it's an explicit-click, per-video
+  // fetch, not a page-load cost) -- but with no cache there was also no
+  // rate limit, so nothing stopped rapid repeated clicks (or a scripted
+  // session) from generating unbounded billable calls.
+  const { data: rateLimitOk } = await supabase.rpc('check_rate_limit', {
+    p_user_id: user.id,
+    p_route: 'youtube-video-details',
+    p_max_requests: 10,
+    p_window_seconds: 60,
+  })
+  if (!rateLimitOk) {
+    return NextResponse.json({ connected: true, error: 'Too many requests — please wait a moment and try again.' })
   }
 
   const details = await getVideoDetails(supabase, user.id, { videoId, source })
