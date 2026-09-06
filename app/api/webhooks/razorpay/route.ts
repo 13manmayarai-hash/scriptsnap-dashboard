@@ -3,21 +3,23 @@ import { createClient } from '@supabase/supabase-js'
 import crypto from 'crypto'
 import * as Sentry from '@sentry/nextjs'
 
-// Fails loudly if unset rather than silently falling back to the anon
-// key. That fallback previously meant: if SUPABASE_SERVICE_ROLE_KEY were
-// ever missing or misconfigured, this webhook would run under RLS with
-// no authenticated session (no auth.uid()) -- the users table's
-// ownership-scoped UPDATE policy would then block every write with zero
-// rows affected, and .update() doesn't error on a zero-row match, so
-// every real payment would silently stop granting tier upgrades with
-// nothing in the logs pointing at why.
-if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
-  throw new Error('SUPABASE_SERVICE_ROLE_KEY is required for the Razorpay webhook to write past RLS')
-}
-const serviceRoleKey: string = process.env.SUPABASE_SERVICE_ROLE_KEY
-
 export async function POST(request: NextRequest) {
-  const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, serviceRoleKey)
+  // Fails loudly if unset rather than silently falling back to the anon
+  // key. That fallback previously meant: if SUPABASE_SERVICE_ROLE_KEY were
+  // ever missing or misconfigured, this webhook would run under RLS with
+  // no authenticated session (no auth.uid()) -- the users table's
+  // ownership-scoped UPDATE policy would then block every write with zero
+  // rows affected, and .update() doesn't error on a zero-row match, so
+  // every real payment would silently stop granting tier upgrades with
+  // nothing in the logs pointing at why. Checked here rather than at
+  // module scope so `next build`'s page-data collection (which imports
+  // this module without ever invoking POST) doesn't require the secret
+  // to be present at build time -- every other route in this codebase
+  // reads its env vars lazily inside the handler for the same reason.
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    throw new Error('SUPABASE_SERVICE_ROLE_KEY is required for the Razorpay webhook to write past RLS')
+  }
+  const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY)
   try {
     const body = await request.text()
     const signature = request.headers.get('x-razorpay-signature')!
