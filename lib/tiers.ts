@@ -26,6 +26,10 @@ export const TIER_SCRIPT_LIMITS: Record<SubscriptionTier, number> = {
   pro: 200,
 }
 
+// Every tier gets the same free allowance of Ask AI messages per month
+// before chat starts drawing from the tier's script quota.
+export const CHAT_FREE_MESSAGES_PER_MONTH = 10
+
 export const TIER_NAMES: Record<SubscriptionTier, string> = {
   free: 'Free',
   basic: 'Basic',

@@ -13,6 +13,13 @@ interface ChatMessage {
   created_at: string
 }
 
+interface ChatUsage {
+  freeUsed: number
+  freeLimit: number
+  scriptsUsed: number
+  scriptLimit: number
+}
+
 // Minimal, dependency-free rendering for the light markdown replies tend to
 // use (bold, inline code, bullet/numbered lists) — full markdown parsing
 // would be overkill for short chat turns.
@@ -84,6 +91,7 @@ function ChatPageInner() {
   const [sending, setSending] = useState(false)
   const [error, setError] = useState('')
   const [scriptTitle, setScriptTitle] = useState<string | null>(null)
+  const [usage, setUsage] = useState<ChatUsage | null>(null)
   const [clearing, setClearing] = useState(false)
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null)
   const [savedIndex, setSavedIndex] = useState<number | null>(null)
@@ -107,6 +115,7 @@ function ChatPageInner() {
         ])
         const data = await chatRes.json()
         setMessages(data.messages || [])
+        if (data.usage) setUsage(data.usage)
         if (scriptResult?.data?.title) setScriptTitle(scriptResult.data.title)
       } catch {
         setError('Could not load chat history.')
@@ -150,6 +159,7 @@ function ChatPageInner() {
         return
       }
       setMessages((prev) => [...prev, { role: 'assistant', content: data.reply, created_at: new Date().toISOString() }])
+      if (data.usage) setUsage(data.usage)
     } catch {
       setError('Failed to send message — try again in a moment.')
     } finally {
@@ -223,6 +233,14 @@ function ChatPageInner() {
           </button>
         )}
       </div>
+
+      {usage && (
+        <p className="mb-3 text-[11px] text-ink-faint">
+          {usage.freeUsed < usage.freeLimit
+            ? `${usage.freeLimit - usage.freeUsed} free message${usage.freeLimit - usage.freeUsed === 1 ? '' : 's'} left this month`
+            : `${usage.scriptsUsed} / ${usage.scriptLimit} scripts used this month (chat now draws from your quota)`}
+        </p>
+      )}
 
       {scriptTitle && (
         <div className="mb-3 inline-flex w-fit items-center gap-1.5 rounded-full bg-sage/10 px-3 py-1 text-xs text-sage">
