@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { repurposeScript, type RepurposePlatform } from '@/lib/scripts/repurpose'
-import { TIER_SCRIPT_LIMITS, type SubscriptionTier } from '@/lib/tiers'
+import { TIER_SCRIPT_LIMITS, getEffectiveTier } from '@/lib/tiers'
 import { friendlyApiErrorMessage } from '@/lib/utils/apiErrors'
 import * as Sentry from '@sentry/nextjs'
 
@@ -72,12 +72,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       ? body.platforms.filter((p: unknown): p is RepurposePlatform => VALID_PLATFORMS.includes(p as RepurposePlatform))
       : []
 
-    const { data: profile } = await supabase
-      .from('users')
-      .select('subscription_tier')
-      .eq('id', user.id)
-      .single()
-    const tier = (profile?.subscription_tier as SubscriptionTier) || 'free'
+    const tier = await getEffectiveTier(supabase, user.id)
     const limit = TIER_SCRIPT_LIMITS[tier] ?? TIER_SCRIPT_LIMITS.free
 
     // Same atomic reserve-before-generating pattern as generate-script and

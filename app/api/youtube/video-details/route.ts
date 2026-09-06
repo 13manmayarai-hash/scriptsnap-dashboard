@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { getVideoDetails } from '@/lib/youtube/video-details'
+import { getEffectiveTier } from '@/lib/tiers'
 
 export async function GET(request: NextRequest) {
   const cookieStore = cookies()
@@ -25,13 +26,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
   }
 
-  const { data: profile } = await supabase
-    .from('users')
-    .select('subscription_tier')
-    .eq('id', user.id)
-    .single()
-
-  if (profile?.subscription_tier !== 'pro') {
+  const tier = await getEffectiveTier(supabase, user.id)
+  if (tier !== 'pro') {
     return NextResponse.json({ error: 'Pro tier required' }, { status: 403 })
   }
 

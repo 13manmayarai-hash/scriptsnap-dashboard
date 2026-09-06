@@ -3,6 +3,7 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { getTrendingContext, getTrendingVideosForFilter } from '@/lib/youtube/trending'
 import { CATEGORY_LABELS } from '@/lib/youtube/categories'
+import { getEffectiveTier } from '@/lib/tiers'
 
 export async function GET(request: NextRequest) {
   const cookieStore = cookies()
@@ -29,13 +30,9 @@ export async function GET(request: NextRequest) {
   // Re-checked on every request, not just at connect time — a user can
   // downgrade after connecting while Pro, and their youtube_connections
   // row survives the downgrade.
-  const { data: profile } = await supabase
-    .from('users')
-    .select('subscription_tier')
-    .eq('id', user.id)
-    .single()
+  const tier = await getEffectiveTier(supabase, user.id)
 
-  if (profile?.subscription_tier !== 'pro') {
+  if (tier !== 'pro') {
     return NextResponse.json({ tierAllowed: false })
   }
 

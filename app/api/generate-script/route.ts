@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import Anthropic from '@anthropic-ai/sdk'
-import { TIER_SCRIPT_LIMITS, type SubscriptionTier } from '@/lib/tiers'
+import { TIER_SCRIPT_LIMITS, getEffectiveTier } from '@/lib/tiers'
 import { getCreatorAnalyticsContext } from '@/lib/youtube/analytics'
 import { getRatingFeedback, formatRatingFeedback } from '@/lib/scripts/ratingFeedback'
 import { friendlyApiErrorMessage } from '@/lib/utils/apiErrors'
@@ -138,13 +138,7 @@ export async function POST(request: NextRequest) {
       Sentry.captureException(err)
     }
 
-    const { data: profile } = await supabase
-      .from('users')
-      .select('subscription_tier')
-      .eq('id', authUser.id)
-      .single()
-
-    const tier = (profile?.subscription_tier as SubscriptionTier) || 'free'
+    const tier = await getEffectiveTier(supabase, authUser.id)
     const limit = TIER_SCRIPT_LIMITS[tier] ?? TIER_SCRIPT_LIMITS.free
 
     // Atomically check-and-reserve quota before spending any Anthropic API

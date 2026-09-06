@@ -3,6 +3,7 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { randomUUID } from 'crypto'
 import { getYouTubeOAuthClient, YOUTUBE_SCOPES } from '@/lib/youtube/oauth'
+import { getEffectiveTier } from '@/lib/tiers'
 
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url)
@@ -29,13 +30,8 @@ export async function GET(request: NextRequest) {
     )
   }
 
-  const { data: profile } = await supabase
-    .from('users')
-    .select('subscription_tier')
-    .eq('id', user.id)
-    .single()
-
-  if (profile?.subscription_tier !== 'pro') {
+  const tier = await getEffectiveTier(supabase, user.id)
+  if (tier !== 'pro') {
     return NextResponse.redirect(new URL('/dashboard/settings?youtube_error=upgrade_required', requestUrl.origin))
   }
 
