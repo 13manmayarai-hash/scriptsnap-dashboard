@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { getRazorpayErrorMessage } from '@/lib/razorpay'
+import { checkRateLimit } from '@/lib/utils/rateLimit'
 import * as Sentry from '@sentry/nextjs'
 
 const Razorpay = require('razorpay')
@@ -47,11 +48,11 @@ export async function POST(request: NextRequest) {
 
     // Burst-abuse guard — stops a scripted loop from spamming Razorpay
     // order creation.
-    const { data: rateLimitOk } = await supabase.rpc('check_rate_limit', {
-      p_user_id: user.id,
-      p_route: 'razorpay-checkout',
-      p_max_requests: 10,
-      p_window_seconds: 60,
+    const rateLimitOk = await checkRateLimit(supabase, {
+      userId: user.id,
+      route: 'razorpay-checkout',
+      maxRequests: 10,
+      windowSeconds: 60,
     })
     if (!rateLimitOk) {
       return NextResponse.json(

@@ -3,6 +3,7 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { analyzeVoiceProfile } from '@/lib/voiceprint/analyze'
 import { friendlyApiErrorMessage } from '@/lib/utils/apiErrors'
+import { checkRateLimit } from '@/lib/utils/rateLimit'
 import * as Sentry from '@sentry/nextjs'
 
 // Builds/refreshes a creator's VoicePrint. Not gated by script-generation
@@ -37,11 +38,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
   }
 
-  const { data: rateLimitOk } = await supabase.rpc('check_rate_limit', {
-    p_user_id: user.id,
-    p_route: 'voice-profile-analyze',
-    p_max_requests: 3,
-    p_window_seconds: 3600,
+  const rateLimitOk = await checkRateLimit(supabase, {
+    userId: user.id,
+    route: 'voice-profile-analyze',
+    maxRequests: 3,
+    windowSeconds: 3600,
   })
   if (!rateLimitOk) {
     return NextResponse.json(

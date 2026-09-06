@@ -3,6 +3,7 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { getVideoDetails } from '@/lib/youtube/video-details'
 import { getEffectiveTier } from '@/lib/tiers'
+import { checkRateLimit } from '@/lib/utils/rateLimit'
 
 export async function GET(request: NextRequest) {
   const cookieStore = cookies()
@@ -57,11 +58,11 @@ export async function GET(request: NextRequest) {
   // fetch, not a page-load cost) -- but with no cache there was also no
   // rate limit, so nothing stopped rapid repeated clicks (or a scripted
   // session) from generating unbounded billable calls.
-  const { data: rateLimitOk } = await supabase.rpc('check_rate_limit', {
-    p_user_id: user.id,
-    p_route: 'youtube-video-details',
-    p_max_requests: 10,
-    p_window_seconds: 60,
+  const rateLimitOk = await checkRateLimit(supabase, {
+    userId: user.id,
+    route: 'youtube-video-details',
+    maxRequests: 10,
+    windowSeconds: 60,
   })
   if (!rateLimitOk) {
     return NextResponse.json({ connected: true, error: 'Too many requests — please wait a moment and try again.' })
