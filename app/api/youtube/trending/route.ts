@@ -4,6 +4,7 @@ import { cookies } from 'next/headers'
 import { getTrendingContext, getTrendingVideosForFilter } from '@/lib/youtube/trending'
 import { CATEGORY_LABELS } from '@/lib/youtube/categories'
 import { getEffectiveTier } from '@/lib/tiers'
+import { checkRateLimit } from '@/lib/utils/rateLimit'
 
 export async function GET(request: NextRequest) {
   const cookieStore = cookies()
@@ -88,11 +89,11 @@ export async function GET(request: NextRequest) {
   // that cache, and nothing was stopping a Pro user (or a scripted
   // session) from hitting refresh=1 in a tight loop, each one a real
   // billable call.
-  const { data: rateLimitOk } = await supabase.rpc('check_rate_limit', {
-    p_user_id: user.id,
-    p_route: 'youtube-trending-refresh',
-    p_max_requests: 10,
-    p_window_seconds: 300,
+  const rateLimitOk = await checkRateLimit(supabase, {
+    userId: user.id,
+    route: 'youtube-trending-refresh',
+    maxRequests: 10,
+    windowSeconds: 300,
   })
   if (!rateLimitOk) {
     return NextResponse.json({

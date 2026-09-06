@@ -3,6 +3,7 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { getPerformanceContext } from '@/lib/youtube/performance'
 import { getEffectiveTier } from '@/lib/tiers'
+import { checkRateLimit } from '@/lib/utils/rateLimit'
 
 export async function GET(request: NextRequest) {
   const cookieStore = cookies()
@@ -56,11 +57,11 @@ export async function GET(request: NextRequest) {
   // 24h cache -- but ?refresh=1 deliberately bypasses that cache, and
   // nothing was stopping a Pro user (or a scripted session) from hitting
   // refresh=1 in a tight loop, each one a real billable call.
-  const { data: rateLimitOk } = await supabase.rpc('check_rate_limit', {
-    p_user_id: user.id,
-    p_route: 'youtube-performance-refresh',
-    p_max_requests: 10,
-    p_window_seconds: 300,
+  const rateLimitOk = await checkRateLimit(supabase, {
+    userId: user.id,
+    route: 'youtube-performance-refresh',
+    maxRequests: 10,
+    windowSeconds: 300,
   })
   if (!rateLimitOk) {
     return NextResponse.json({

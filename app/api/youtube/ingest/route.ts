@@ -3,6 +3,7 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { ingestChannelTranscripts } from '@/lib/youtube/transcripts'
 import { getEffectiveTier } from '@/lib/tiers'
+import { checkRateLimit } from '@/lib/utils/rateLimit'
 import * as Sentry from '@sentry/nextjs'
 
 // Pulls the connected channel's latest videos' real captions into
@@ -37,11 +38,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ tierAllowed: false })
   }
 
-  const { data: rateLimitOk } = await supabase.rpc('check_rate_limit', {
-    p_user_id: user.id,
-    p_route: 'youtube-ingest',
-    p_max_requests: 3,
-    p_window_seconds: 300,
+  const rateLimitOk = await checkRateLimit(supabase, {
+    userId: user.id,
+    route: 'youtube-ingest',
+    maxRequests: 3,
+    windowSeconds: 300,
   })
   if (!rateLimitOk) {
     return NextResponse.json(

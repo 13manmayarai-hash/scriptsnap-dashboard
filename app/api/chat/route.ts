@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { sendChatMessage, clearChatHistory } from '@/lib/chat/assistant'
 import { TIER_SCRIPT_LIMITS, CHAT_FREE_MESSAGES_PER_MONTH, getEffectiveTier } from '@/lib/tiers'
 import { friendlyApiErrorMessage } from '@/lib/utils/apiErrors'
+import { checkRateLimit } from '@/lib/utils/rateLimit'
 import * as Sentry from '@sentry/nextjs'
 
 const CHAT_HISTORY_LIMIT = 50
@@ -77,11 +78,11 @@ export async function POST(request: NextRequest) {
 
     // Chat is meant to feel snappy (back-and-forth turns), so a more
     // generous window than the heavier one-shot generation routes.
-    const { data: rateLimitOk } = await supabase.rpc('check_rate_limit', {
-      p_user_id: user.id,
-      p_route: 'chat',
-      p_max_requests: 20,
-      p_window_seconds: 60,
+    const rateLimitOk = await checkRateLimit(supabase, {
+      userId: user.id,
+      route: 'chat',
+      maxRequests: 20,
+      windowSeconds: 60,
     })
     if (!rateLimitOk) {
       return NextResponse.json(

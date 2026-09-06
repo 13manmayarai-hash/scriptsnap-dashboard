@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { getCreatorAnalyticsContext } from '@/lib/youtube/analytics'
+import { checkRateLimit } from '@/lib/utils/rateLimit'
 
 export async function GET(request: NextRequest) {
   const cookieStore = cookies()
@@ -45,11 +46,11 @@ export async function GET(request: NextRequest) {
   // restricted, so it was the most exposed instance of this pattern: any
   // authenticated user, any tier, calling this repeatedly always bypassed
   // the cache, each call a real billable Claude call.
-  const { data: rateLimitOk } = await supabase.rpc('check_rate_limit', {
-    p_user_id: user.id,
-    p_route: 'youtube-analytics-sync',
-    p_max_requests: 10,
-    p_window_seconds: 300,
+  const rateLimitOk = await checkRateLimit(supabase, {
+    userId: user.id,
+    route: 'youtube-analytics-sync',
+    maxRequests: 10,
+    windowSeconds: 300,
   })
   if (!rateLimitOk) {
     return NextResponse.json({

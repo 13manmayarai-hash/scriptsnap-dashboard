@@ -3,6 +3,7 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import Anthropic from '@anthropic-ai/sdk'
 import { friendlyApiErrorMessage } from '@/lib/utils/apiErrors'
+import { checkRateLimit } from '@/lib/utils/rateLimit'
 import * as Sentry from '@sentry/nextjs'
 
 const client = new Anthropic({
@@ -40,11 +41,11 @@ export async function POST(request: NextRequest) {
   // Burst-abuse guard — this triggers a real Anthropic call and isn't
   // gated by quota (see comment above), so without this an authenticated
   // user could loop it for unbounded billable spend.
-  const { data: rateLimitOk } = await supabase.rpc('check_rate_limit', {
-    p_user_id: user.id,
-    p_route: 'tone-presets-derive',
-    p_max_requests: 10,
-    p_window_seconds: 60,
+  const rateLimitOk = await checkRateLimit(supabase, {
+    userId: user.id,
+    route: 'tone-presets-derive',
+    maxRequests: 10,
+    windowSeconds: 60,
   })
   if (!rateLimitOk) {
     return NextResponse.json(

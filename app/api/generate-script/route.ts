@@ -6,6 +6,7 @@ import { TIER_SCRIPT_LIMITS, getEffectiveTier } from '@/lib/tiers'
 import { getCreatorAnalyticsContext } from '@/lib/youtube/analytics'
 import { getRatingFeedback, formatRatingFeedback } from '@/lib/scripts/ratingFeedback'
 import { friendlyApiErrorMessage } from '@/lib/utils/apiErrors'
+import { checkRateLimit } from '@/lib/utils/rateLimit'
 import * as Sentry from '@sentry/nextjs'
 
 const client = new Anthropic({
@@ -102,11 +103,11 @@ export async function POST(request: NextRequest) {
     // Burst-abuse guard, independent of the monthly quota below — caps how
     // fast a single user can trigger billable Anthropic calls, regardless
     // of how much of their monthly allowance remains.
-    const { data: rateLimitOk } = await supabase.rpc('check_rate_limit', {
-      p_user_id: authUser.id,
-      p_route: 'generate-script',
-      p_max_requests: 5,
-      p_window_seconds: 60,
+    const rateLimitOk = await checkRateLimit(supabase, {
+      userId: authUser.id,
+      route: 'generate-script',
+      maxRequests: 5,
+      windowSeconds: 60,
     })
     if (!rateLimitOk) {
       return NextResponse.json(

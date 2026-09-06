@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { generateStructuredScript } from '@/lib/scripts/structuredScript'
 import { TIER_SCRIPT_LIMITS, getEffectiveTier } from '@/lib/tiers'
 import { friendlyApiErrorMessage } from '@/lib/utils/apiErrors'
+import { checkRateLimit } from '@/lib/utils/rateLimit'
 import * as Sentry from '@sentry/nextjs'
 
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
@@ -41,11 +42,11 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     }
     userId = user.id
 
-    const { data: rateLimitOk } = await supabase.rpc('check_rate_limit', {
-      p_user_id: user.id,
-      p_route: 'script-structured',
-      p_max_requests: 10,
-      p_window_seconds: 60,
+    const rateLimitOk = await checkRateLimit(supabase, {
+      userId: user.id,
+      route: 'script-structured',
+      maxRequests: 10,
+      windowSeconds: 60,
     })
     if (!rateLimitOk) {
       return NextResponse.json(
