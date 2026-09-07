@@ -1,13 +1,26 @@
 'use client'
 
 import { Suspense, useEffect, useRef, useState } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import ErrorMessage from '@/lib/components/ui/ErrorMessage'
 import LoadingState from '@/lib/components/ui/LoadingState'
-import { MessageCircle, Send, Loader2, Sparkles, Copy, Check, Trash2, Lightbulb } from 'lucide-react'
+import {
+  MessageCircle,
+  Send,
+  Loader2,
+  Sparkles,
+  Copy,
+  Check,
+  Trash2,
+  Lightbulb,
+  ThumbsUp,
+  ThumbsDown,
+  Wand2,
+} from 'lucide-react'
 
 interface ChatMessage {
+  id: string | null
   role: 'user' | 'assistant'
   content: string
   created_at: string
@@ -18,6 +31,12 @@ interface ChatUsage {
   freeLimit: number
   scriptsUsed: number
   scriptLimit: number
+}
+
+interface TonePreset {
+  id: string
+  name: string
+  style_description: string
 }
 
 // Minimal, dependency-free rendering for the light markdown replies tend to
@@ -82,6 +101,7 @@ export default function ChatPage() {
 }
 
 function ChatPageInner() {
+  const router = useRouter()
   const searchParams = useSearchParams()
   const scriptId = searchParams.get('scriptId') || undefined
 
@@ -95,6 +115,9 @@ function ChatPageInner() {
   const [clearing, setClearing] = useState(false)
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null)
   const [savedIndex, setSavedIndex] = useState<number | null>(null)
+  const [tonePresets, setTonePresets] = useState<TonePreset[]>([])
+  const [tonePresetId, setTonePresetId] = useState('')
+  const [ratings, setRatings] = useState<Record<string, 1 | -1>>({})
   const scrollRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
@@ -107,16 +130,39 @@ function ChatPageInner() {
         return
       }
       try {
-        const [chatRes, scriptResult] = await Promise.all([
+        const [chatRes, scriptResult, { data: presets }] = await Promise.all([
           fetch('/api/chat', { credentials: 'same-origin' }),
           scriptId
             ? supabase.from('scripts').select('title').eq('id', scriptId).maybeSingle()
             : Promise.resolve({ data: null }),
+          supabase
+            .from('tone_presets')
+            .select('id, name, style_description')
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: true }),
         ])
         const data = await chatRes.json()
-        setMessages(data.messages || [])
+        const loadedMessages: ChatMessage[] = data.messages || []
+        setMessages(loadedMessages)
         if (data.usage) setUsage(data.usage)
         if (scriptResult?.data?.title) setScriptTitle(scriptResult.data.title)
+        if (presets) setTonePresets(presets)
+
+        const assistantIds = loadedMessages
+          .filter((m) => m.role === 'assistant' && m.id)
+          .map((m) => m.id as string)
+        if (assistantIds.length > 0) {
+          const { data: ratingRows } = await supabase
+            .from('chat_message_ratings')
+            .select('chat_message_id, rating')
+            .eq('user_id', user.id)
+            .in('chat_message_id', assistantIds)
+          if (ratingRows) {
+            const map: Record<string, 1 | -1> = {}
+            for (const r of ratingRows) map[r.chat_message_id] = r.rating
+            setRatings(map)
+          }
+        }
       } catch {
         setError('Could not load chat history.')
       } finally {
@@ -144,21 +190,28 @@ function ChatPageInner() {
     setInput('')
     setError('')
     setSending(true)
-    setMessages((prev) => [...prev, { role: 'user', content: text, created_at: new Date().toISOString() }])
+    setMessages((prev) => [...prev, { id: null, role: 'user', content: text, created_at: new Date().toISOString() }])
 
     try {
       const res = await fetch('/api/chat', {
         method: 'POST',
         credentials: 'same-origin',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text, ...(scriptId ? { scriptId } : {}) }),
+        body: JSON.stringify({
+          message: text,
+          ...(scriptId ? { scriptId } : {}),
+          ...(tonePresetId ? { tonePresetId } : {}),
+        }),
       })
       const data = await res.json()
       if (!res.ok) {
         setError(data.error || 'Failed to send message')
         return
       }
-      setMessages((prev) => [...prev, { role: 'assistant', content: data.reply, created_at: new Date().toISOString() }])
+      setMessages((prev) => [
+        ...prev,
+        { id: data.messageId ?? null, role: 'assistant', content: data.reply, created_at: new Date().toISOString() },
+      ])
       if (data.usage) setUsage(data.usage)
     } catch {
       setError('Failed to send message — try again in a moment.')
@@ -179,7 +232,10 @@ function ChatPageInner() {
     setClearing(true)
     try {
       const res = await fetch('/api/chat', { method: 'DELETE', credentials: 'same-origin' })
-      if (res.ok) setMessages([])
+      if (res.ok) {
+        setMessages([])
+        setRatings({})
+      }
     } catch {
       // Best-effort — leave existing messages visible on failure.
     } finally {
@@ -205,6 +261,37 @@ function ChatPageInner() {
     if (!insertError) {
       setSavedIndex(index)
       setTimeout(() => setSavedIndex((prev) => (prev === index ? null : prev)), 2000)
+    }
+  }
+
+  const handleUseAsScript = (text: string) => {
+    router.push(`/dashboard/new?topic=${encodeURIComponent(text)}`)
+  }
+
+  const handleRate = async (messageId: string, value: 1 | -1) => {
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+
+    const next = ratings[messageId] === value ? null : value
+    setRatings((prev) => {
+      const copy = { ...prev }
+      if (next === null) delete copy[messageId]
+      else copy[messageId] = next
+      return copy
+    })
+
+    if (next === null) {
+      await supabase
+        .from('chat_message_ratings')
+        .delete()
+        .eq('chat_message_id', messageId)
+        .eq('user_id', user.id)
+    } else {
+      await supabase.from('chat_message_ratings').upsert(
+        { chat_message_id: messageId, user_id: user.id, rating: next },
+        { onConflict: 'chat_message_id,user_id' }
+      )
     }
   }
 
@@ -234,13 +321,30 @@ function ChatPageInner() {
         )}
       </div>
 
-      {usage && (
-        <p className="mb-3 text-[11px] text-ink-faint">
-          {usage.freeUsed < usage.freeLimit
-            ? `${usage.freeLimit - usage.freeUsed} free message${usage.freeLimit - usage.freeUsed === 1 ? '' : 's'} left this month`
-            : `${usage.scriptsUsed} / ${usage.scriptLimit} scripts used this month (chat now draws from your quota)`}
-        </p>
-      )}
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        {usage && (
+          <p className="text-[11px] text-ink-faint">
+            {usage.freeUsed < usage.freeLimit
+              ? `${usage.freeLimit - usage.freeUsed} free message${usage.freeLimit - usage.freeUsed === 1 ? '' : 's'} left this month`
+              : `${usage.scriptsUsed} / ${usage.scriptLimit} scripts used this month (chat now draws from your quota)`}
+          </p>
+        )}
+        {tonePresets.length > 0 && (
+          <select
+            value={tonePresetId}
+            onChange={(e) => setTonePresetId(e.target.value)}
+            className="input h-auto w-auto py-1 text-xs"
+            aria-label="Tone for this conversation"
+          >
+            <option value="">Default voice</option>
+            {tonePresets.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.name} tone
+              </option>
+            ))}
+          </select>
+        )}
+      </div>
 
       {scriptTitle && (
         <div className="mb-3 inline-flex w-fit items-center gap-1.5 rounded-full bg-sage/10 px-3 py-1 text-xs text-sage">
@@ -259,7 +363,7 @@ function ChatPageInner() {
           </div>
         )}
         {messages.map((m, i) => (
-          <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+          <div key={m.id ?? i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
             <div className="max-w-[80%]">
               <div
                 className={`whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
@@ -282,6 +386,29 @@ function ChatPageInner() {
                     <button onClick={() => handleSaveAsIdea(m.content, i)} className="hover:text-ink" aria-label="Save as idea">
                       {savedIndex === i ? <Check size={11} aria-hidden="true" /> : <Lightbulb size={11} aria-hidden="true" />}
                     </button>
+                    <button onClick={() => handleUseAsScript(m.content)} className="hover:text-ink" aria-label="Use as script topic">
+                      <Wand2 size={11} aria-hidden="true" />
+                    </button>
+                    {m.id && (
+                      <>
+                        <button
+                          onClick={() => handleRate(m.id as string, 1)}
+                          aria-pressed={ratings[m.id] === 1}
+                          aria-label="This reply was helpful"
+                          className={ratings[m.id] === 1 ? 'text-sage' : 'hover:text-ink'}
+                        >
+                          <ThumbsUp size={11} aria-hidden="true" />
+                        </button>
+                        <button
+                          onClick={() => handleRate(m.id as string, -1)}
+                          aria-pressed={ratings[m.id] === -1}
+                          aria-label="This reply wasn't helpful"
+                          className={ratings[m.id] === -1 ? 'text-error' : 'hover:text-ink'}
+                        >
+                          <ThumbsDown size={11} aria-hidden="true" />
+                        </button>
+                      </>
+                    )}
                   </>
                 )}
               </div>

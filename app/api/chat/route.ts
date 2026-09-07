@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
   const [{ data: messages, error }, { data: profile }, tier] = await Promise.all([
     supabase
       .from('chat_messages')
-      .select('role, content, created_at')
+      .select('id, role, content, created_at')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .limit(CHAT_HISTORY_LIMIT),
@@ -94,8 +94,24 @@ export async function POST(request: NextRequest) {
     const body = await request.json().catch(() => ({}))
     const message = typeof body.message === 'string' ? body.message.trim() : ''
     const scriptId = typeof body.scriptId === 'string' ? body.scriptId : undefined
+    const tonePresetId = typeof body.tonePresetId === 'string' ? body.tonePresetId : undefined
     if (!message) {
       return NextResponse.json({ error: 'Message is empty' }, { status: 400 })
+    }
+
+    // Ownership-scoped lookup -- a tonePresetId belonging to another user
+    // simply resolves to no tone rather than leaking their preset text.
+    let tone: { name: string; styleDescription: string } | undefined
+    if (tonePresetId) {
+      const { data: preset } = await supabase
+        .from('tone_presets')
+        .select('name, style_description')
+        .eq('id', tonePresetId)
+        .eq('user_id', user.id)
+        .maybeSingle<{ name: string; style_description: string }>()
+      if (preset) {
+        tone = { name: preset.name, styleDescription: preset.style_description }
+      }
     }
 
     const tier = await getEffectiveTier(supabase, user.id)
@@ -128,7 +144,7 @@ export async function POST(request: NextRequest) {
     quotaReserved = true
     usedFree = usage.used_free
 
-    const { reply, error } = await sendChatMessage(supabase, user.id, message, scriptId)
+    const { reply, error, messageId } = await sendChatMessage(supabase, user.id, message, { scriptId, tone })
     if (!reply) {
       if (quotaReserved) {
         try { await supabase.rpc('decrement_chat_usage', { p_user_id: user.id, p_used_free: usedFree, p_amount: quotaAmount }) } catch {}
@@ -138,6 +154,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       reply,
+      messageId,
       usage: {
         freeUsed: usage.free_used,
         freeLimit: CHAT_FREE_MESSAGES_PER_MONTH,
