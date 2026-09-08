@@ -2,6 +2,8 @@
 
 **A Systems Audit of `omnicache-proxy` (commit `2bafa7a`, v3.0.3)**
 
+> **Update (v3.0.4 remediation verified):** The findings below reflect commit `2bafa7a` at the time of the original audit. A follow-up commit, `5b0d924` (v3.0.4, "Remediate empirical audit findings"), has since been independently re-verified against a clean checkout and confirms fixes for nearly every issue raised here. See **Section 7 — Remediation Verification (v3.0.4)** at the end of this report for the full, re-measured results. Sections 1–6 are preserved unedited as the historical record of the audited commit.
+
 ---
 
 ## 1. Abstract
@@ -332,3 +334,38 @@ Three concrete, low-effort fixes would close the largest gaps identified here: (
 ---
 
 *This report reflects measurements taken against `omnicache-proxy` commit `2bafa7a` (v3.0.3) in an isolated, keyless (no upstream LLM credentials configured), single-host Linux sandbox. All reported latencies are host-relative and intended to characterize reproducibility, correctness, and internal consistency of claims — not to serve as a cross-platform performance guarantee. Raw experiment scripts and JSON outputs underlying Tables 5.1–5.5 and 5.9 are available on request; Tables 5.6–5.8 and 5.10 reproduce unmodified output from the project's own `benchmark`, `harness`, and `pytest` invocations.*
+
+---
+
+## 7. Remediation Verification (v3.0.4)
+
+Following the publication of Sections 1–6, the maintainer pushed commit `5b0d924` ("fix(audit): Remediate empirical audit findings, optimize embedder memory, and release v3.0.4"). This section documents an **independent re-verification** performed against a fresh, clean checkout of that commit — not a review of the diff alone. The same instruments from §3.3 (a fresh clone, the project's own `pytest`/`benchmark`/`harness`, and the three purpose-built experiment scripts from §5.1–5.2) were re-run without any local patches applied, and the resulting numbers were compared directly against Sections 4–5.
+
+### 7.1 Verification method
+
+For each finding, the verification either (a) re-executed a CLI command with zero local modifications, (b) re-ran an unmodified experiment script from §5.1/§5.2 against the new source, or (c) took a fresh, methodologically-matched memory measurement (import isolated from construction, `gc.collect()` before measuring, cross-checked against direct `sys.getsizeof`/`buffer_info()` accounting rather than relying on a single `tracemalloc` snapshot). Where a discrepancy remains, it is reported rather than rounded away.
+
+### 7.2 Results by finding
+
+| § | Original finding | Verification result | Evidence |
+|---|---|---|---|
+| 4.1 | `NameError` crashes every CLI command and blocks pytest collection | **Fixed** | `from typing import Optional, List, Dict, Any, Tuple, Union` added to `server/cli.py`. `omnicache doctor` now runs cleanly on a checkout with **zero local patches**. Full suite: **206/206 tests pass**, 0 collection errors (up from 200/40-modules with 5 collection failures pre-fix). |
+| 4.2 (dict-key bug) | Benchmark always printed "0 tool signatures" | **Fixed** | Now reads `tools_recorded` (falling back to the old key). Re-run: correctly prints "20 files (139 tool signatures)". |
+| 4.2 (undisclosed baseline) | "Cold Turn" figures were hardcoded constants presented as measurements | **Fixed via disclosure** | Table now labels the column "Est. Upstream Turn ... (Est.)" with an explicit footnote: *"Est. Upstream Turn represents typical remote cloud LLM network roundtrips for comparison. OmniCache Replay columns represent actual locally measured micro-benchmarks."* The baseline still isn't a live measurement, but it is no longer presented as one. |
+| 4.3 / 4.4 | `git_status` measured 5.25 ms vs. advertised `<0.3ms`; blanket claim didn't disclose the two policy families | **Fixed via re-scoping** | Re-measured on the new commit: `git_status` median **5.60 ms** (statistically unchanged — the live-subprocess design is intentional and correct, not a bug). README now reads `<0.1ms` for cached reads/scoped queries and `~5ms` when verifying live dirty git state — this now matches measurement. The `extract_candidate_path()` argument-key list was also substantially widened with a case-insensitive normalized-key fallback, addressing the fragility noted in §4.4. Cross-file mutation isolation re-tested: still **0 false-positive leaks**. |
+| 4.7 | Quantized embedder: 512 KB claimed vs. 25.2 MB measured (49×) | **Fixed, and the claim is now real** | Weight matrix repacked from nested Python `int` lists into `array.array('b', ...)`. Re-measured with import isolated from construction and `gc.collect()` applied before snapshotting (a stricter protocol than the original measurement, applied identically to both commits for a fair comparison): old commit re-measured at **11.81 MB**, new commit at **728.9 KB** — a **~16.6× reduction**. Of that 728.9 KB, `stats()` now computes the reported 512.0 KB directly from `array.buffer_info()` (the true raw buffer, byte-for-byte), with the residual ~217 KB being ordinary `array.array` Python-object header overhead (2,048 objects × ~99 bytes) — an expected and disclosed-by-nature gap, not a fabricated formula. |
+| 4.8 | P2P mesh harness check took ~2,081 ms due to a real timeout against a hardcoded unreachable IP (`10.0.0.42`) | **Fixed** | The harness now mocks `mesh_bus._post_to_peer` for the broadcast check instead of hitting the network. Re-ran 3×: **66–67 ms** (down from ~2,081 ms, a **~31× reduction**), with a peer-cleanup call added to prevent state leakage between runs. |
+| 4.6 | "Up to 80%" cascade savings claim; tier-1 economy architecturally unreachable for Claude-origin traffic | **Disclosed, not architecturally changed** | Re-ran the full 85-prompt sweep against the new commit: **routing behavior is bit-for-bit identical** to the original audit — `tier_1_economy` is still 0/85, and the single empirical breakpoint is still at complexity 0.6138. The maintainer chose to correct the *claim* rather than the *routing logic*: README and the module docstring now read "saving up to 73.3% on Anthropic Claude cascades (Sonnet → Haiku) and up to 95% on OpenAI/Gemini cross-vendor cascades" — which matches measurement. Buyers evaluating this for Claude-only traffic should still budget for the ~73% figure, not "up to 80%." |
+| 4.10 (partial) | Broad, less-tested subsystem surface (audio, telephony, vision) presented at the same confidence as the tested core | **Addressed** | README now labels the multimodal audio, vision-dedup, and telephony features `[Beta]`, distinguishing them from the more thoroughly-verified caching/cascade/mesh core. |
+
+### 7.3 What remains open
+
+* **The cheapest cost tier is still unreachable for Claude-origin traffic** (§4.6) — this is now honestly labeled rather than fixed, which is an acceptable interim state but worth surfacing explicitly to any buyer whose traffic is Claude-only.
+* **The benchmark's upstream baseline is still an estimate, not a live measurement** — now disclosed as such, which resolves the credibility issue, but a genuinely measured cold-turn comparison (§6.3, item 2) would still strengthen the tool's evidentiary claims further.
+* Sections 1–6 of this report describe commit `2bafa7a` and are retained as-is for historical accuracy; readers evaluating the project **today** should weight this Section 7 as the current state.
+
+### 7.4 Revised bottom line
+
+Every Tier 0 and Tier 1 item from the original fix-list (release-blocking CLI crash, test-suite collection failures, the two benchmark-honesty bugs, the P2P mesh harness anomaly, and the memory-footprint claim) is confirmed fixed by direct re-measurement, not merely by reading the changelog. This was a substantive, verifiable remediation pass, and it materially changes this report's §6.2 recommendation: the packaging and self-diagnostic trust issues that were the primary blocker to a pilot are resolved as of v3.0.4. The remaining caveat is narrower and specific — the cost-arbiter's cheapest tier is still architecturally unreachable for same-vendor Claude traffic — which is now accurately disclosed rather than hidden, and should inform cost projections rather than block adoption.
+
+*Section 7 reflects measurements taken against `omnicache-proxy` commit `5b0d924` (v3.0.4) under the same sandbox and methodology described in §3.1–3.3.*
