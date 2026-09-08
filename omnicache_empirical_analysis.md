@@ -3,6 +3,8 @@
 **A Systems Audit of `omnicache-proxy` (commit `2bafa7a`, v3.0.3)**
 
 > **Update (v3.0.4 remediation verified):** The findings below reflect commit `2bafa7a` at the time of the original audit. A follow-up commit, `5b0d924` (v3.0.4, "Remediate empirical audit findings"), has since been independently re-verified against a clean checkout and confirms fixes for nearly every issue raised here. See **Section 7 — Remediation Verification (v3.0.4)** at the end of this report for the full, re-measured results. Sections 1–6 are preserved unedited as the historical record of the audited commit.
+>
+> **Update (v3.0.5 license change and security-doc correction):** Commit `05b02dc` (v3.0.5) relicensed the project from MIT to the Functional Source License 1.1 (FSL-1.1-MIT), and a subsequent commit `9ed8b3b` corrected `SECURITY.md`, which previously claimed "AES-256-GCM envelope encryption" for data at rest and "TLS 1.3 enforced on all external endpoints" — claims not backed by any code in the repository (confirmed by a full-repository search for any encryption implementation, which found zero matches outside that one documentation file). The corrected `SECURITY.md` now accurately states that OmniCache relies on host OS disk encryption and does not implement application-level envelope encryption, and that TLS must be provided by a fronting reverse proxy for non-loopback deployments. See **Section 8 — License and Security-Documentation Correction (v3.0.5)**.
 
 ---
 
@@ -369,3 +371,32 @@ For each finding, the verification either (a) re-executed a CLI command with zer
 Every Tier 0 and Tier 1 item from the original fix-list (release-blocking CLI crash, test-suite collection failures, the two benchmark-honesty bugs, the P2P mesh harness anomaly, and the memory-footprint claim) is confirmed fixed by direct re-measurement, not merely by reading the changelog. This was a substantive, verifiable remediation pass, and it materially changes this report's §6.2 recommendation: the packaging and self-diagnostic trust issues that were the primary blocker to a pilot are resolved as of v3.0.4. The remaining caveat is narrower and specific — the cost-arbiter's cheapest tier is still architecturally unreachable for same-vendor Claude traffic — which is now accurately disclosed rather than hidden, and should inform cost projections rather than block adoption.
 
 *Section 7 reflects measurements taken against `omnicache-proxy` commit `5b0d924` (v3.0.4) under the same sandbox and methodology described in §3.1–3.3.*
+
+---
+
+## 8. License and Security-Documentation Correction (v3.0.5)
+
+Two further commits followed the v3.0.4 remediation, both independently verified against fresh checkouts.
+
+### 8.1 License change
+
+Commit `05b02dc` relicensed the project from the MIT License to the **Functional Source License, Version 1.1, MIT Future License (FSL-1.1-MIT)**, with the copyright holder updated from the generic "OmniCache Team" to a named individual, Rajiv Prasad. Verified by reading the full text of the new `LICENSE` file directly (not summarized from a changelog): the text is the standard, unmodified FSL-1.1-MIT boilerplate, consistent across `LICENSE`, `pyproject.toml`'s `license` field, and the README's license section, with no leftover references to the prior MIT terms or to "open source" anywhere in the README (checked directly).
+
+Substantively, FSL-1.1-MIT grants free use of the software subject to one restriction — the software may not be used to provide a "Competing Use" (a product or service that competes with the software itself) — and automatically converts to plain MIT two years after each release. This is a well-precedented category of license (originated by Sentry, also used by other infrastructure projects) designed specifically to prevent a third party from taking the published source and operating it as a competing hosted service, while preserving free use for individuals, internal organizational deployment, and non-competing integrations. It is not an OSI-recognized "open source" license (the competing-use restriction disqualifies it under the Open Source Definition), which the project's own documentation now avoids claiming.
+
+### 8.2 Security-documentation correction
+
+At the time of the original audit (and unchanged through v3.0.4), `SECURITY.md` stated:
+
+> "At-Rest Persistence: SQLite snapshots support AES-256-GCM envelope encryption."
+> "In-Flight Encryption: TLS 1.3 enforced on all external endpoints."
+
+A full-repository search (`AES`, `GCM`, `Fernet`, `cryptography`, `from Crypto`) across every source file found these terms appearing **nowhere except that one documentation file** — no encryption-at-rest implementation exists anywhere in `persistence/snapshot_store.py` or elsewhere in the codebase, and no TLS-termination logic exists in the application layer. This is a materially more serious class of finding than the performance-claim discrepancies in Sections 4–5: it is a specific, written security assurance in the document a security researcher or enterprise buyer would consult first, unsupported by any code.
+
+Commit `9ed8b3b` ("Eliminate phantom encryption claims and ground SECURITY.md in real code") rewrites the relevant section to state accurately that data-at-rest protection relies on host operating-system disk encryption (LUKS/FileVault/BitLocker/Android FBE) rather than application-level envelope encryption, that in-flight transport on the local loopback binding is plain HTTP by design (bind is `127.0.0.1` unless explicitly reconfigured), and that non-loopback deployments must be fronted by an external TLS-terminating reverse proxy. It also replaced a vulnerability-disclosure contact address (`security@omnicache.ai`) that could not be confirmed to resolve to an active, monitored inbox with a verifiable GitHub Security Advisory link and the maintainer's own direct email. Re-reading the corrected file confirms every remaining claim in it now traces to actual, verifiable behavior in the codebase (loopback binding, credential passthrough without persistence, and the `PrivacyShield` HMAC-SHA256 tokenization module, which does exist in `core/privacy_shield.py`).
+
+### 8.3 Assessment
+
+Both changes directly address gaps a real commercial launch or enterprise security review would otherwise surface immediately — the license change closes the competing-use/appropriation risk inherent in the prior MIT terms, and the security-documentation correction removes a false compliance claim before it could be relied upon by a paying customer's security team. Combined with the v3.0.4 remediation in Section 7, this project has now demonstrated three consecutive rounds of fast, accurate, verifiable response to externally-identified issues — a pattern worth more to a rollout decision than the state of any single commit.
+
+*Section 8 reflects the state of `omnicache-proxy` as of commit `9ed8b3b` (v3.0.5), verified via direct file inspection and full-repository search rather than by reading commit messages alone.*
