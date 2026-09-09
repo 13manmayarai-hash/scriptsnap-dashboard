@@ -7,3 +7,7 @@ dist
 *.log
 .vercel
 *.tsbuildinfo
+
+# HyperFrames video scratch projects — generated marketing/promo assets,
+# not part of this app; not meant to live in this repo's history.
+videos/
